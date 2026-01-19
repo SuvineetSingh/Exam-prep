@@ -1,0 +1,11 @@
+# Public Assets
+
+This directory contains static assets that are served directly:
+- Images
+- Icons
+- Fonts
+- Logos
+- Other static files
+
+Files in this directory can be referenced from the root URL.
+Example: /public/logo.png can be accessed as /logo.png
