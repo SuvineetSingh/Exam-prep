@@ -1,6 +1,7 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 import { getSupabaseConfig, isSupabaseConfigValid } from './config';
+import type { Database } from '@/lib/types';
 
 /**
  * Middleware helper for Supabase authentication
@@ -17,7 +18,7 @@ export async function updateSession(request: NextRequest) {
 
   const { url, anonKey } = getSupabaseConfig();
 
-  const supabase = createServerClient(url, anonKey, {
+  const supabase = createServerClient<Database>(url, anonKey, {
     cookies: {
       getAll() {
         return request.cookies.getAll();
@@ -34,18 +35,20 @@ export async function updateSession(request: NextRequest) {
     },
   });
 
-  // Refresh session if expired
-  const { error } = await supabase.auth.getUser();
+  const {data: {user}, error} = await supabase.auth.getUser();
 
   if (error) {
     console.error('Error refreshing session:', error);
   }
 
-  // Optional: Protect routes
-  // Uncomment and customize based on your needs
-  /*
-  const protectedRoutes = ['/dashboard', '/settings', '/profile'];
+  // Protect routes
+  const protectedRoutes = ['/dashboard', '/settings', '/profile', '/questions'];
+  const publicRoutes = ['/','/login', '/register'];
+
   const isProtectedRoute = protectedRoutes.some((route) =>
+    request.nextUrl.pathname.startsWith(route)
+  );
+  const isPublicRoute = publicRoutes.some((route) =>
     request.nextUrl.pathname.startsWith(route)
   );
 
@@ -56,14 +59,12 @@ export async function updateSession(request: NextRequest) {
     redirectUrl.searchParams.set('redirectedFrom', request.nextUrl.pathname);
     return NextResponse.redirect(redirectUrl);
   }
-
-  if (request.nextUrl.pathname === '/login' && user) {
-    // Redirect to dashboard if already logged in
+  //If route is public and user is logged in, redirect to dashboard
+  if (isPublicRoute && user) {
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname = '/dashboard';
     return NextResponse.redirect(redirectUrl);
   }
-  */
 
   return supabaseResponse;
 }
