@@ -4,13 +4,12 @@ import { getSupabaseConfig, isSupabaseConfigValid } from './config';
 import type { Database } from '@/lib/types';
 
 /**
- * Middleware helper for Supabase authentication
- * Refreshes the user's session and sets cookies appropriately
+ * Refreshes Supabase session and manages authentication cookies
+ * Route protection is currently disabled - see commented code below
  */
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
 
-  // Check if Supabase is configured
   if (!isSupabaseConfigValid()) {
     console.error('Supabase not configured in middleware');
     return supabaseResponse;
@@ -35,36 +34,41 @@ export async function updateSession(request: NextRequest) {
     },
   });
 
-  const {data: {user}, error} = await supabase.auth.getUser();
+  const { error } = await supabase.auth.getUser();
 
-  if (error) {
+  // Only log real errors, not missing session (status 400)
+  if (error && error.status !== 400) {
     console.error('Error refreshing session:', error);
   }
 
-  // Protect routes
-  const protectedRoutes = ['/dashboard', '/settings', '/profile', '/questions'];
-  const publicRoutes = ['/','/login', '/register'];
+  /* ROUTE PROTECTION DISABLED
+   * To enable: uncomment code below and update protectedRoutes array
+   * Current setup allows unauthenticated access for simplified dashboard
+   * 
+  /*
+  const protectedRoutes = ['/questions'];
+  const publicRoutes = ['/', '/login', '/register'];
 
   const isProtectedRoute = protectedRoutes.some((route) =>
     request.nextUrl.pathname.startsWith(route)
   );
   const isPublicRoute = publicRoutes.some((route) =>
-    request.nextUrl.pathname.startsWith(route)
+    request.nextUrl.pathname === route
   );
 
   if (isProtectedRoute && !user) {
-    // Redirect to login if accessing protected route without authentication
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname = '/login';
     redirectUrl.searchParams.set('redirectedFrom', request.nextUrl.pathname);
     return NextResponse.redirect(redirectUrl);
   }
-  //If route is public and user is logged in, redirect to dashboard
+
   if (isPublicRoute && user) {
     const redirectUrl = request.nextUrl.clone();
-    redirectUrl.pathname = '/dashboard';
+    redirectUrl.pathname = '/questions';
     return NextResponse.redirect(redirectUrl);
   }
+  */
 
   return supabaseResponse;
 }

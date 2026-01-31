@@ -1,8 +1,3 @@
-/**
- * Centralized Supabase configuration
- * Validates and exports environment variables
- */
-
 export interface SupabaseConfig {
   url: string;
   anonKey: string;
@@ -16,9 +11,8 @@ export function getSupabaseConfig(): SupabaseConfig {
     const errorMessage =
       'Missing Supabase environment variables. Please check your .env.local file and ensure NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY are set.';
     
-    // In production, log to monitoring service
     if (process.env.NODE_ENV === 'production') {
-      // TODO: Log to Sentry/DataDog
+      // TODO: Integrate with error monitoring (Sentry/DataDog)
       console.error(errorMessage);
     }
     
@@ -28,10 +22,7 @@ export function getSupabaseConfig(): SupabaseConfig {
   return { url, anonKey };
 }
 
-/**
- * Validates config without throwing
- * Useful for graceful degradation
- */
+/** Check if Supabase environment variables are configured (non-throwing) */
 export function isSupabaseConfigValid(): boolean {
   return !!(
     process.env.NEXT_PUBLIC_SUPABASE_URL &&

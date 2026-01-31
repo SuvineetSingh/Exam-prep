@@ -16,23 +16,21 @@ export function RegisterForm() {
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setError('');
-        setLoading(true);  // ✅ Set loading before try
+        setLoading(true);
         
         try {
-            // Validate passwords
             if (currentPassword !== confirmPassword) {
                 setError('Passwords do not match. Please try again.');
-                return;  // ✅ No manual setLoading(false) - finally handles it
+                return;
             }
             
-            // Validate password length
             if (currentPassword.length < 8) {
                 setError('Password must be at least 8 characters long.');
-                return;  // ✅ No manual setLoading(false)
+                return;
             }
 
             const supabase = createClient();
-            const { data, error } = await supabase.auth.signUp({
+            const { error } = await supabase.auth.signUp({
                 email: email,
                 password: currentPassword,
                 options: {
@@ -45,30 +43,29 @@ export function RegisterForm() {
             if (error) {
                 setError(error.message);
                 return;
-            } else {
-                // ✅ Better success message
-                alert('Success! Please check your email to confirm your account.');
-                router.push('/login');
             }
+            
+            alert('Success! Please check your email to confirm your account.');
+            router.push('/login');
         } catch (error) {
             setError('An error occurred while registering. Please try again.');
         } finally {
-            setLoading(false);  // ✅ Always runs
+            setLoading(false);
         }
     };
 
     return (
-        <div className="max-w-md mx-auto p-4 flex flex-col items-center justify-center">  {/* ✅ Fixed space */}
+        <div className="max-w-md mx-auto p-4 flex flex-col items-center justify-center">
             <h1 className="text-2xl font-bold mb-4">Register for an account</h1>
             
             <form onSubmit={handleSubmit} className='w-full max-w-md space-y-4'>
                 <div className='form-group space-y-4'>
                     <div>
-                        <label htmlFor='username' className="block mb-1">Username</label>  {/* ✅ Removed extra space */}
+                        <label htmlFor='username' className="block mb-1">Username</label>
                         <input
                             type='text'
                             id='username'
-                            placeholder="Choose a username"  // ✅ Added placeholder
+                            placeholder="Choose a username"
                             value={username}
                             onChange={(e) => setUsername(e.target.value)}
                             required
@@ -82,7 +79,7 @@ export function RegisterForm() {
                         <input
                             type='email'
                             id='email'
-                            placeholder="Enter your email"  // ✅ Added placeholder
+                            placeholder="Enter your email"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             required
@@ -92,11 +89,11 @@ export function RegisterForm() {
                     </div>
                     
                     <div>
-                        <label htmlFor='current_password' className="block mb-1">Password</label>  {/* ✅ Fixed label */}
+                        <label htmlFor='current_password' className="block mb-1">Password</label>
                         <input
                             type='password'
                             id='current_password'
-                            placeholder="At least 8 characters"  // ✅ Added placeholder
+                            placeholder="At least 8 characters"
                             value={currentPassword}
                             onChange={(e) => setCurrentPassword(e.target.value)}
                             required
@@ -106,11 +103,11 @@ export function RegisterForm() {
                     </div>
 
                     <div>
-                        <label htmlFor='confirm_password' className="block mb-1">Confirm Password</label>  {/* ✅ Removed extra space */}
+                        <label htmlFor='confirm_password' className="block mb-1">Confirm Password</label>
                         <input
                             type='password'
                             id='confirm_password'
-                            placeholder="Re-enter your password"  // ✅ Added placeholder
+                            placeholder="Re-enter your password"
                             value={confirmPassword}
                             onChange={(e) => setConfirmPassword(e.target.value)}
                             required
