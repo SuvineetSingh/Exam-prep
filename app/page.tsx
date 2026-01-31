@@ -1,9 +1,11 @@
 import Link from 'next/link';
 import { APP_CONFIG } from '@/lib/utils/constants';
+import { Footer } from '@/components/layout/Footer';
 
 export default function Home() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-24">
+    <div className="flex min-h-screen flex-col">
+    <main className="flex flex-1 flex-col items-center justify-center p-24">
       <div className="z-10 w-full max-w-5xl items-center justify-center">
         <div className="text-center">
           <h1 className="mb-4 text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl">
@@ -32,5 +34,9 @@ export default function Home() {
         </div>
       </div>
     </main>
+    
+    {/* Footer */}
+    <Footer />
+    </div>
   );
 }

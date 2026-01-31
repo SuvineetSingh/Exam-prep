@@ -98,3 +98,34 @@ export interface QuestionFilters {
   topic?: string;
   question_type?: QuestionType;
 }
+
+// Dashboard question with answer status
+export interface DashboardQuestion extends Question {
+  is_answered: boolean;
+  user_answer?: string | null;
+}
+
+// Filter types for dashboard
+export type QuestionStatus = 'all' | 'answered' | 'unanswered';
+
+export interface DashboardFilters {
+  exam_type: ExamType | 'all';
+  difficulty: DifficultyLevel | 'all';
+  topic: string | 'all';
+  status: QuestionStatus;
+}
+
+// User stats for dashboard
+export interface UserStats {
+  total_answered: number;
+  accuracy_rate: number;
+  study_streak: number;
+  today_count: number;
+  this_week_improvement: number;
+}
+
+export interface DailyProgress {
+  date: string;
+  questions_answered: number;
+  correct_count: number;
+}
