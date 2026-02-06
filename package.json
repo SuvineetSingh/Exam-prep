@@ -6,37 +6,39 @@
     "author": "Suvineet Singh",
     "license": "PROPRIETARY",
     "scripts": {
-      "dev": "next dev",
-      "build": "next build",
-      "start": "next start",
-      "lint": "next lint",
-      "type-check": "tsc --noEmit",
-      "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
-      "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md}\""
+        "dev": "next dev",
+        "build": "next build",
+        "start": "next start",
+        "lint": "next lint",
+        "type-check": "tsc --noEmit",
+        "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
+        "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md}\""
     },
-  "dependencies": {
-    "@supabase/ssr": "^0.5.2",
-    "@supabase/supabase-js": "^2.45.4",
-    "@stripe/stripe-js": "^4.8.0",
-    "next": "^16.0.0",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "stripe": "^17.3.1"
-  },
-  "devDependencies": {
-    "@types/node": "^22",
-    "@types/react": "^18",
-    "@types/react-dom": "^18",
-    "autoprefixer": "^10.4.20",
-    "eslint": "^9",
-    "eslint-config-next": "^16.0.0",
-      "postcss": "^8.4.49",
-      "prettier": "^3.4.2",
-      "tailwindcss": "^3.4.15",
-      "typescript": "^5"
+    "dependencies": {
+        "@stripe/stripe-js": "^4.8.0",
+        "@supabase/ssr": "^0.5.2",
+        "@supabase/supabase-js": "^2.45.4",
+        "next": "^16.0.0",
+        "react": "^18.3.1",
+        "react-dom": "^18.3.1",
+        "stripe": "^17.3.1",
+        "zxcvbn": "^4.4.2"
+    },
+    "devDependencies": {
+        "@types/node": "^22",
+        "@types/react": "^18",
+        "@types/react-dom": "^18",
+        "@types/zxcvbn": "^4.4.5",
+        "autoprefixer": "^10.4.20",
+        "eslint": "^9",
+        "eslint-config-next": "^16.0.0",
+        "postcss": "^8.4.49",
+        "prettier": "^3.4.2",
+        "tailwindcss": "^3.4.15",
+        "typescript": "^5"
     },
     "engines": {
-      "node": ">=18.0.0",
-      "npm": ">=9.0.0"
+        "node": ">=18.0.0",
+        "npm": ">=9.0.0"
     }
-  }
+}
