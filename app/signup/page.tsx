@@ -37,7 +37,7 @@ export default function Signup() {
       { label: 'Strong', color: 'bg-green-500', width: '100%' },
     ];
 
-    return strengthLevels[score] ?? strengthLevels[0];
+    return strengthLevels[Math.min(score, strengthLevels.length - 1)]!;
   }, [password]);
 
   // --- Handlers ---
