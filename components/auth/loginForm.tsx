@@ -1,98 +1,136 @@
 'use client';
 
-import { useState } from "react";
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
-import Link from "next/link";
 
 export function LoginForm() {
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [error, setError] = useState('');
-    const [loading, setLoading] = useState(false);
-    const router = useRouter();
-    
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setError('');
-        setLoading(true);
-        
-        try {
-            const supabase = createClient();
-            const { error } = await supabase.auth.signInWithPassword({
-                email, 
-                password
-            });
-            
-            if (error) {
-                setError(error.message);
-                return;
-            } else {
-                router.push('/questions');
-                router.refresh();
-            }
-        } catch (error) {
-            setError('Invalid email or password. Please try again.');
-        } finally {
-            setLoading(false);
-        }
-    };
+  const router = useRouter();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [status, setStatus] = useState<{ type: 'error' | 'success' | null; message: string | null }>({
+    type: null,
+    message: null,
+  });
 
-    return (
-        <div className="max-w-md mx-auto p-4 flex flex-col items-center justify-center">
-            <h1 className="text-2xl font-bold mb-4">Welcome back! Log in to access your content.</h1>
-            
-            <form onSubmit={handleSubmit} className="w-full space-y-4">
-                <div className="form-content space-y-4">
-                    <div className="form-item">
-                        <label htmlFor="email" className="block mb-1">Email:</label>
-                        <input
-                            id="email"
-                            name="email"
-                            type="email"
-                            placeholder="Enter your email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            required
-                            disabled={loading}
-                            className="w-full p-2 border border-gray-300 rounded-md"
-                        />
-                    </div>
-                    
-                    <div className="form-item">
-                        <label htmlFor="password" className="block mb-1">Password:</label>
-                        <input
-                            id="password"
-                            name="password"
-                            type="password"
-                            placeholder="Enter your password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            required
-                            disabled={loading}
-                            className="w-full p-2 border border-gray-300 rounded-md"
-                        />
-                    </div>
-                </div>
+  const handleGoogleLogin = async () => {
+    const supabase = createClient();
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: `${window.location.origin}/auth/callback` },
+    });
+    if (error) setStatus({ type: 'error', message: error.message });
+  };
 
-                {error && (
-                    <div className="text-red-600 text-sm mt-2 p-2 bg-red-50 rounded-md">
-                        {error}
-                    </div>
-                )}
+  const handleEmailLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setStatus({ type: null, message: null });
 
-                <button 
-                    type="submit" 
-                    className="btn-primary w-full mt-4" 
-                    disabled={loading}
-                >
-                    {loading ? 'Logging in...' : 'Log In'}
-                </button>
-            </form>
+    const supabase = createClient();
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
 
-            <p className="mt-4 text-sm">
-                Don't have an account? <Link href="/register" className="text-primary-600 hover:underline">Register</Link>
-            </p>
+    if (error) {
+      setStatus({
+        type: 'error',
+        message: "We couldn't find an account with those details. Give it another shot?",
+      });
+      setIsSubmitting(false);
+    } else {
+      setStatus({ type: 'success', message: 'Login successful! Redirecting...' });
+      setTimeout(() => {
+        router.push('/questions');
+        router.refresh();
+      }, 1200);
+    }
+  };
+
+  const showSuccess = status.type === 'success';
+  const showError = status.type === 'error';
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
+      <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-xl border border-slate-100">
+        <div className="text-center mb-10">
+          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Welcome back</h1>
+          <p className="text-slate-500 mt-2">Log in to your account to continue</p>
         </div>
-    );
+
+        <button
+          type="button"
+          onClick={handleGoogleLogin}
+          className="w-full flex items-center justify-center gap-3 px-4 py-2.5 border border-slate-300 rounded-xl font-medium text-slate-700 hover:bg-slate-50 active:scale-[0.98] transition-all mb-8 shadow-sm"
+        >
+          <img src="https://www.svgrepo.com/show/355037/google.svg" className="h-5 w-5" alt="" />
+          Continue with Google
+        </button>
+
+        <div className="relative mb-8">
+          <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-200"></div></div>
+          <div className="relative flex justify-center text-xs uppercase tracking-widest">
+            <span className="bg-white px-4 text-slate-400 font-medium">or email</span>
+          </div>
+        </div>
+
+        {showError && (
+          <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-400 text-red-700 text-sm rounded-r-md">
+            {status.message}
+          </div>
+        )}
+
+        {showSuccess && (
+          <div className="mb-6 p-4 bg-emerald-50 border-l-4 border-emerald-400 text-emerald-700 text-sm rounded-r-md font-medium">
+            {status.message}
+          </div>
+        )}
+
+        <form onSubmit={handleEmailLogin} className="space-y-5">
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 mb-1 ml-1">Email</label>
+            <input
+              type="email"
+              required
+              placeholder="name@example.com"
+              className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all disabled:opacity-60"
+              onChange={(e) => setEmail(e.target.value)}
+              disabled={showSuccess}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 mb-1 ml-1">Password</label>
+            <input
+              type="password"
+              required
+              placeholder="••••••••"
+              className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all disabled:opacity-60"
+              onChange={(e) => setPassword(e.target.value)}
+              disabled={showSuccess}
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={isSubmitting || showSuccess}
+            className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold shadow-lg shadow-blue-200 transition-all disabled:opacity-50 active:scale-[0.99] flex justify-center items-center"
+          >
+            {isSubmitting ? (
+              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            ) : showSuccess ? (
+              'Redirecting...'
+            ) : (
+              'Sign In'
+            )}
+          </button>
+        </form>
+
+        <p className="mt-8 text-center text-slate-600">
+          New here?{' '}
+          <Link href="/signup" className="text-blue-600 font-bold hover:underline">Create an account</Link>
+        </p>
+      </div>
+    </div>
+  );
 }
