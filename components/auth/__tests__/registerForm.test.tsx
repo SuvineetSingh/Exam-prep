@@ -1,20 +1,19 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { RegisterForm } from '../registerForm';
+import { SignupForm } from '../signupForm';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 
+// Mock modules
 jest.mock('@/lib/supabase/client');
 jest.mock('next/navigation');
 
-describe('RegisterForm', () => {
+describe('SignupForm', () => {
   const mockPush = jest.fn();
   const mockSignUp = jest.fn();
-  const mockAlert = jest.fn();
 
   beforeEach(() => {
     jest.clearAllMocks();
-    global.alert = mockAlert;
     (useRouter as jest.Mock).mockReturnValue({
       push: mockPush,
     });
@@ -23,12 +22,16 @@ describe('RegisterForm', () => {
         signUp: mockSignUp,
       },
     });
+
+    // Mock window.location.origin for Supabase redirects
+    delete (window as any).location;
+    window.location = { ...window.location, origin: 'http://localhost:3000' } as any;
   });
 
   it('renders registration form with all fields', () => {
-    render(<RegisterForm />);
+    render(<SignupForm />);
 
-    expect(screen.getByText(/register for an account/i)).toBeInTheDocument();
+    expect(screen.getByText(/create account/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/username/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/^email$/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/^password$/i)).toBeInTheDocument();
@@ -37,7 +40,7 @@ describe('RegisterForm', () => {
   });
 
   it('renders link to login page', () => {
-    render(<RegisterForm />);
+    render(<SignupForm />);
 
     const loginLink = screen.getByRole('link', { name: /log in/i });
     expect(loginLink).toBeInTheDocument();
@@ -46,29 +49,34 @@ describe('RegisterForm', () => {
 
   it('updates input values when user types', async () => {
     const user = userEvent.setup();
-    render(<RegisterForm />);
+    render(<SignupForm />);
 
-    await user.type(screen.getByLabelText(/username/i), 'testuser');
-    await user.type(screen.getByLabelText(/^email$/i), 'test@example.com');
-    await user.type(screen.getByLabelText(/^password$/i), 'password123');
-    await user.type(screen.getByLabelText(/confirm password/i), 'password123');
+    const usernameInput = screen.getByLabelText(/username/i);
+    const emailInput = screen.getByLabelText(/^email$/i);
+    const passwordInput = screen.getByLabelText(/^password$/i);
+    const confirmInput = screen.getByLabelText(/confirm password/i);
 
-    expect(screen.getByLabelText(/username/i)).toHaveValue('testuser');
-    expect(screen.getByLabelText(/^email$/i)).toHaveValue('test@example.com');
-    expect(screen.getByLabelText(/^password$/i)).toHaveValue('password123');
-    expect(screen.getByLabelText(/confirm password/i)).toHaveValue('password123');
+    await user.type(usernameInput, 'testuser');
+    await user.type(emailInput, 'test@example.com');
+    await user.type(passwordInput, 'StrongPass@123');
+    await user.type(confirmInput, 'StrongPass@123');
+
+    expect(usernameInput).toHaveValue('testuser');
+    expect(emailInput).toHaveValue('test@example.com');
+    expect(passwordInput).toHaveValue('StrongPass@123');
+    expect(confirmInput).toHaveValue('StrongPass@123');
   });
 
   it('validates password match', async () => {
     const user = userEvent.setup();
-    render(<RegisterForm />);
+    render(<SignupForm />);
 
     await user.type(screen.getByLabelText(/username/i), 'testuser');
     await user.type(screen.getByLabelText(/^email$/i), 'test@example.com');
-    await user.type(screen.getByLabelText(/^password$/i), 'password123');
+    await user.type(screen.getByLabelText(/^password$/i), 'StrongPass@123');
     await user.type(screen.getByLabelText(/confirm password/i), 'different');
 
-    fireEvent.click(screen.getByRole('button', { name: /register/i }));
+    await user.click(screen.getByRole('button', { name: /create account/i }));
 
     await waitFor(() => {
       expect(screen.getByText(/passwords do not match/i)).toBeInTheDocument();
@@ -77,67 +85,65 @@ describe('RegisterForm', () => {
     expect(mockSignUp).not.toHaveBeenCalled();
   });
 
-  it('validates minimum password length', async () => {
+  it('validates password complexity (Regex/zxcvbn)', async () => {
     const user = userEvent.setup();
-    render(<RegisterForm />);
+    render(<SignupForm />);
 
     await user.type(screen.getByLabelText(/username/i), 'testuser');
     await user.type(screen.getByLabelText(/^email$/i), 'test@example.com');
-    await user.type(screen.getByLabelText(/^password$/i), 'short');
-    await user.type(screen.getByLabelText(/confirm password/i), 'short');
+    // Using a weak password that fails your component's regex/strength check
+    await user.type(screen.getByLabelText(/^password$/i), '123');
+    await user.type(screen.getByLabelText(/confirm password/i), '123');
 
-    fireEvent.click(screen.getByRole('button', { name: /register/i }));
+    await user.click(screen.getByRole('button', { name: /create account/i }));
 
     await waitFor(() => {
-      expect(screen.getByText(/password must be at least 8 characters/i)).toBeInTheDocument();
+      expect(screen.getByText(/password needs 8\+ characters/i)).toBeInTheDocument();
     });
 
     expect(mockSignUp).not.toHaveBeenCalled();
   });
 
-  it('successfully registers user and redirects to login', async () => {
+  it('successfully registers user and shows success popup', async () => {
     mockSignUp.mockResolvedValue({ error: null });
 
     const user = userEvent.setup();
-    render(<RegisterForm />);
+    render(<SignupForm />);
 
     await user.type(screen.getByLabelText(/username/i), 'testuser');
     await user.type(screen.getByLabelText(/^email$/i), 'test@example.com');
-    await user.type(screen.getByLabelText(/^password$/i), 'password123');
-    await user.type(screen.getByLabelText(/confirm password/i), 'password123');
+    await user.type(screen.getByLabelText(/^password$/i), 'StrongPass@123');
+    await user.type(screen.getByLabelText(/confirm password/i), 'StrongPass@123');
 
-    fireEvent.click(screen.getByRole('button', { name: /register/i }));
+    await user.click(screen.getByRole('button', { name: /create account/i }));
 
     await waitFor(() => {
       expect(mockSignUp).toHaveBeenCalledWith({
         email: 'test@example.com',
-        password: 'password123',
+        password: 'StrongPass@123',
         options: {
-          data: {
-            username: 'testuser',
-          },
+          emailRedirectTo: 'http://localhost:3000/auth/callback',
+          data: { username: 'testuser' },
         },
       });
-      expect(mockAlert).toHaveBeenCalledWith(
-        expect.stringContaining('check your email')
-      );
-      expect(mockPush).toHaveBeenCalledWith('/login');
+      // Check for your custom success modal text instead of window.alert
+      expect(screen.getByText(/verify your email/i)).toBeInTheDocument();
     });
   });
 
-  it('displays error message on failed registration', async () => {
+  it('displays error message on failed registration from Supabase', async () => {
     const errorMessage = 'Email already exists';
     mockSignUp.mockResolvedValue({ error: { message: errorMessage } });
 
     const user = userEvent.setup();
-    render(<RegisterForm />);
+    render(<SignupForm />);
 
     await user.type(screen.getByLabelText(/username/i), 'testuser');
     await user.type(screen.getByLabelText(/^email$/i), 'existing@example.com');
-    await user.type(screen.getByLabelText(/^password$/i), 'password123');
-    await user.type(screen.getByLabelText(/confirm password/i), 'password123');
+    await user.type(screen.getByLabelText(/^password$/i), 'StrongPass@123');
+    await user.type(screen.getByLabelText(/confirm password/i), 'StrongPass@123');
 
-    fireEvent.click(screen.getByRole('button', { name: /register/i }));
+    await user.click(screen.getByRole('button', { name: /create account/i }));
 
     await waitFor(() => {
       expect(screen.getByText(errorMessage)).toBeInTheDocument();
@@ -150,17 +156,17 @@ describe('RegisterForm', () => {
     );
 
     const user = userEvent.setup();
-    render(<RegisterForm />);
+    render(<SignupForm />);
 
     await user.type(screen.getByLabelText(/username/i), 'testuser');
     await user.type(screen.getByLabelText(/^email$/i), 'test@example.com');
-    await user.type(screen.getByLabelText(/^password$/i), 'password123');
-    await user.type(screen.getByLabelText(/confirm password/i), 'password123');
+    await user.type(screen.getByLabelText(/^password$/i), 'StrongPass@123');
+    await user.type(screen.getByLabelText(/confirm password/i), 'StrongPass@123');
 
-    fireEvent.click(screen.getByRole('button', { name: /register/i }));
+    await user.click(screen.getByRole('button', { name: /create account/i }));
 
-    expect(screen.getByText(/registering.../i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /registering.../i })).toBeDisabled();
+    expect(screen.getByText(/creating account\.\.\./i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /creating account\.\.\./i })).toBeDisabled();
   });
 
   it('disables inputs during submission', async () => {
@@ -169,14 +175,14 @@ describe('RegisterForm', () => {
     );
 
     const user = userEvent.setup();
-    render(<RegisterForm />);
+    render(<SignupForm />);
 
     await user.type(screen.getByLabelText(/username/i), 'testuser');
     await user.type(screen.getByLabelText(/^email$/i), 'test@example.com');
-    await user.type(screen.getByLabelText(/^password$/i), 'password123');
-    await user.type(screen.getByLabelText(/confirm password/i), 'password123');
+    await user.type(screen.getByLabelText(/^password$/i), 'StrongPass@123');
+    await user.type(screen.getByLabelText(/confirm password/i), 'StrongPass@123');
 
-    fireEvent.click(screen.getByRole('button', { name: /register/i }));
+    await user.click(screen.getByRole('button', { name: /create account/i }));
 
     expect(screen.getByLabelText(/username/i)).toBeDisabled();
     expect(screen.getByLabelText(/^email$/i)).toBeDisabled();

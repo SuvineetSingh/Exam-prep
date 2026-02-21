@@ -136,8 +136,9 @@ export function SignupForm() {
 
         <form onSubmit={handleEmailSignup} className="space-y-5">
           <div className="space-y-1.5">
-            <label className="text-sm font-semibold text-gray-700 ml-1">Username</label>
+            <label htmlFor="username" className="text-sm font-semibold text-gray-700 ml-1">Username</label>
             <input
+              id="username"
               type="text"
               placeholder="johndoe123"
               value={username}
@@ -148,8 +149,9 @@ export function SignupForm() {
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-sm font-semibold text-gray-700 ml-1">Email Address</label>
+            <label htmlFor="email" className="text-sm font-semibold text-gray-700 ml-1">Email Address</label>
             <input
+              id="email"
               type="email"
               placeholder="name@company.com"
               value={email}
@@ -160,9 +162,10 @@ export function SignupForm() {
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-sm font-semibold text-gray-700 ml-1">Password</label>
+            <label htmlFor="password" className="text-sm font-semibold text-gray-700 ml-1">Password</label>
             <div className="space-y-2">
               <input
+                id="password"
                 type="password"
                 placeholder="••••••••"
                 value={password}
@@ -190,8 +193,9 @@ export function SignupForm() {
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-sm font-semibold text-gray-700 ml-1">Confirm Password</label>
+            <label htmlFor="confirmPassword" className="text-sm font-semibold text-gray-700 ml-1">Confirm Password</label>
             <input
+              id="confirmPassword"
               type="password"
               placeholder="••••••••"
               value={confirmPassword}
@@ -209,17 +213,21 @@ export function SignupForm() {
           </div>
 
           {errorMsg && (
-            <div className="p-3 bg-red-50 border border-red-100 text-red-600 text-sm rounded-lg">
+            <div role="alert" className="p-3 bg-red-50 border border-red-100 text-red-600 text-sm rounded-lg">
               {errorMsg}
             </div>
           )}
 
           <button
+            type="submit"
             disabled={loading}
             className="w-full bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 disabled:opacity-50 flex justify-center items-center gap-2 transition-all shadow-md active:scale-95 mt-2"
           >
             {loading ? (
-              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              <span className="flex items-center gap-2">
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                Registering...
+              </span>
             ) : (
               'Create Account'
             )}
