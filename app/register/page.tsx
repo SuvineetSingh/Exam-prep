@@ -1,9 +1,5 @@
-import { RegisterForm } from '@/components/auth/registerForm';
+import { SignupForm } from '@/components/auth/signupForm';
 
-export default function RegisterPage() {
-    return (
-        <div className="flex min-h-screen items-center justify-center">
-            <RegisterForm />
-        </div>
-    );
+export default function SignupPage() {
+  return <SignupForm />;
 }
