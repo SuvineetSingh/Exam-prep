@@ -13,7 +13,7 @@ function ResultsContent() {
   useEffect(() => {
     const fetchResult = async () => {
       const supabase = createClient();
-      const { data: session, error } = await supabase
+      const { data: session } = await supabase
         .from('exam_sessions')
         .select('*')
         .eq('id', sessionId)

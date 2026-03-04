@@ -7,8 +7,9 @@ import { QuestionFilters } from '@/components/question/QuestionFilters';
 import { QuestionCard } from '@/components/question/QuestionCard';
 import { Pagination } from '@/components/ui/Pagination';
 import { Footer } from '@/components/layout/Footer';
-// Import the consolidated components from your Navigation file
-import { Navbar, QuestionHeader } from '@/components/question/Navigation';
+import { Header } from '@/components/layout/Header';
+import { QuestionHeader } from '@/components/question/Navigation';
+import { getAttemptedQuestionIds } from '@/lib/supabase/queries/userStats';
 
 // --- Types ---
 interface Question {
@@ -17,6 +18,7 @@ interface Question {
   category: string;
   difficulty: string;
   question_text: string;
+  is_attempted?: boolean;
 }
 
 interface FilterOptions {
@@ -68,13 +70,13 @@ export default function QuestionsDashboard() {
     } catch (err: any) {
       console.error("Error fetching filters:", err.message);
     }
-  }, [supabase]);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     const initAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return router.push('/login');
-      
+
       setUser(session.user);
       setAuthLoading(false);
       fetchFilters();
@@ -91,7 +93,7 @@ export default function QuestionsDashboard() {
     });
 
     return () => subscription.unsubscribe();
-  }, [router, fetchFilters, supabase]);
+  }, [router, fetchFilters]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchQuestions = useCallback(async () => {
     if (authLoading) return;
@@ -99,6 +101,9 @@ export default function QuestionsDashboard() {
     setErrorMsg(null);
 
     try {
+      // Fetch attempted question IDs
+      const attemptedIds = await getAttemptedQuestionIds();
+
       let query = supabase.from('questions').select('*', { count: 'exact' });
 
       if (examType !== 'all') query = query.eq('exam_type', examType);
@@ -111,23 +116,25 @@ export default function QuestionsDashboard() {
         .range(from, from + ITEMS_PER_PAGE - 1);
 
       if (error) throw error;
-      setQuestions((data as Question[]) || []);
+
+      // Mark questions as attempted if they exist in attemptedIds
+      const questionsWithStatus = (data || []).map(q => ({
+        ...q,
+        is_attempted: attemptedIds.has(q.id)
+      }));
+
+      setQuestions(questionsWithStatus as Question[]);
       setTotalCount(count || 0);
     } catch (err: any) {
       setErrorMsg(err.message || "Failed to fetch questions.");
     } finally {
       setLoading(false);
     }
-  }, [examType, category, difficulty, currentPage, authLoading, supabase]);
+  }, [examType, category, difficulty, currentPage, authLoading]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     fetchQuestions();
   }, [fetchQuestions]);
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    router.push('/login');
-  };
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -146,10 +153,9 @@ export default function QuestionsDashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900 flex flex-col">
-      {/* Navbar Component from Navigation.tsx */}
-      <Navbar user={user} onLogout={handleLogout} />
+      <Header user={user} />
 
-      <main className="flex-1 max-w-5xl mx-auto w-full p-6">
+      <main className="flex-1 max-w-5xl mx-auto w-full p-6 pt-24">
         {/* QuestionHeader Component from Navigation.tsx */}
         <QuestionHeader />
 

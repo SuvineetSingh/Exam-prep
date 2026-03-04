@@ -46,7 +46,7 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header user={{ email: user.email || '', username: user.user_metadata?.username }} />
+      <Header user={user} />
       
       <main className="max-w-6xl mx-auto px-4 py-8 pt-24">
         <div className="mb-8">

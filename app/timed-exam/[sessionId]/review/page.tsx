@@ -49,14 +49,15 @@ export default function ReviewPage({ params }: { params: Promise<{ sessionId: st
         });
         
         const formatted = answersData.map((item: any) => {
-          // Normalize the correct answer: handles "C", "(C)", or "c"
-          const rawCorrect = item.questions?.correct_text || item.questions?.correct_option || "";
-          const sanitizedCorrect = rawCorrect.replace(/[()]/g, "").trim().toUpperCase();
+          const question = item.questions || {};
+          const correctText = String(question.correct_answer || "").trim();
+          const rawUserChoice = (item.user_choice || 'UNATTEMPTED').trim();
+          const userKey = rawUserChoice === 'UNATTEMPTED' ? 'unattempted' : rawUserChoice.toLowerCase();
 
           return {
-            ...item.questions,
-            userAnswer: (item.user_choice || 'UNATTEMPTED').replace(/[()]/g, "").trim().toUpperCase(),
-            correct_option: sanitizedCorrect
+            ...question,
+            userAnswer: userKey,
+            correct_answer: correctText
           };
         });
         

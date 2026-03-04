@@ -3,17 +3,18 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { ProfileModal } from '@/components/ui/ProfileModal';
+import type { User } from '@supabase/supabase-js';
 
 interface HeaderProps {
-  user: {
-    email: string;
-    username?: string;
-    avatar_url?: string;
-  };
+  user: User;
 }
 
 export function Header({ user }: HeaderProps) {
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+
+  const email = user.email || '';
+  const username = user.user_metadata?.username || user.user_metadata?.full_name;
+  const initial = username?.[0]?.toUpperCase() || email[0]?.toUpperCase() || 'U';
 
   return (
     <>
@@ -45,6 +46,28 @@ export function Header({ user }: HeaderProps) {
               </span>
             </Link>
 
+            {/* Navigation Links */}
+            <nav className="hidden sm:flex items-center space-x-1">
+              <Link
+                href="/dashboard"
+                className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+              >
+                Dashboard
+              </Link>
+              <Link
+                href="/questions"
+                className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+              >
+                Questions
+              </Link>
+              <Link
+                href="/lobby"
+                className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+              >
+                Lobby
+              </Link>
+            </nav>
+
             {/* Profile Icon */}
             <button
               onClick={() => setIsProfileModalOpen(true)}
@@ -52,7 +75,7 @@ export function Header({ user }: HeaderProps) {
               aria-label="Open profile menu"
             >
               <div className="w-10 h-10 bg-primary-600 rounded-full flex items-center justify-center text-white font-semibold">
-                {user.username?.[0]?.toUpperCase() || user.email?.[0]?.toUpperCase() || 'U'}
+                {initial}
               </div>
             </button>
           </div>
@@ -63,7 +86,7 @@ export function Header({ user }: HeaderProps) {
       <ProfileModal
         isOpen={isProfileModalOpen}
         onClose={() => setIsProfileModalOpen(false)}
-        user={user}
+        user={{ email, username }}
       />
     </>
   );

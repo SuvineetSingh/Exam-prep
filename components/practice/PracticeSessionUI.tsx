@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
 export interface PracticeSessionUIProps {
@@ -28,16 +27,16 @@ export function PracticeSessionUI({
   const router = useRouter();
   const [showExitPopup, setShowExitPopup] = useState(false);
 
-  const rawCorrectValue = String(question.correct_answer || question.correct_option || "");
-  const correctAnswerKey = rawCorrectValue.trim().toLowerCase();
-  const isCorrect = selectedOption?.toLowerCase() === correctAnswerKey;
+  const optionsArray: string[] = question.options || [];
+  const correctAnswerText = String(question.correct_answer || "").trim();
+  const correctIndex = optionsArray.findIndex(opt => opt.trim() === correctAnswerText);
+  const correctKey = correctIndex >= 0 ? String.fromCharCode(97 + correctIndex) : ""; // 'a', 'b', 'c', 'd'
+  const isCorrect = selectedOption === correctKey;
 
-  const options = [
-    { key: 'a', text: question.option_a },
-    { key: 'b', text: question.option_b },
-    { key: 'c', text: question.option_c },
-    { key: 'd', text: question.option_d },
-  ];
+  const options = optionsArray.map((text, idx) => ({
+    key: String.fromCharCode(97 + idx),
+    text,
+  }));
 
   return (
     <div className="min-h-screen bg-slate-50 p-4 md:p-8 relative">
@@ -100,7 +99,7 @@ export function PracticeSessionUI({
             {options.map((opt) => {
               let containerStyle = "border-slate-200 hover:border-blue-300";
               if (isSubmitted) {
-                if (opt.key === correctAnswerKey) containerStyle = "border-emerald-500 bg-emerald-50 ring-1 ring-emerald-500";
+                if (opt.key === correctKey) containerStyle = "border-emerald-500 bg-emerald-50 ring-1 ring-emerald-500";
                 else if (selectedOption === opt.key) containerStyle = "border-red-500 bg-red-50 ring-1 ring-red-500";
                 else containerStyle = "opacity-50 border-slate-100";
               } else if (selectedOption === opt.key) {

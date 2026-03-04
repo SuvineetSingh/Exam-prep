@@ -1,5 +1,5 @@
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
-import QuestionsDashboard from '../page';
+import QuestionsDashboard from '@/app/questions/page';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 

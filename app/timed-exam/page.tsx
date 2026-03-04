@@ -33,7 +33,7 @@ export default function ExamSetupPage() {
     } finally {
       setFetchingFilters(false);
     }
-  }, [supabase]);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     fetchExamTypes();

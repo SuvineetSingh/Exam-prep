@@ -20,7 +20,7 @@ export default function Home() {
               Log in
             </Link>
             <Link
-              href="/signup"
+              href="/register"
               className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 transition-all"
             >
               Sign up
@@ -46,7 +46,7 @@ export default function Home() {
               </p>
               <div className="mt-10 flex items-center justify-center gap-x-6">
                 <Link
-                  href="/signup"
+                  href="/register"
                   className="rounded-md bg-blue-600 px-6 py-3 text-lg font-semibold text-white shadow-lg hover:bg-blue-500 hover:-translate-y-0.5 transition-all"
                 >
                   Start Practicing Now
