@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/lobby/bots",
+      "schedule": "*/5 * * * *"
+    }
+  ]
+}

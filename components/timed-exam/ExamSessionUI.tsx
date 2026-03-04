@@ -1,14 +1,9 @@
 'use client';
 
-import React from 'react';
-
 interface Question {
   id: string;
   question_text: string;
-  option_a: string;
-  option_b: string;
-  option_c: string;
-  option_d: string;
+  options: string[];
 }
 
 interface ExamSessionUIProps {
@@ -158,16 +153,19 @@ export function ExamSessionUI({
           <div className="bg-white rounded-[2.5rem] shadow-xl border border-gray-100 p-8 md:p-10 mb-6">
             <p className="text-xl font-bold text-gray-800 mb-8 leading-relaxed">{currentQuestion.question_text}</p>
             <div className="space-y-3">
-              {['a', 'b', 'c', 'd'].map((opt) => (
-                <button
-                  key={opt}
-                  onClick={() => setUserAnswers({ ...userAnswers, [currentQuestion.id]: opt.toUpperCase() })}
-                  className={`w-full text-left p-5 rounded-2xl border-2 transition-all font-bold flex items-center gap-4 ${userAnswers[currentQuestion.id] === opt.toUpperCase() ? 'border-blue-600 bg-blue-50 text-blue-700 ring-4 ring-blue-50' : 'border-gray-50 bg-gray-50 hover:border-gray-200 text-gray-600'}`}
-                >
-                   <span className={`w-10 h-10 rounded-xl flex items-center justify-center border-2 font-black ${userAnswers[currentQuestion.id] === opt.toUpperCase() ? 'border-blue-600 bg-blue-600 text-white' : 'border-gray-200 bg-white'}`}>{opt.toUpperCase()}</span>
-                   {currentQuestion[`option_${opt}` as keyof Question]}
-                </button>
-              ))}
+              {(currentQuestion.options || []).map((optionText, idx) => {
+                const label = String.fromCharCode(65 + idx);
+                return (
+                  <button
+                    key={idx}
+                    onClick={() => setUserAnswers({ ...userAnswers, [currentQuestion.id]: label })}
+                    className={`w-full text-left p-5 rounded-2xl border-2 transition-all font-bold flex items-center gap-4 ${userAnswers[currentQuestion.id] === label ? 'border-blue-600 bg-blue-50 text-blue-700 ring-4 ring-blue-50' : 'border-gray-50 bg-gray-50 hover:border-gray-200 text-gray-600'}`}
+                  >
+                    <span className={`w-10 h-10 rounded-xl flex items-center justify-center border-2 font-black ${userAnswers[currentQuestion.id] === label ? 'border-blue-600 bg-blue-600 text-white' : 'border-gray-200 bg-white'}`}>{label}</span>
+                    {optionText}
+                  </button>
+                );
+              })}
             </div>
           </div>
           )}

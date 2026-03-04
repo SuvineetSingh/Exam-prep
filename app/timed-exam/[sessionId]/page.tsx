@@ -41,7 +41,7 @@ export default function ExamPage({ params }: { params: Promise<{ sessionId: stri
       }
     };
     if (examType) fetchQuestions();
-  }, [examType, questionCount, supabase]);
+  }, [examType, questionCount]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSubmit = useCallback(async () => {
     setIsSubmitting(true);
@@ -56,7 +56,11 @@ export default function ExamPage({ params }: { params: Promise<{ sessionId: stri
       let correctCount = 0;
 
       const answerRows = questions.map(q => {
-        const isCorrect = userAnswers[q.id] === String(q.correct_option || q.correct_answer).toUpperCase();
+        const opts: string[] = q.options || [];
+        const correctText = String(q.correct_answer || "").trim();
+        const correctIdx = opts.findIndex((o: string) => o.trim() === correctText);
+        const correctLabel = correctIdx >= 0 ? String.fromCharCode(65 + correctIdx) : "";
+        const isCorrect = userAnswers[q.id] === correctLabel;
         if (isCorrect) correctCount++;
         return {
           session_id: sessionId,
@@ -94,10 +98,10 @@ export default function ExamPage({ params }: { params: Promise<{ sessionId: stri
       alert(err.message);
       setIsSubmitting(false);
     }
-  }, [sessionId, examType, questions, userAnswers, timeLeft, questionCount, router, supabase]);
+  }, [sessionId, examType, questions, userAnswers, timeLeft, questionCount, router]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    if (loading || timeLeft <= 0) return;
+    if (loading) return;
     const timer = setInterval(() => {
       setTimeLeft(prev => {
         if (prev <= 1) { clearInterval(timer); handleSubmit(); return 0; }
@@ -105,7 +109,7 @@ export default function ExamPage({ params }: { params: Promise<{ sessionId: stri
       });
     }, 1000);
     return () => clearInterval(timer);
-  }, [loading, timeLeft, handleSubmit]);
+  }, [loading, handleSubmit]);
 
   const formatTime = (s: number) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`;
 

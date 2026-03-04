@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 
 interface AnswerReviewUIProps {
@@ -51,12 +51,13 @@ export function AnswerReviewUI({ questions, summary }: AnswerReviewUIProps) {
         {/* --- QUESTIONS LIST --- */}
         <div className="space-y-4">
           {questions.map((q, idx) => {
-            // LOGIC FROM PRACTICE MODE
-            const rawCorrectValue = String(q.correct_answer || q.correct_option || "");
-            const correctAnswerKey = rawCorrectValue.trim().toLowerCase();
+            const optionsArray: string[] = q.options || [];
+            const correctAnswerText = String(q.correct_answer || "").trim();
+            const correctIndex = optionsArray.findIndex((opt: string) => opt.trim() === correctAnswerText);
+            const correctKey = correctIndex >= 0 ? String.fromCharCode(97 + correctIndex) : "";
             const selectedOption = (q.userAnswer || "").trim().toLowerCase();
-            
-            const isCorrect = selectedOption === correctAnswerKey;
+
+            const isCorrect = selectedOption === correctKey;
             const isUnattempted = selectedOption === 'unattempted' || selectedOption === '';
             
             // Show explanation if not correct
@@ -91,11 +92,11 @@ export function AnswerReviewUI({ questions, summary }: AnswerReviewUIProps) {
                     <p className="text-xl font-bold text-slate-800 mb-8 leading-relaxed">{q.question_text}</p>
                     
                     <div className="space-y-3">
-                      {['a', 'b', 'c', 'd'].map((l) => {
-                        const optionKey = l.toLowerCase();
-                        const isThisCorrect = optionKey === correctAnswerKey;
+                      {optionsArray.map((optionText: string, optIdx: number) => {
+                        const optionKey = String.fromCharCode(97 + optIdx);
+                        const isThisCorrect = optionKey === correctKey;
                         const isThisUserSelection = selectedOption === optionKey;
-                        
+
                         let containerStyle = "border-slate-100 bg-slate-50 text-slate-400";
                         if (isThisCorrect) {
                           containerStyle = "border-emerald-500 bg-emerald-50 ring-1 ring-emerald-500 text-emerald-700";
@@ -104,15 +105,15 @@ export function AnswerReviewUI({ questions, summary }: AnswerReviewUIProps) {
                         }
 
                         return (
-                          <div key={l} className={`p-5 rounded-2xl border-2 flex items-center gap-5 transition-all ${containerStyle}`}>
+                          <div key={optIdx} className={`p-5 rounded-2xl border-2 flex items-center gap-5 transition-all ${containerStyle}`}>
                             <span className={`w-8 h-8 rounded-lg flex items-center justify-center font-black text-sm ${
-                              isThisCorrect ? 'bg-emerald-500 text-white' : 
-                              (isThisUserSelection && !isCorrect) ? 'bg-rose-500 text-white' : 
+                              isThisCorrect ? 'bg-emerald-500 text-white' :
+                              (isThisUserSelection && !isCorrect) ? 'bg-rose-500 text-white' :
                               'bg-white border border-slate-200 text-slate-400'
                             }`}>
-                              {l.toUpperCase()}
+                              {optionKey.toUpperCase()}
                             </span>
-                            <span className="font-bold text-lg">{q[`option_${l}`]}</span>
+                            <span className="font-bold text-lg">{optionText}</span>
                           </div>
                         );
                       })}

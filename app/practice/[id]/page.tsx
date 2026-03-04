@@ -62,7 +62,7 @@ export default function SingleQuestionPractice() {
       });
     }
     setLoading(false);
-  }, [id, exam, cat, supabase]);
+  }, [id, exam, cat]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     fetchQuestionAndBoundaries();

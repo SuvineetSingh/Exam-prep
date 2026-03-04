@@ -1,7 +1,5 @@
 'use client';
 
-import Link from 'next/link';
-
 interface ExamSetupFormProps {
   examTypes: string[];
   config: { examType: string; questionCount: number };

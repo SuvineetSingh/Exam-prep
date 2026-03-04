@@ -3,9 +3,13 @@ import { Header } from '../Header';
 
 describe('Header', () => {
   const mockUser = {
+    id: '123',
     email: 'test@example.com',
-    username: 'testuser',
-  };
+    user_metadata: { username: 'testuser' },
+    app_metadata: {},
+    aud: 'authenticated',
+    created_at: '',
+  } as any;
 
   it('renders the header with logo and title', () => {
     render(<Header user={mockUser} />);
@@ -29,8 +33,13 @@ describe('Header', () => {
 
   it('renders profile button with email initial when no username', () => {
     const userWithoutUsername = {
+      id: '456',
       email: 'user@example.com',
-    };
+      user_metadata: {},
+      app_metadata: {},
+      aud: 'authenticated',
+      created_at: '',
+    } as any;
     render(<Header user={userWithoutUsername} />);
 
     expect(screen.getByText('U')).toBeInTheDocument(); // First letter of "user@example.com"

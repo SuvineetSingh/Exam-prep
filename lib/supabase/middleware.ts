@@ -5,7 +5,7 @@ import type { Database } from '@/lib/types';
 
 /**
  * Refreshes Supabase session and manages authentication cookies
- * Route protection is currently disabled - see commented code below
+ * Redirects unauthenticated users away from protected routes
  */
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
@@ -34,19 +34,14 @@ export async function updateSession(request: NextRequest) {
     },
   });
 
-  const { error } = await supabase.auth.getUser();
+  const { data: { user }, error } = await supabase.auth.getUser();
 
   // Only log real errors, not missing session (status 400)
   if (error && error.status !== 400) {
     console.error('Error refreshing session:', error);
   }
 
-  /* ROUTE PROTECTION DISABLED
-   * To enable: uncomment code below and update protectedRoutes array
-   * Current setup allows unauthenticated access for simplified dashboard
-   * 
-  /*
-  const protectedRoutes = ['/questions'];
+  const protectedRoutes = ['/questions', '/practice', '/timed-exam', '/dashboard'];
   const publicRoutes = ['/', '/login', '/register'];
 
   const isProtectedRoute = protectedRoutes.some((route) =>
@@ -65,10 +60,9 @@ export async function updateSession(request: NextRequest) {
 
   if (isPublicRoute && user) {
     const redirectUrl = request.nextUrl.clone();
-    redirectUrl.pathname = '/questions';
+    redirectUrl.pathname = '/dashboard';
     return NextResponse.redirect(redirectUrl);
   }
-  */
 
   return supabaseResponse;
 }

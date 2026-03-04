@@ -39,7 +39,7 @@ export default function PracticeSetup() {
         categories: uniqueCats as string[]
       });
     }
-  }, [supabase]);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     fetchDynamicFilters();
