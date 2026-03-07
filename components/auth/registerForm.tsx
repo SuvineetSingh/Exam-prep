@@ -12,7 +12,7 @@ type StrengthLevel = {
   width: string;
 };
 
-export function SignupForm() {
+export function RegisterForm() {
   const router = useRouter();
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');

@@ -14,21 +14,23 @@ export default function ReviewPage({ params }: { params: Promise<{ sessionId: st
     const fetchFullReview = async () => {
       const supabase = createClient();
       
+      // 1. Fetch Session Summary
       const { data: session, error: sErr } = await supabase
         .from('exam_sessions')
         .select('*')
         .eq('id', sessionId)
         .single();
 
+      // 2. Fetch Answers from the correct table 'user_answers' with correct FK 'exam_session_id'
       const { data: answersData, error: aErr } = await supabase
-        .from('exam_answers')
+        .from('user_answers')
         .select(`
-          user_choice,
+          selected_answer,
           is_correct,
           question_id,
           questions (*)
         `)
-        .eq('session_id', sessionId);
+        .eq('exam_session_id', sessionId);
 
       if (sErr || aErr) {
         console.error("Supabase Error:", aErr || sErr);
@@ -49,13 +51,14 @@ export default function ReviewPage({ params }: { params: Promise<{ sessionId: st
         });
         
         const formatted = answersData.map((item: any) => {
-          // Normalize the correct answer: handles "C", "(C)", or "c"
-          const rawCorrect = item.questions?.correct_text || item.questions?.correct_option || "";
+          // Normalize the correct answer from the joined questions table
+          const rawCorrect = item.questions?.correct_option || item.questions?.correct_answer || "";
           const sanitizedCorrect = rawCorrect.replace(/[()]/g, "").trim().toUpperCase();
 
           return {
             ...item.questions,
-            userAnswer: (item.user_choice || 'UNATTEMPTED').replace(/[()]/g, "").trim().toUpperCase(),
+            // Map 'selected_answer' from schema to 'userAnswer' expected by UI
+            userAnswer: (item.selected_answer || 'UNATTEMPTED').replace(/[()]/g, "").trim().toUpperCase(),
             correct_option: sanitizedCorrect
           };
         });

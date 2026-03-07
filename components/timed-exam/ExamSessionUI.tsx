@@ -27,8 +27,11 @@ interface ExamSessionUIProps {
     setShowSummary: (show: boolean) => void;
     showConfirm: boolean;
     setShowConfirm: (show: boolean) => void;
+    showExit: boolean;
+    setShowExit: (show: boolean) => void;
   };
   onSubmit: () => void;
+  onExit: () => void;
 }
 
 export function ExamSessionUI({
@@ -43,17 +46,36 @@ export function ExamSessionUI({
   setIsSidebarOpen,
   isSubmitting,
   modals,
-  onSubmit
+  onSubmit,
+  onExit
 }: ExamSessionUIProps) {
   const currentQuestion = questions[currentIndex];
-  
-  // --- Restored Calculations ---
   const answeredCount = Object.keys(userAnswers).length;
   const unattemptedCount = questions.length - answeredCount;
 
   return (
-    <div className="min-h-screen bg-gray-50 flex overflow-hidden relative">
-      {/* 1st Popup: Summary (Uses restored counts) */}
+    <div 
+      className="min-h-screen bg-gray-50 flex overflow-hidden relative select-none"
+      onContextMenu={(e) => e.preventDefault()}
+      onCopy={(e) => e.preventDefault()}
+    >
+      {/* Exit Confirm Modal */}
+      {modals.showExit && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl border-2 border-red-50">
+            <h3 className="text-xl font-black text-gray-900 mb-2 text-center">Exit Exam?</h3>
+            <p className="text-gray-500 text-center mb-8 font-medium">Are you sure you want to exit? Your progress will not be saved.</p>
+            <div className="flex gap-3">
+              <button onClick={() => modals.setShowExit(false)} className="flex-1 py-3 bg-gray-100 text-gray-600 rounded-xl font-bold hover:bg-gray-200 transition-colors">Cancel</button>
+              <button onClick={onExit} className="flex-1 py-3 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 transition-colors">
+                Yes, Exit
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 1st Popup: Summary */}
       {modals.showSummary && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           <div className="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl">
@@ -92,7 +114,17 @@ export function ExamSessionUI({
         </div>
       )}
 
-      {/* Question Map Sidebar */}
+      {/* Exit Button in Corner */}
+      <button 
+        onClick={() => modals.setShowExit(true)}
+        className="fixed top-6 right-6 z-50 p-2 px-4 bg-white/80 hover:bg-red-50 text-red-600 rounded-xl font-bold text-sm shadow-sm border border-red-100 transition-all flex items-center gap-2"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+        </svg>
+        Cancel Exam
+      </button>
+
       {!isSidebarOpen && (
         <button onClick={() => setIsSidebarOpen(true)} className="fixed top-6 left-6 z-50 p-3 bg-white shadow-xl rounded-xl text-gray-600">
           <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
@@ -119,7 +151,6 @@ export function ExamSessionUI({
             ))}
           </div>
 
-          {/* --- Restored Legend Section --- */}
           <div className="mt-8 space-y-2 border-t border-gray-50 pt-6">
             <div className="flex items-center gap-2 text-[10px] font-bold uppercase text-gray-400">
               <div className="w-3 h-3 rounded bg-blue-600"></div> Current
@@ -140,9 +171,8 @@ export function ExamSessionUI({
         </div>
       </aside>
 
-      {/* Main Exam Content */}
-      <main className="flex-1 overflow-y-auto bg-gray-50 relative">
-        <div className="max-w-3xl mx-auto p-4 md:p-8">
+      <main className="flex-1 overflow-y-auto bg-gray-50 flex items-center justify-center p-4 md:p-8">
+        <div className="w-full max-w-3xl">
           <div className="flex justify-between items-center mb-6 bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
             <div className={!isSidebarOpen ? 'pl-14' : ''}>
               <span className="text-gray-400 text-xs font-bold uppercase block tracking-tighter">Exam Session</span>
