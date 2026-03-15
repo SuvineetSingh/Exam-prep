@@ -1,5 +1,4 @@
 'use client';
-
 import React from 'react';
 
 interface Question {
@@ -61,7 +60,7 @@ export function ExamSessionUI({
     >
       {/* Exit Confirm Modal */}
       {modals.showExit && (
-        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <div className="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl border-2 border-red-50">
             <h3 className="text-xl font-black text-gray-900 mb-2 text-center">Exit Exam?</h3>
             <p className="text-gray-500 text-center mb-8 font-medium">Are you sure you want to exit? Your progress will not be saved.</p>
@@ -77,7 +76,7 @@ export function ExamSessionUI({
 
       {/* 1st Popup: Summary */}
       {modals.showSummary && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-[210] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           <div className="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl">
             <h3 className="text-xl font-black text-gray-900 mb-4">Exam Summary</h3>
             <div className="space-y-3 mb-8">
@@ -100,7 +99,7 @@ export function ExamSessionUI({
 
       {/* 2nd Popup: Confirm */}
       {modals.showConfirm && (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-[220] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <div className="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl border-2 border-blue-100">
             <h3 className="text-xl font-black text-gray-900 mb-2 text-center">Ready to Submit?</h3>
             <p className="text-gray-500 text-center mb-8 font-medium">This action cannot be undone.</p>
@@ -114,7 +113,7 @@ export function ExamSessionUI({
         </div>
       )}
 
-      {/* Exit Button in Corner */}
+      {/* Cancel Button - Hidden on mobile, handled by header flow later if needed, or kept fixed */}
       <button 
         onClick={() => modals.setShowExit(true)}
         className="fixed top-6 right-6 z-50 p-2 px-4 bg-white/80 hover:bg-red-50 text-red-600 rounded-xl font-bold text-sm shadow-sm border border-red-100 transition-all flex items-center gap-2"
@@ -122,7 +121,7 @@ export function ExamSessionUI({
         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
         </svg>
-        Cancel Exam
+        Cancel
       </button>
 
       {!isSidebarOpen && (
@@ -131,7 +130,17 @@ export function ExamSessionUI({
         </button>
       )}
 
-      <aside className={`bg-white border-r border-gray-100 transition-all duration-300 flex flex-col ${isSidebarOpen ? 'w-64 translate-x-0' : 'w-0 -translate-x-full'}`}>
+      {/* MOBILE OVERLAY BACKGROUND */}
+      {isSidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-slate-900/40 z-[140] md:hidden backdrop-blur-sm" 
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+
+      {/* SIDEBAR - TRANSFORMED TO DRAWER ON MOBILE */}
+      <aside className={`fixed md:relative inset-y-0 left-0 bg-white border-r border-gray-100 transition-all duration-300 flex flex-col flex-shrink-0 z-[150] md:z-30
+        ${isSidebarOpen ? 'w-64 translate-x-0' : 'w-0 -translate-x-full md:w-0'}`}>
         <div className="p-6 overflow-y-auto flex-1 min-w-[16rem]">
           <div className="flex justify-between items-center mb-6">
             <h3 className="text-xs font-black uppercase text-gray-400 tracking-widest">Question Map</h3>
@@ -143,7 +152,10 @@ export function ExamSessionUI({
             {questions.map((q, idx) => (
               <button
                 key={q.id}
-                onClick={() => setCurrentIndex(idx)}
+                onClick={() => {
+                  setCurrentIndex(idx);
+                  if (window.innerWidth < 768) setIsSidebarOpen(false);
+                }}
                 className={`h-10 rounded-lg font-bold text-sm border-2 transition-all ${currentIndex === idx ? 'border-blue-600 bg-blue-600 text-white shadow-lg' : !!userAnswers[q.id] ? 'border-emerald-100 bg-emerald-50 text-emerald-600' : 'border-gray-50 bg-gray-50 text-gray-400'}`}
               >
                 {idx + 1}
@@ -171,43 +183,43 @@ export function ExamSessionUI({
         </div>
       </aside>
 
-      <main className="flex-1 overflow-y-auto bg-gray-50 flex items-center justify-center p-4 md:p-8">
-        <div className="w-full max-w-3xl">
-          <div className="flex justify-between items-center mb-6 bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+      <main className="flex-1 overflow-y-auto bg-gray-50 flex flex-col items-center p-4 md:p-8">
+        <div className="w-full max-w-3xl flex-1 flex flex-col justify-center">
+          <div className="flex justify-between items-center mb-6 bg-white p-4 rounded-2xl shadow-sm border border-gray-100 w-full">
             <div className={!isSidebarOpen ? 'pl-14' : ''}>
-              <span className="text-gray-400 text-xs font-bold uppercase block tracking-tighter">Exam Session</span>
-              <span className="text-lg font-black text-gray-900">Q{currentIndex + 1} / {questions.length}</span>
+              <span className="text-gray-400 text-[10px] font-bold uppercase block tracking-tighter">Exam Session</span>
+              <span className="text-base md:text-lg font-black text-gray-900">Q{currentIndex + 1} / {questions.length}</span>
             </div>
-            <div className={`text-right p-2 px-6 rounded-xl border-2 transition-colors ${timeLeft < 60 ? 'bg-red-50 text-red-600 border-red-100' : 'bg-gray-50 text-blue-600 border-gray-100'}`}>
-              <span className="text-[10px] font-bold uppercase block leading-none mb-1">Time Remaining</span>
-              <span className="text-2xl font-black tabular-nums">{formatTime(timeLeft)}</span>
+            <div className={`text-right p-2 px-4 md:px-6 rounded-xl border-2 transition-colors ${timeLeft < 60 ? 'bg-red-50 text-red-600 border-red-100' : 'bg-gray-50 text-blue-600 border-gray-100'}`}>
+              <span className="text-[10px] font-bold uppercase block leading-none mb-1">Timer</span>
+              <span className="text-xl md:text-2xl font-black tabular-nums">{formatTime(timeLeft)}</span>
             </div>
           </div>
 
           {currentQuestion && (
-          <div className="bg-white rounded-[2.5rem] shadow-xl border border-gray-100 p-8 md:p-10 mb-6">
-            <p className="text-xl font-bold text-gray-800 mb-8 leading-relaxed">{currentQuestion.question_text}</p>
+          <div className="bg-white rounded-[2rem] md:rounded-[2.5rem] shadow-xl border border-gray-100 p-6 md:p-10 mb-6 w-full">
+            <p className="text-lg md:text-xl font-bold text-gray-800 mb-8 leading-relaxed">{currentQuestion.question_text}</p>
             <div className="space-y-3">
               {['a', 'b', 'c', 'd'].map((opt) => (
                 <button
                   key={opt}
                   onClick={() => setUserAnswers({ ...userAnswers, [currentQuestion.id]: opt.toUpperCase() })}
-                  className={`w-full text-left p-5 rounded-2xl border-2 transition-all font-bold flex items-center gap-4 ${userAnswers[currentQuestion.id] === opt.toUpperCase() ? 'border-blue-600 bg-blue-50 text-blue-700 ring-4 ring-blue-50' : 'border-gray-50 bg-gray-50 hover:border-gray-200 text-gray-600'}`}
+                  className={`w-full text-left p-4 md:p-5 rounded-2xl border-2 transition-all font-bold flex items-center gap-4 ${userAnswers[currentQuestion.id] === opt.toUpperCase() ? 'border-blue-600 bg-blue-50 text-blue-700 ring-4 ring-blue-50' : 'border-gray-50 bg-gray-50 hover:border-gray-200 text-gray-600'}`}
                 >
-                   <span className={`w-10 h-10 rounded-xl flex items-center justify-center border-2 font-black ${userAnswers[currentQuestion.id] === opt.toUpperCase() ? 'border-blue-600 bg-blue-600 text-white' : 'border-gray-200 bg-white'}`}>{opt.toUpperCase()}</span>
-                   {currentQuestion[`option_${opt}` as keyof Question]}
+                   <span className={`w-8 h-8 md:w-10 md:h-10 shrink-0 rounded-xl flex items-center justify-center border-2 font-black ${userAnswers[currentQuestion.id] === opt.toUpperCase() ? 'border-blue-600 bg-blue-600 text-white' : 'border-gray-200 bg-white'}`}>{opt.toUpperCase()}</span>
+                   <span className="text-sm md:text-base">{currentQuestion[`option_${opt}` as keyof Question]}</span>
                 </button>
               ))}
             </div>
           </div>
           )}
 
-          <div className="flex justify-between items-center px-2">
-            <button disabled={currentIndex === 0} onClick={() => setCurrentIndex(currentIndex - 1)} className="px-8 py-3 bg-slate-200 text-slate-700 rounded-xl font-bold hover:bg-slate-300 transition-all active:scale-95 disabled:opacity-0 text-sm">Previous</button>
+          <div className="flex justify-between items-center px-2 pb-8">
+            <button disabled={currentIndex === 0} onClick={() => setCurrentIndex(currentIndex - 1)} className="px-6 md:px-8 py-3 bg-slate-200 text-slate-700 rounded-xl font-bold hover:bg-slate-300 transition-all active:scale-95 disabled:opacity-0 text-xs md:text-sm">Previous</button>
             {currentIndex === questions.length - 1 ? (
-              <button onClick={() => modals.setShowSummary(true)} className="px-10 py-3 bg-gray-900 text-white rounded-xl font-bold hover:bg-black transition-all active:scale-95 text-sm">Finish Exam</button>
+              <button onClick={() => modals.setShowSummary(true)} className="px-8 md:px-10 py-3 bg-gray-900 text-white rounded-xl font-bold hover:bg-black transition-all active:scale-95 text-xs md:text-sm">Finish Exam</button>
             ) : (
-              <button onClick={() => setCurrentIndex(currentIndex + 1)} className="px-10 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-all active:scale-95 text-sm">Next Question</button>
+              <button onClick={() => setCurrentIndex(currentIndex + 1)} className="px-8 md:px-10 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-all active:scale-95 text-xs md:text-sm">Next Question</button>
             )}
           </div>
         </div>

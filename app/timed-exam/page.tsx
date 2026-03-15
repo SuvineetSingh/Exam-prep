@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import Link from 'next/link';
 import { ExamSetupForm } from '@/components/timed-exam/ExamSetupForm';
+// Import the UUID generator
+import { v4 as uuidv4 } from 'uuid';
 
 export default function ExamSetupPage() {
   const router = useRouter();
@@ -19,7 +21,6 @@ export default function ExamSetupPage() {
   const [fetchingFilters, setFetchingFilters] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Logic: Fetch dynamic exam types
   const fetchExamTypes = useCallback(async () => {
     try {
       const { data, error } = await supabase.from('questions').select('exam_type');
@@ -49,7 +50,9 @@ export default function ExamSetupPage() {
     setError(null);
     setLoading(true);
 
-    const sessionId = crypto.randomUUID();
+    // FIX: Use uuidv4 instead of crypto.randomUUID()
+    const sessionId = uuidv4();
+    
     router.push(
       `/timed-exam/${sessionId}?type=${config.examType}&count=${config.questionCount}`
     );
@@ -57,7 +60,6 @@ export default function ExamSetupPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-6 relative">
-      {/* Back Button */}
       <div className="absolute top-8 left-8">
         <Link
           href="/questions"
