@@ -70,3 +70,18 @@ export interface BotScript {
   messages: BotScriptEntry[];
   loop: boolean;
 }
+
+export interface NotificationToast {
+  id: string;
+  timestamp: Date;
+  type: 'room' | 'dm';
+  senderName: string;
+  senderAvatar?: string | null;
+  roomName?: string;
+  message: string;
+}
+
+export interface UnreadCounts {
+  rooms: Record<string, number>;
+  dms: Record<string, number>;
+}

@@ -105,7 +105,7 @@ describe('ProfileModal', () => {
       />
     );
 
-    const backdrop = screen.getByRole('button', { name: /close modal/i }).parentElement?.parentElement;
+    const backdrop = screen.getByRole('button', { name: /close modal/i }).parentElement?.parentElement?.parentElement;
     if (backdrop) {
       fireEvent.click(backdrop);
       expect(mockOnClose).toHaveBeenCalled();
@@ -181,7 +181,7 @@ describe('ProfileModal', () => {
       />
     );
 
-    const backdrop = container.querySelector('.animate-fadeIn');
+    const backdrop = container.querySelector('.animate-fade-in');
     expect(backdrop).toBeInTheDocument();
   });
 

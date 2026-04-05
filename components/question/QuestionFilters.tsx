@@ -23,9 +23,10 @@ export function QuestionFilters({
   return (
     <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-200 flex flex-wrap items-center gap-6 mb-8">
       <div className="flex-1 min-w-[150px]">
-        <label className="block text-[10px] font-bold uppercase text-gray-400 mb-1.5 ml-1">Exam Type</label>
-        <select 
-          value={examType} 
+        <label htmlFor="exam-type-filter" className="block text-[10px] font-bold uppercase text-gray-400 mb-1.5 ml-1">Exam Type</label>
+        <select
+          id="exam-type-filter"
+          value={examType}
           onChange={(e) => setExamType(e.target.value)}
           className="w-full border border-gray-200 rounded-xl p-2.5 bg-gray-50 focus:ring-2 focus:ring-blue-500 outline-none text-sm font-medium"
         >

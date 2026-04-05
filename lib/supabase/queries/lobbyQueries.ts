@@ -120,3 +120,13 @@ export async function updateUserProfile(userId: string, updates: Partial<LobbyUs
 
   if (error) throw error;
 }
+
+export async function updateUserOnlineStatus(userId: string) {
+  const supabase = createClient();
+  const { error } = await supabase
+    .from('user_profiles')
+    .update({ last_seen_at: new Date().toISOString() })
+    .eq('id', userId);
+
+  if (error) throw error;
+}

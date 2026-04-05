@@ -223,6 +223,6 @@ describe('Pagination', () => {
     );
 
     const pagination = container.firstChild;
-    expect(pagination).toHaveClass('bg-white', 'rounded-lg', 'shadow-sm');
+    expect(pagination).toHaveClass('bg-white', 'border-t', 'border-gray-200');
   });
 });

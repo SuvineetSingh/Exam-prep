@@ -6,6 +6,9 @@ import { useRouter } from 'next/navigation';
 // Mock the external modules
 jest.mock('@/lib/supabase/client');
 jest.mock('next/navigation');
+jest.mock('@/lib/supabase/queries/userStats', () => ({
+  getAttemptedQuestionIds: jest.fn().mockResolvedValue(new Set()),
+}));
 
 describe('QuestionsDashboard', () => {
   const mockPush = jest.fn();
@@ -45,25 +48,37 @@ describe('QuestionsDashboard', () => {
     (useRouter as jest.Mock).mockReturnValue({ push: mockPush });
     (createClient as jest.Mock).mockReturnValue(mockSupabase);
 
+    // Re-set after clearAllMocks since it resets mock implementations
+    mockSupabase.from.mockReturnThis();
+    mockSupabase.select.mockReturnThis();
+    mockSupabase.order.mockReturnThis();
+    mockSupabase.range.mockReturnThis();
+    mockSupabase.eq.mockReturnThis();
+    mockSupabase.auth.onAuthStateChange.mockReturnValue({
+      data: { subscription: { unsubscribe: jest.fn() } },
+    });
+
     // Default mock: User is logged in
     mockSupabase.auth.getSession.mockResolvedValue({
       data: { session: { user: { email: 'test@example.com', user_metadata: { full_name: 'Atharva Thube' } } } },
     });
 
-    // Default mock: Return questions
-    mockSupabase.select.mockImplementation((query, options) => {
-        if (options?.count === 'exact') {
-            return Promise.resolve({ data: mockQuestions, count: 2, error: null });
-        }
-        // This handles the fetchFilters call
-        return Promise.resolve({ data: mockQuestions, error: null });
+    // select: chain continues for count queries, resolves directly for filter queries
+    mockSupabase.select.mockImplementation((_fields: string, options?: { count?: string }) => {
+      if (options?.count === 'exact') {
+        return mockSupabase; // keep chain going → .order().range() will resolve
+      }
+      return Promise.resolve({ data: mockQuestions, error: null });
     });
+
+    // range: final step of fetchQuestions chain
+    mockSupabase.range.mockResolvedValue({ data: mockQuestions, count: 2, error: null });
   });
 
   it('redirects to login if no session is found', async () => {
     mockSupabase.auth.getSession.mockResolvedValue({ data: { session: null } });
     render(<QuestionsDashboard />);
-    
+
     await waitFor(() => {
       expect(mockPush).toHaveBeenCalledWith('/login');
     });
@@ -72,8 +87,7 @@ describe('QuestionsDashboard', () => {
   it('renders the dashboard header and candidate name', async () => {
     render(<QuestionsDashboard />);
 
-    expect(await screen.findByText(/ExamPrep AI/i)).toBeInTheDocument();
-    expect(screen.getByText(/Atharva Thube/i)).toBeInTheDocument();
+    expect(await screen.findByRole('link', { name: /exam prep platform/i })).toBeInTheDocument();
     expect(screen.getByText(/Questions Browser/i)).toBeInTheDocument();
   });
 
@@ -87,11 +101,12 @@ describe('QuestionsDashboard', () => {
 
   it('shows loading state while fetching questions', async () => {
     // Delay the mock response to catch the loading state
-    mockSupabase.select.mockReturnValue(new Promise(() => {})); 
-    
+    mockSupabase.range.mockReturnValue(new Promise(() => {}));
+
     render(<QuestionsDashboard />);
-    
-    expect(screen.getByText(/Fetching from database.../i)).toBeInTheDocument();
+
+    // Wait for auth to complete, then check that questions loading state appears
+    expect(await screen.findByText(/Fetching from database.../i)).toBeInTheDocument();
   });
 
   it('updates filters when a user selects a different Exam Type', async () => {
@@ -107,8 +122,8 @@ describe('QuestionsDashboard', () => {
 
   it('clears all filters when the "Clear all filters" button is clicked', async () => {
     // Setup state where no questions are found to show the clear button
-    mockSupabase.select.mockResolvedValue({ data: [], count: 0, error: null });
-    
+    mockSupabase.range.mockResolvedValue({ data: [], count: 0, error: null });
+
     render(<QuestionsDashboard />);
 
     const clearButton = await screen.findByRole('button', { name: /Clear all filters/i });

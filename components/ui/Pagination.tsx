@@ -62,9 +62,7 @@ export function Pagination({
       <div className="flex flex-col sm:flex-row items-center justify-between space-y-3 sm:space-y-0">
         {/* Info Text */}
         <div className="text-sm text-gray-700">
-          Showing <span className="font-medium">{startItem}</span> to{' '}
-          <span className="font-medium">{endItem}</span> of{' '}
-          <span className="font-medium">{totalItems}</span> questions
+          Showing {startItem}-{endItem} of {totalItems} questions
         </div>
 
         {/* Pagination Controls */}

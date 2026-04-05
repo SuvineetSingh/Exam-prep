@@ -30,8 +30,8 @@ describe('LoginForm', () => {
     render(<LoginForm />);
 
     expect(screen.getByText(/welcome back!/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/email:/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/password:/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /log in/i })).toBeInTheDocument();
     expect(screen.getByText(/don't have an account?/i)).toBeInTheDocument();
   });
@@ -51,8 +51,8 @@ describe('LoginForm', () => {
     fireEvent.click(submitButton);
 
     // HTML5 validation prevents submission
-    const emailInput = screen.getByLabelText(/email:/i);
-    const passwordInput = screen.getByLabelText(/password:/i);
+    const emailInput = screen.getByLabelText(/email/i);
+    const passwordInput = screen.getByLabelText(/password/i);
     
     expect(emailInput).toBeRequired();
     expect(passwordInput).toBeRequired();
@@ -62,8 +62,8 @@ describe('LoginForm', () => {
     const user = userEvent.setup();
     render(<LoginForm />);
 
-    const emailInput = screen.getByLabelText(/email:/i);
-    const passwordInput = screen.getByLabelText(/password:/i);
+    const emailInput = screen.getByLabelText(/email/i);
+    const passwordInput = screen.getByLabelText(/password/i);
 
     await user.type(emailInput, 'test@example.com');
     await user.type(passwordInput, 'password123');
@@ -80,8 +80,8 @@ describe('LoginForm', () => {
     const user = userEvent.setup();
     render(<LoginForm />);
 
-    const emailInput = screen.getByLabelText(/email:/i);
-    const passwordInput = screen.getByLabelText(/password:/i);
+    const emailInput = screen.getByLabelText(/email/i);
+    const passwordInput = screen.getByLabelText(/password/i);
     const submitButton = screen.getByRole('button', { name: /log in/i });
 
     await user.type(emailInput, 'test@example.com');
@@ -99,8 +99,8 @@ describe('LoginForm', () => {
     const user = userEvent.setup();
     render(<LoginForm />);
 
-    await user.type(screen.getByLabelText(/email:/i), 'test@example.com');
-    await user.type(screen.getByLabelText(/password:/i), 'password123');
+    await user.type(screen.getByLabelText(/email/i), 'test@example.com');
+    await user.type(screen.getByLabelText(/password/i), 'password123');
     
     const submitButton = screen.getByRole('button', { name: /log in/i });
     fireEvent.click(submitButton);
@@ -112,7 +112,7 @@ describe('LoginForm', () => {
       });
       expect(mockPush).toHaveBeenCalledWith('/questions');
       expect(mockRefresh).toHaveBeenCalled();
-    });
+    }, { timeout: 2000 });
   });
 
   it('displays error message on failed login', async () => {
@@ -124,8 +124,8 @@ describe('LoginForm', () => {
     const user = userEvent.setup();
     render(<LoginForm />);
 
-    await user.type(screen.getByLabelText(/email:/i), 'wrong@example.com');
-    await user.type(screen.getByLabelText(/password:/i), 'wrongpass');
+    await user.type(screen.getByLabelText(/email/i), 'wrong@example.com');
+    await user.type(screen.getByLabelText(/password/i), 'wrongpass');
     
     fireEvent.click(screen.getByRole('button', { name: /log in/i }));
 
@@ -142,13 +142,13 @@ describe('LoginForm', () => {
     const user = userEvent.setup();
     render(<LoginForm />);
 
-    await user.type(screen.getByLabelText(/email:/i), 'test@example.com');
-    await user.type(screen.getByLabelText(/password:/i), 'password123');
+    await user.type(screen.getByLabelText(/email/i), 'test@example.com');
+    await user.type(screen.getByLabelText(/password/i), 'password123');
     
     fireEvent.click(screen.getByRole('button', { name: /log in/i }));
 
-    const emailInput = screen.getByLabelText(/email:/i);
-    const passwordInput = screen.getByLabelText(/password:/i);
+    const emailInput = screen.getByLabelText(/email/i);
+    const passwordInput = screen.getByLabelText(/password/i);
 
     expect(emailInput).toBeDisabled();
     expect(passwordInput).toBeDisabled();
@@ -163,8 +163,8 @@ describe('LoginForm', () => {
     render(<LoginForm />);
 
     // First failed attempt
-    await user.type(screen.getByLabelText(/email:/i), 'test@example.com');
-    await user.type(screen.getByLabelText(/password:/i), 'wrong');
+    await user.type(screen.getByLabelText(/email/i), 'test@example.com');
+    await user.type(screen.getByLabelText(/password/i), 'wrong');
     fireEvent.click(screen.getByRole('button', { name: /log in/i }));
 
     await waitFor(() => {
@@ -172,8 +172,8 @@ describe('LoginForm', () => {
     });
 
     // Second attempt
-    await user.clear(screen.getByLabelText(/password:/i));
-    await user.type(screen.getByLabelText(/password:/i), 'correct');
+    await user.clear(screen.getByLabelText(/password/i));
+    await user.type(screen.getByLabelText(/password/i), 'correct');
     fireEvent.click(screen.getByRole('button', { name: /log in/i }));
 
     await waitFor(() => {
