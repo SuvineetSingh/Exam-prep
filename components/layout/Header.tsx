@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { ProfileModal } from '@/components/ui/ProfileModal';
+import { useUserActivity } from '@/hooks/useUserActivity';
 import type { User } from '@supabase/supabase-js';
 
 interface HeaderProps {
@@ -11,6 +12,9 @@ interface HeaderProps {
 
 export function Header({ user }: HeaderProps) {
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+
+  // Track user activity and update online status
+  useUserActivity(user.id);
 
   const email = user.email || '';
   const username = user.user_metadata?.username || user.user_metadata?.full_name;
@@ -71,11 +75,16 @@ export function Header({ user }: HeaderProps) {
             {/* Profile Icon */}
             <button
               onClick={() => setIsProfileModalOpen(true)}
-              className="flex items-center space-x-2 hover:bg-gray-100 rounded-full p-2 transition-colors"
+              className="flex items-center space-x-2 hover:bg-gray-100 rounded-full p-2 transition-colors relative"
               aria-label="Open profile menu"
             >
-              <div className="w-10 h-10 bg-primary-600 rounded-full flex items-center justify-center text-white font-semibold">
+              <div className="w-10 h-10 bg-primary-600 rounded-full flex items-center justify-center text-white font-semibold relative">
                 {initial}
+                {/* Online indicator */}
+                <span
+                  className="absolute bottom-0 right-0 block h-3 w-3 rounded-full bg-green-500 ring-2 ring-white"
+                  aria-label="Online"
+                />
               </div>
             </button>
           </div>
