@@ -7,6 +7,8 @@ jest.mock('@/lib/supabase/queries/userStats');
 describe('useUserStats', () => {
   const mockStats = {
     total_answered: 42,
+    practice_answered: 30,
+    timed_answered: 12,
     accuracy_rate: 85,
     study_streak: 7,
     today_count: 5,
@@ -53,6 +55,8 @@ describe('useUserStats', () => {
 
     expect(result.current.stats).toEqual({
       total_answered: 0,
+      practice_answered: 0,
+      timed_answered: 0,
       accuracy_rate: 0,
       study_streak: 0,
       today_count: 0,
@@ -73,6 +77,8 @@ describe('useUserStats', () => {
 
     expect(result.current.stats).toEqual({
       total_answered: 0,
+      practice_answered: 0,
+      timed_answered: 0,
       accuracy_rate: 0,
       study_streak: 0,
       today_count: 0,

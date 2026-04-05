@@ -72,58 +72,51 @@ export async function getUserStats(): Promise<UserStats | null> {
   
   if (!user) return null;
   
+  const ZERO_STATS: UserStats = {
+    total_answered: 0,
+    practice_answered: 0,
+    timed_answered: 0,
+    accuracy_rate: 0,
+    study_streak: 0,
+    today_count: 0,
+    this_week_improvement: 0,
+  };
+
   const { data, error } = await supabase
     .from('user_answers')
-    .select('is_correct, created_at')
+    .select('is_correct, mode, created_at')
     .eq('user_id', user.id);
-    
+
   if (error) {
-    // Gracefully handle missing table or permissions - return zeros instead of breaking dashboard
     if (process.env.NODE_ENV === 'development') {
       console.warn(
         '⚠️ Could not fetch user stats. This is normal if the user_answers table has not been created yet.',
         '\nError:', error.message || 'Unknown error'
       );
     }
-    
-    return {
-      total_answered: 0,
-      accuracy_rate: 0,
-      study_streak: 0,
-      today_count: 0,
-      this_week_improvement: 0,
-    };
+    return ZERO_STATS;
   }
-  
+
   if (!data || data.length === 0) {
-    return {
-      total_answered: 0,
-      accuracy_rate: 0,
-      study_streak: 0,
-      today_count: 0,
-      this_week_improvement: 0,
-    };
+    return ZERO_STATS;
   }
-  
+
   const totalAnswered = data.length;
+  const practiceAnswered = data.filter(a => a.mode === 'practice').length;
+  const timedAnswered = data.filter(a => a.mode === 'timed').length;
   const correctCount = data.filter(a => a.is_correct).length;
-  const accuracyRate = totalAnswered > 0 
-    ? Math.round((correctCount / totalAnswered) * 100) 
+  const accuracyRate = totalAnswered > 0
+    ? Math.round((correctCount / totalAnswered) * 100)
     : 0;
-  
-  const today = new Date().toISOString().split('T')[0];
-  const todayCount = data.filter(a =>
-    a.created_at.startsWith(today)
-  ).length;
+
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const todayCount = data.filter(a => a.created_at.startsWith(todayStr)).length;
 
   // Calculate consecutive days with activity — use UTC throughout to avoid timezone shifts
   const uniqueDays = new Set(data.map(a => a.created_at.slice(0, 10)));
-
   const MS_PER_DAY = 24 * 60 * 60 * 1000;
-  const todayStr = new Date().toISOString().slice(0, 10);
   let cursor = new Date(todayStr + 'T00:00:00Z');
 
-  // If user hasn't answered anything today, start counting from yesterday
   if (!uniqueDays.has(todayStr)) {
     cursor = new Date(cursor.getTime() - MS_PER_DAY);
   }
@@ -133,12 +126,14 @@ export async function getUserStats(): Promise<UserStats | null> {
     streak++;
     cursor = new Date(cursor.getTime() - MS_PER_DAY);
   }
-  
+
   return {
     total_answered: totalAnswered,
+    practice_answered: practiceAnswered,
+    timed_answered: timedAnswered,
     accuracy_rate: accuracyRate,
     study_streak: streak,
     today_count: todayCount,
-    this_week_improvement: 0, // TODO: Implement weekly comparison
+    this_week_improvement: 0,
   };
 }

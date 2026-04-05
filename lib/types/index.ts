@@ -148,6 +148,8 @@ export interface DashboardFilters {
 // User stats for dashboard
 export interface UserStats {
   total_answered: number;
+  practice_answered: number;
+  timed_answered: number;
   accuracy_rate: number;
   study_streak: number;
   today_count: number;

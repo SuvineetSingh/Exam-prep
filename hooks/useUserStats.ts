@@ -6,6 +6,8 @@ import type { UserStats } from '@/lib/types';
 
 const DEFAULT_STATS: UserStats = {
   total_answered: 0,
+  practice_answered: 0,
+  timed_answered: 0,
   accuracy_rate: 0,
   study_streak: 0,
   today_count: 0,
@@ -15,7 +17,7 @@ const DEFAULT_STATS: UserStats = {
 export function useUserStats() {
   const [stats, setStats] = useState<UserStats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchStats() {

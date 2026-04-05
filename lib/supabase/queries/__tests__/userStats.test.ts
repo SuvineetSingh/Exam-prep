@@ -9,6 +9,16 @@ describe('getUserStats', () => {
   const mockEq = jest.fn();
   const mockGetUser = jest.fn();
 
+  const ZERO_STATS = {
+    total_answered: 0,
+    practice_answered: 0,
+    timed_answered: 0,
+    accuracy_rate: 0,
+    study_streak: 0,
+    today_count: 0,
+    this_week_improvement: 0,
+  };
+
   beforeEach(() => {
     jest.clearAllMocks();
     mockEq.mockResolvedValue({ data: [], error: null });
@@ -37,22 +47,16 @@ describe('getUserStats', () => {
 
     const result = await getUserStats();
 
-    expect(result).toEqual({
-      total_answered: 0,
-      accuracy_rate: 0,
-      study_streak: 0,
-      today_count: 0,
-      this_week_improvement: 0,
-    });
+    expect(result).toEqual(ZERO_STATS);
   });
 
   it('calculates total answered correctly', async () => {
     mockGetUser.mockResolvedValue({ data: { user: mockUser }, error: null });
     mockEq.mockResolvedValue({
       data: [
-        { is_correct: true, created_at: '2024-01-01T10:00:00Z' },
-        { is_correct: false, created_at: '2024-01-01T11:00:00Z' },
-        { is_correct: true, created_at: '2024-01-02T10:00:00Z' },
+        { is_correct: true, mode: 'practice', created_at: '2024-01-01T10:00:00Z' },
+        { is_correct: false, mode: 'timed', created_at: '2024-01-01T11:00:00Z' },
+        { is_correct: true, mode: 'practice', created_at: '2024-01-02T10:00:00Z' },
       ],
       error: null,
     });
@@ -66,10 +70,10 @@ describe('getUserStats', () => {
     mockGetUser.mockResolvedValue({ data: { user: mockUser }, error: null });
     mockEq.mockResolvedValue({
       data: [
-        { is_correct: true, created_at: '2024-01-01T10:00:00Z' },
-        { is_correct: true, created_at: '2024-01-01T11:00:00Z' },
-        { is_correct: false, created_at: '2024-01-02T10:00:00Z' },
-        { is_correct: true, created_at: '2024-01-03T10:00:00Z' },
+        { is_correct: true, mode: 'practice', created_at: '2024-01-01T10:00:00Z' },
+        { is_correct: true, mode: 'practice', created_at: '2024-01-01T11:00:00Z' },
+        { is_correct: false, mode: 'timed', created_at: '2024-01-02T10:00:00Z' },
+        { is_correct: true, mode: 'timed', created_at: '2024-01-03T10:00:00Z' },
       ],
       error: null,
     });
@@ -79,14 +83,31 @@ describe('getUserStats', () => {
     expect(result?.accuracy_rate).toBe(75); // 3 out of 4 correct = 75%
   });
 
+  it('calculates practice and timed answered correctly', async () => {
+    mockGetUser.mockResolvedValue({ data: { user: mockUser }, error: null });
+    mockEq.mockResolvedValue({
+      data: [
+        { is_correct: true, mode: 'practice', created_at: '2024-01-01T10:00:00Z' },
+        { is_correct: false, mode: 'practice', created_at: '2024-01-01T11:00:00Z' },
+        { is_correct: true, mode: 'timed', created_at: '2024-01-02T10:00:00Z' },
+      ],
+      error: null,
+    });
+
+    const result = await getUserStats();
+
+    expect(result?.practice_answered).toBe(2);
+    expect(result?.timed_answered).toBe(1);
+  });
+
   it('calculates today count correctly', async () => {
     const today = new Date().toISOString().split('T')[0];
     mockGetUser.mockResolvedValue({ data: { user: mockUser }, error: null });
     mockEq.mockResolvedValue({
       data: [
-        { is_correct: true, created_at: `${today}T10:00:00Z` },
-        { is_correct: false, created_at: `${today}T11:00:00Z` },
-        { is_correct: true, created_at: '2024-01-01T10:00:00Z' },
+        { is_correct: true, mode: 'practice', created_at: `${today}T10:00:00Z` },
+        { is_correct: false, mode: 'timed', created_at: `${today}T11:00:00Z` },
+        { is_correct: true, mode: 'practice', created_at: '2024-01-01T10:00:00Z' },
       ],
       error: null,
     });
@@ -106,13 +127,7 @@ describe('getUserStats', () => {
 
     const result = await getUserStats();
 
-    expect(result).toEqual({
-      total_answered: 0,
-      accuracy_rate: 0,
-      study_streak: 0,
-      today_count: 0,
-      this_week_improvement: 0,
-    });
+    expect(result).toEqual(ZERO_STATS);
 
     consoleWarn.mockRestore();
   });
@@ -124,7 +139,7 @@ describe('getUserStats', () => {
 
     const supabase = createClient();
     expect(supabase.from).toHaveBeenCalledWith('user_answers');
-    expect(mockSelect).toHaveBeenCalledWith('is_correct, created_at');
+    expect(mockSelect).toHaveBeenCalledWith('is_correct, mode, created_at');
     expect(mockEq).toHaveBeenCalledWith('user_id', 'user-123');
   });
 
@@ -134,13 +149,7 @@ describe('getUserStats', () => {
 
     const result = await getUserStats();
 
-    expect(result).toEqual({
-      total_answered: 0,
-      accuracy_rate: 0,
-      study_streak: 0,
-      today_count: 0,
-      this_week_improvement: 0,
-    });
+    expect(result).toEqual(ZERO_STATS);
   });
 
   it('calculates streak for consecutive days', async () => {
@@ -153,9 +162,9 @@ describe('getUserStats', () => {
     mockGetUser.mockResolvedValue({ data: { user: mockUser }, error: null });
     mockEq.mockResolvedValue({
       data: [
-        { is_correct: true, created_at: today.toISOString() },
-        { is_correct: true, created_at: yesterday.toISOString() },
-        { is_correct: true, created_at: twoDaysAgo.toISOString() },
+        { is_correct: true, mode: 'practice', created_at: today.toISOString() },
+        { is_correct: true, mode: 'timed', created_at: yesterday.toISOString() },
+        { is_correct: true, mode: 'practice', created_at: twoDaysAgo.toISOString() },
       ],
       error: null,
     });
