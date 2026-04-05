@@ -74,7 +74,7 @@ export async function getUserStats(): Promise<UserStats | null> {
   
   const { data, error } = await supabase
     .from('user_answers')
-    .select('is_correct, answered_at')
+    .select('is_correct, created_at')
     .eq('user_id', user.id);
     
   if (error) {
@@ -113,12 +113,12 @@ export async function getUserStats(): Promise<UserStats | null> {
   
   const today = new Date().toISOString().split('T')[0];
   const todayCount = data.filter(a =>
-    a.answered_at.startsWith(today)
+    a.created_at.startsWith(today)
   ).length;
 
   // Calculate consecutive days with activity (simplified streak algorithm)
   const uniqueDates = [...new Set(data.map(a =>
-    a.answered_at.split('T')[0]
+    a.created_at.split('T')[0]
   ))].sort().reverse();
   
   let streak = 0;

@@ -19,18 +19,17 @@ export function formatDate(
   date: string | Date,
   format: 'full' | 'short' = 'short'
 ): string {
+  if (date === null || date === undefined) return 'Invalid Date';
+
   const dateObj = typeof date === 'string' ? new Date(date) : date;
-  
-  // Validate date
-  if (isNaN(dateObj.getTime())) {
-    throw new Error(`Invalid date: ${date}`);
-  }
-  
+
+  if (isNaN(dateObj.getTime())) return 'Invalid Date';
+
   const options: Intl.DateTimeFormatOptions =
     format === 'full'
-      ? { month: 'long', day: 'numeric', year: 'numeric' }
-      : { month: 'short', day: 'numeric', year: 'numeric' };
-  
+      ? { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' }
+      : { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' };
+
   return dateObj.toLocaleDateString('en-US', options);
 }
 
@@ -38,13 +37,17 @@ export function formatDate(
  * Format time in seconds to MM:SS format
  * Handles negative values and large numbers
  */
-export function formatTime(seconds: number): string {
-  const absSeconds = Math.abs(Math.floor(seconds));
-  const mins = Math.floor(absSeconds / 60);
-  const secs = absSeconds % 60;
-  const sign = seconds < 0 ? '-' : '';
-  
-  return `${sign}${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+export function formatTime(datetime: string): string {
+  if (!datetime || typeof datetime !== 'string') return 'Invalid Time';
+
+  const date = new Date(datetime);
+  if (isNaN(date.getTime())) return 'Invalid Time';
+
+  const hours = date.getHours();
+  const minutes = date.getMinutes().toString().padStart(2, '0');
+  const seconds = date.getSeconds().toString().padStart(2, '0');
+
+  return `${hours}:${minutes}:${seconds}`;
 }
 
 /**
@@ -81,10 +84,12 @@ export function truncate(
   length: number,
   suffix: string = '...'
 ): string {
+  if (!text) return '';
+
   if (length < 0) {
     throw new Error('Length must be positive');
   }
-  
+
   if (text.length <= length) {
     return text;
   }

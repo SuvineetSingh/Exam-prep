@@ -8,11 +8,19 @@ describe('QuickActions', () => {
     expect(screen.getByText('Quick Actions')).toBeInTheDocument();
   });
 
-  it('renders two action buttons', () => {
+  it('renders three action buttons', () => {
     render(<QuickActions />);
 
     const buttons = screen.getAllByRole('link');
-    expect(buttons).toHaveLength(2);
+    expect(buttons).toHaveLength(3);
+  });
+
+  it('renders "Join Study Lobby" button with correct link', () => {
+    render(<QuickActions />);
+
+    const lobbyButton = screen.getByRole('link', { name: /join study lobby/i });
+    expect(lobbyButton).toBeInTheDocument();
+    expect(lobbyButton).toHaveAttribute('href', '/lobby');
   });
 
   it('renders "Start Practice" button with correct link', () => {
@@ -49,7 +57,7 @@ describe('QuickActions', () => {
     const { container } = render(<QuickActions />);
 
     const grid = container.querySelector('.grid');
-    expect(grid).toHaveClass('grid-cols-1', 'sm:grid-cols-2');
+    expect(grid).toHaveClass('grid-cols-1', 'sm:grid-cols-3');
   });
 
   it('has proper spacing between buttons', () => {

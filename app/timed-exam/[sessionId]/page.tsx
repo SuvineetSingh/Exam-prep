@@ -215,10 +215,6 @@ export default function ExamPage({ params }: { params: Promise<{ sessionId: stri
 
   const formatTime = (s: number) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`;
 
-  // --- START COPIED LOGIC ---
-  const answeredCount = Object.keys(userAnswers).length;
-  const unattemptedCount = questions.length - answeredCount;
-  // --- END COPIED LOGIC ---
 
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center font-bold text-blue-600 uppercase tracking-widest">
