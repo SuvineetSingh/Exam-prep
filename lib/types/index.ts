@@ -44,12 +44,20 @@ export interface Question {
   question_type: QuestionType;
   question_text: string;
   options: string[] | null;
+  // Individual option columns as stored in DB (optional — not in dummy data)
+  option_a?: string | null;
+  option_b?: string | null;
+  option_c?: string | null;
+  option_d?: string | null;
   correct_answer: string;
+  correct_option?: string | null;
   explanation: string | null;
-  topic: string;
-  subtopic: string | null;
+  topic?: string | null;
+  category?: string | null;
+  subtopic?: string | null;
   created_at: string;
   updated_at: string;
+  [key: string]: unknown; // allow dynamic option_x access
 }
 
 // Exam session types

@@ -7,6 +7,9 @@ import { useRouter } from 'next/navigation';
 // Mock modules
 jest.mock('@/lib/supabase/client');
 jest.mock('next/navigation');
+jest.mock('@/lib/supabase/queries/lobbyQueries', () => ({
+  updateUserOnlineStatus: jest.fn().mockResolvedValue(undefined),
+}));
 
 describe('LoginForm', () => {
   const mockPush = jest.fn();
@@ -74,7 +77,7 @@ describe('LoginForm', () => {
 
   it('shows loading state during submission', async () => {
     mockSignInWithPassword.mockImplementation(
-      () => new Promise((resolve) => setTimeout(() => resolve({ error: null }), 100))
+      () => new Promise((resolve) => setTimeout(() => resolve({ data: { user: { id: '123' } }, error: null }), 100))
     );
 
     const user = userEvent.setup();
@@ -94,7 +97,7 @@ describe('LoginForm', () => {
   });
 
   it('successfully logs in and redirects to questions page', async () => {
-    mockSignInWithPassword.mockResolvedValue({ error: null });
+    mockSignInWithPassword.mockResolvedValue({ data: { user: { id: '123' } }, error: null });
 
     const user = userEvent.setup();
     render(<LoginForm />);
@@ -136,7 +139,7 @@ describe('LoginForm', () => {
 
   it('disables inputs during submission', async () => {
     mockSignInWithPassword.mockImplementation(
-      () => new Promise((resolve) => setTimeout(() => resolve({ error: null }), 100))
+      () => new Promise((resolve) => setTimeout(() => resolve({ data: { user: { id: '123' } }, error: null }), 100))
     );
 
     const user = userEvent.setup();
@@ -157,7 +160,7 @@ describe('LoginForm', () => {
   it('clears error message on new submission attempt', async () => {
     mockSignInWithPassword
       .mockResolvedValueOnce({ error: { message: 'Error' } })
-      .mockResolvedValueOnce({ error: null });
+      .mockResolvedValueOnce({ data: { user: { id: '123' } }, error: null });
 
     const user = userEvent.setup();
     render(<LoginForm />);

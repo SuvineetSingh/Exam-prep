@@ -37,17 +37,13 @@ export function formatDate(
  * Format time in seconds to MM:SS format
  * Handles negative values and large numbers
  */
-export function formatTime(datetime: string): string {
-  if (!datetime || typeof datetime !== 'string') return 'Invalid Time';
+export function formatTime(seconds: number): string {
+  const absSeconds = Math.abs(Math.floor(seconds));
+  const mins = Math.floor(absSeconds / 60);
+  const secs = absSeconds % 60;
+  const sign = seconds < 0 ? '-' : '';
 
-  const date = new Date(datetime);
-  if (isNaN(date.getTime())) return 'Invalid Time';
-
-  const hours = date.getHours();
-  const minutes = date.getMinutes().toString().padStart(2, '0');
-  const seconds = date.getSeconds().toString().padStart(2, '0');
-
-  return `${hours}:${minutes}:${seconds}`;
+  return `${sign}${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
 }
 
 /**

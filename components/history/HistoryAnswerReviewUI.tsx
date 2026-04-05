@@ -4,11 +4,27 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { Footer } from '@/components/layout/Footer';
 import { Header } from '@/components/layout/Header';
+import type { User } from '@supabase/supabase-js';
+import type { ExamSession } from '@/components/history/HistoryComponents';
+
+interface ReviewQuestion {
+  id: string;
+  question_text: string;
+  options: string[] | null;
+  correct_option: string;
+  correct_answer: string;
+  explanation: string | null;
+  exam_type: string;
+  category: string | null;
+  difficulty: string | null;
+  userAnswer: string;
+  [key: string]: unknown; // allow dynamic option_x access
+}
 
 interface HistoryAnswerReviewUIProps {
-  questions: any[];
-  summary: any;
-  user?: any; // optional — passed from the page if available
+  questions: ReviewQuestion[];
+  summary: ExamSession & { timeFormatted: string; dateFormatted: string };
+  user?: User;
 }
 
 // --- Helpers ---
@@ -38,7 +54,7 @@ function getScoreBg(pct: number | null): string {
 }
 
 // --- Review summary header ---
-function ReviewSummary({ summary }: { summary: any }) {
+function ReviewSummary({ summary }: { summary: HistoryAnswerReviewUIProps['summary'] }) {
   const pct = summary?.percentage ?? null;
 
   return (
@@ -134,7 +150,7 @@ function ReviewFilters({ active, setActive, counts }: {
 }
 
 // --- Single question card ---
-function QuestionCard({ question, index }: { question: any; index: number }) {
+function QuestionCard({ question, index }: { question: ReviewQuestion; index: number }) {
   const [expanded, setExpanded] = useState(false);
 
   const correctKey   = (question.correct_option || '').trim().toLowerCase();
@@ -214,7 +230,7 @@ function QuestionCard({ question, index }: { question: any; index: number }) {
                   <span className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs font-black flex-shrink-0 ${badgeStyle}`}>
                     {l.toUpperCase()}
                   </span>
-                  <span className="font-medium text-sm">{question[`option_${l}`]}</span>
+                  <span className="font-medium text-sm">{String(question[`option_${l}`] ?? '')}</span>
                   {isThisCorrect && (
                     <span className="ml-auto text-[10px] font-black uppercase text-emerald-600 tracking-wide">Correct Answer</span>
                   )}
@@ -268,7 +284,7 @@ export function HistoryAnswerReviewUI({ questions, summary, user }: HistoryAnswe
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* FIX: replaced hardcoded div navbar with real Header so ProfileDropdown works */}
-      <Header user={user} />
+      {user && <Header user={user} />}
 
       <main className="flex-1 max-w-4xl mx-auto w-full px-4 py-8 pt-24">
         <ReviewSummary summary={summary} />

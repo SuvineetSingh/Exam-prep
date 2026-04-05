@@ -48,8 +48,8 @@ export default function HistoryPage() {
       const { data, error } = await query;
       if (error) throw error;
       setSessions((data as ExamSession[]) || []);
-    } catch (err: any) {
-      setError(err.message || 'Failed to load exam history.');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load exam history.');
     } finally {
       setLoading(false);
     }

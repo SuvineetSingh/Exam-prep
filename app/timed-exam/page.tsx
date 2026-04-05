@@ -29,8 +29,8 @@ export default function ExamSetupPage() {
         const uniqueExams = Array.from(new Set(data.map((item) => item.exam_type))).sort();
         setExamTypes(uniqueExams as string[]);
       }
-    } catch (err: any) {
-      console.error('Error fetching exam types:', err.message);
+    } catch (err) {
+      console.error('Error fetching exam types:', err instanceof Error ? err.message : err);
     } finally {
       setFetchingFilters(false);
     }

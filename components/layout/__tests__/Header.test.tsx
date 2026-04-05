@@ -1,6 +1,18 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { Header } from '../Header';
 
+jest.mock('next/navigation', () => ({
+  useRouter: () => ({ push: jest.fn() }),
+}));
+jest.mock('@/lib/supabase/client', () => ({
+  createClient: () => ({
+    auth: { signOut: jest.fn().mockResolvedValue({}) },
+  }),
+}));
+jest.mock('@/hooks/useUserActivity', () => ({
+  useUserActivity: jest.fn(),
+}));
+
 describe('Header', () => {
   const mockUser = {
     id: '123',
@@ -25,10 +37,11 @@ describe('Header', () => {
     expect(logoLink).toHaveAttribute('href', '/');
   });
 
-  it('renders profile button with username initial', () => {
+  it('renders profile dropdown button with email initial', () => {
     render(<Header user={mockUser} />);
 
-    expect(screen.getByText('T')).toBeInTheDocument(); // First letter of "testuser"
+    // ProfileDropdown uses email initial
+    expect(screen.getByText('T')).toBeInTheDocument(); // First letter of "test@example.com"
   });
 
   it('renders profile button with email initial when no username', () => {
@@ -45,16 +58,14 @@ describe('Header', () => {
     expect(screen.getByText('U')).toBeInTheDocument(); // First letter of "user@example.com"
   });
 
-  it('opens profile modal when profile button is clicked', () => {
+  it('opens profile dropdown when profile button is clicked', () => {
     render(<Header user={mockUser} />);
 
-    const profileButton = screen.getByRole('button', { name: /open profile menu/i });
+    const profileButton = screen.getByRole('button', { name: 'T Online' });
     fireEvent.click(profileButton);
 
-    // ProfileModal should be rendered
-    // Note: This depends on ProfileModal implementation
-    // We're just checking the button click doesn't error
-    expect(profileButton).toBeInTheDocument();
+    expect(screen.getByText('Exam History')).toBeInTheDocument();
+    expect(screen.getByText('Logout')).toBeInTheDocument();
   });
 
   it('has fixed positioning at top', () => {
@@ -79,13 +90,6 @@ describe('Header', () => {
 
     expect(fullTitle).toHaveClass('hidden', 'sm:block');
     expect(abbrevTitle).toHaveClass('sm:hidden');
-  });
-
-  it('has hover effect on profile button', () => {
-    render(<Header user={mockUser} />);
-
-    const profileButton = screen.getByRole('button', { name: /open profile menu/i });
-    expect(profileButton).toHaveClass('hover:bg-gray-100');
   });
 
   it('renders with border at bottom', () => {

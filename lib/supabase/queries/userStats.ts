@@ -116,26 +116,22 @@ export async function getUserStats(): Promise<UserStats | null> {
     a.created_at.startsWith(today)
   ).length;
 
-  // Calculate consecutive days with activity (simplified streak algorithm)
-  const uniqueDates = [...new Set(data.map(a =>
-    a.created_at.split('T')[0]
-  ))].sort().reverse();
-  
+  // Calculate consecutive days with activity — use UTC throughout to avoid timezone shifts
+  const uniqueDays = new Set(data.map(a => a.created_at.slice(0, 10)));
+
+  const MS_PER_DAY = 24 * 60 * 60 * 1000;
+  const todayStr = new Date().toISOString().slice(0, 10);
+  let cursor = new Date(todayStr + 'T00:00:00Z');
+
+  // If user hasn't answered anything today, start counting from yesterday
+  if (!uniqueDays.has(todayStr)) {
+    cursor = new Date(cursor.getTime() - MS_PER_DAY);
+  }
+
   let streak = 0;
-  const todayDate = new Date();
-  todayDate.setHours(0, 0, 0, 0);
-  
-  for (const dateStr of uniqueDates) {
-    const date = new Date(dateStr);
-    date.setHours(0, 0, 0, 0);
-    const daysDiff = Math.floor(
-      (todayDate.getTime() - date.getTime()) / (1000 * 60 * 60 * 24)
-    );
-    if (daysDiff === streak) {
-      streak++;
-    } else {
-      break;
-    }
+  while (uniqueDays.has(cursor.toISOString().slice(0, 10))) {
+    streak++;
+    cursor = new Date(cursor.getTime() - MS_PER_DAY);
   }
   
   return {

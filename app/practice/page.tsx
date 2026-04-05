@@ -95,7 +95,7 @@ export default function PracticeSetup() {
         `/practice/${data.id}?exam=${examFilter}&cat=${categoryFilter}&session=${sessionId}`
       );
     } else {
-      alert('No questions found for this selection!');
+      setExamError(true);
       setLoading(false);
     }
   };

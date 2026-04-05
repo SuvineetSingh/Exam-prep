@@ -54,14 +54,14 @@ describe('Helper Functions', () => {
   });
 
   describe('formatTime', () => {
-    it('formats valid time string', () => {
-      const result = formatTime('2024-01-15T14:30:00');
-      expect(result).toMatch(/\d{1,2}:\d{2}:\d{2}/);
+    it('formats seconds into MM:SS', () => {
+      expect(formatTime(90)).toBe('01:30');
+      expect(formatTime(0)).toBe('00:00');
+      expect(formatTime(3600)).toBe('60:00');
     });
 
-    it('returns Invalid Time for invalid input', () => {
-      const result = formatTime('invalid');
-      expect(result).toBe('Invalid Time');
+    it('handles negative values', () => {
+      expect(formatTime(-90)).toBe('-01:30');
     });
   });
 

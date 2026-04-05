@@ -3,13 +3,14 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import type { Question } from '@/lib/types';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
 // ─────────────────────────────────────────────────────────────────────────────
 
 export interface QuestionLog {
-  questionId: number;
+  questionId: string;
   questionText: string;
   selectedAnswer: string;
   isCorrect: boolean;
@@ -17,7 +18,7 @@ export interface QuestionLog {
 }
 
 export interface PracticeSessionUIProps {
-  question: any;
+  question: Question;
   selectedOption: string | null;
   setSelectedOption: (key: string) => void;
   isSubmitted: boolean;

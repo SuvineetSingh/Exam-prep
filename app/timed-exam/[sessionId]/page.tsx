@@ -28,6 +28,7 @@ export default function ExamPage({ params }: { params: Promise<{ sessionId: stri
   const [showExitConfirm, setShowExitConfirm] = useState(false);
   const [showCountWarning, setShowCountWarning] = useState(false);
   const [hasStarted, setHasStarted] = useState(false);
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchQuestions = async () => {
@@ -58,7 +59,7 @@ export default function ExamPage({ params }: { params: Promise<{ sessionId: stri
           localStorage.setItem(`exam_timer_${sessionId}`, initialTime.toString());
         }
       } catch (err) {
-        console.error('Fetch error:', err);
+        setFetchError(err instanceof Error ? err.message : 'Failed to load exam questions.');
       } finally {
         setLoading(false);
       }
@@ -217,7 +218,14 @@ export default function ExamPage({ params }: { params: Promise<{ sessionId: stri
 
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center font-bold text-blue-600 uppercase tracking-widest">
-        Preparing Session...
+      Preparing Session...
+    </div>
+  );
+
+  if (fetchError) return (
+    <div className="min-h-screen flex items-center justify-center flex-col gap-4">
+      <p className="text-red-600 font-semibold">{fetchError}</p>
+      <button onClick={() => window.history.back()} className="text-blue-600 font-bold hover:underline">← Go Back</button>
     </div>
   );
 

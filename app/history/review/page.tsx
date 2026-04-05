@@ -4,14 +4,32 @@ import { useEffect, useState, use } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import { HistoryAnswerReviewUI } from '@/components/history/HistoryAnswerReviewUI';
+import type { User } from '@supabase/supabase-js';
+import type { ExamSession } from '@/components/history/HistoryComponents';
+
+interface ReviewQuestion {
+  id: string;
+  question_text: string;
+  options: string[] | null;
+  correct_option: string;
+  correct_answer: string;
+  explanation: string | null;
+  exam_type: string;
+  category: string | null;
+  difficulty: string | null;
+  userAnswer: string;
+  [key: string]: unknown;
+}
+
+type ReviewSummary = ExamSession & { timeFormatted: string; dateFormatted: string };
 
 export default function HistoryReviewPage({ params }: { params: Promise<{ sessionId: string }> }) {
   const { sessionId } = use(params);
   const router = useRouter();
 
-  const [reviewData, setReviewData] = useState<any[]>([]);
-  const [summary, setSummary] = useState<any>(null);
-  const [user, setUser] = useState<any>(null);
+  const [reviewData, setReviewData] = useState<ReviewQuestion[]>([]);
+  const [summary, setSummary] = useState<ReviewSummary | null>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -60,15 +78,16 @@ export default function HistoryReviewPage({ params }: { params: Promise<{ sessio
             : 'Recent Session',
         });
 
-        const formatted = answersData.map((item: any) => {
-          const rawCorrect = item.questions?.correct_option || item.questions?.correct_answer || '';
+        const formatted: ReviewQuestion[] = answersData.map((item) => {
+          const q = item.questions as unknown as Record<string, unknown> | null;
+          const rawCorrect = String(q?.correct_option || q?.correct_answer || '');
           const sanitizedCorrect = rawCorrect.replace(/[()]/g, '').trim().toLowerCase();
 
           return {
-            ...item.questions,
+            ...(q as Omit<ReviewQuestion, 'userAnswer' | 'correct_option'>),
             userAnswer: (item.selected_answer || 'UNATTEMPTED').replace(/[()]/g, '').trim().toLowerCase(),
             correct_option: sanitizedCorrect,
-          };
+          } as ReviewQuestion;
         });
 
         setReviewData(formatted);
@@ -101,5 +120,6 @@ export default function HistoryReviewPage({ params }: { params: Promise<{ sessio
     );
   }
 
-  return <HistoryAnswerReviewUI questions={reviewData} summary={summary} user={user} />;
+  if (!summary) return null;
+  return <HistoryAnswerReviewUI questions={reviewData} summary={summary} user={user ?? undefined} />;
 }
