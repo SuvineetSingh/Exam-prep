@@ -1,4 +1,30 @@
 import Link from 'next/link';
+// ProfileDropdown now lives in Header.tsx — import it from there
+import { ProfileDropdown } from '@/components/layout/Header';
+
+interface NavbarProps {
+  user: any;
+  onLogout: () => void;
+}
+
+export function Navbar({ user, onLogout }: NavbarProps) {
+  return (
+    <nav className="bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center sticky top-0 z-50 shadow-sm">
+      <h1 className="text-xl font-black text-blue-600 tracking-tighter uppercase">ExamPrep AI</h1>
+
+      <div className="flex items-center gap-4">
+        <div className="text-right hidden sm:block">
+          <p className="text-xs font-bold text-gray-400 uppercase leading-none">Candidate</p>
+          <p className="text-sm font-semibold text-gray-700">
+            {user?.user_metadata?.full_name || user?.email}
+          </p>
+        </div>
+        <ProfileDropdown user={user} onLogout={onLogout} />
+      </div>
+    </nav>
+  );
+}
+
 
 export function QuestionHeader() {
   return (
