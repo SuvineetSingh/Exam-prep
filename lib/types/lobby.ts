@@ -73,15 +73,18 @@ export interface BotScript {
 
 export interface NotificationToast {
   id: string;
-  timestamp: Date;
   type: 'room' | 'dm';
+  senderId: string;
   senderName: string;
-  senderAvatar?: string | null;
-  roomName?: string;
+  senderAvatar?: string;
   message: string;
+  roomId?: string;
+  roomName?: string;
+  dmPartnerId?: string;
+  timestamp: Date;
 }
 
 export interface UnreadCounts {
-  rooms: Record<string, number>;
-  dms: Record<string, number>;
+  rooms: { [roomId: string]: number };
+  dms: { [userId: string]: number };
 }

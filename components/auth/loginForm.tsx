@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
+import { updateUserOnlineStatus } from '@/lib/supabase/queries/lobbyQueries';
 
 export function LoginForm() {
   const router = useRouter();
@@ -30,7 +31,7 @@ export function LoginForm() {
     setStatus({ type: null, message: null });
 
     const supabase = createClient();
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error) {
       setStatus({
@@ -40,6 +41,12 @@ export function LoginForm() {
       setIsSubmitting(false);
     } else {
       setStatus({ type: 'success', message: 'Login successful! Redirecting...' });
+
+      // Set user as online immediately after login
+      if (data.user) {
+        await updateUserOnlineStatus(data.user.id);
+      }
+
       // Keep isSubmitting true during the redirect phase
       setTimeout(() => {
         router.push('/questions');

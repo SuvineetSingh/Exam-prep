@@ -1,15 +1,17 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useLobbyPresence } from '@/hooks/useLobbyPresence';
 import { useLobbyMessages } from '@/hooks/useLobbyMessages';
 import { useDMMessages } from '@/hooks/useDMMessages';
+import { useNotifications } from '@/hooks/useNotifications';
 import { RoomList } from './RoomList';
 import { RoomChat } from './RoomChat';
 import { OnlineUsersList } from './OnlineUsersList';
 import { MiniProfileCard } from './MiniProfileCard';
 import { IndustrySelector } from './IndustrySelector';
-import type { LobbyRoom, LobbyUserProfile } from '@/lib/types/lobby';
+import { NotificationToast } from './NotificationToast';
+import type { LobbyRoom, LobbyUserProfile, LobbyMessage, NotificationToast as NotificationToastType } from '@/lib/types/lobby';
 
 interface LobbyViewProps {
   rooms: LobbyRoom[];
@@ -34,6 +36,11 @@ export function LobbyView({ rooms, currentUser, userProfile }: LobbyViewProps) {
   const onlineUsers = useLobbyPresence(activeRoom?.slug || '', currentUser);
   const { messages: roomMessages, loading: roomLoading, sendMessage: sendRoomMessage } = useLobbyMessages(activeRoom?.id || null);
   const { messages: dmMessages, loading: dmLoading, sendDM } = useDMMessages(currentUser.id, dmPartnerId);
+  const { unreadCounts, toasts, incrementUnread, clearUnread, addToast, removeToast } = useNotifications(currentUser.id);
+
+  // Track previous message states to detect new messages
+  const prevRoomMessagesRef = useRef<LobbyMessage[]>([]);
+  const prevDmMessagesRef = useRef<LobbyMessage[]>([]);
 
   const handleSendMessage = useCallback(
     (content: string) => {
@@ -64,6 +71,87 @@ export function LobbyView({ rooms, currentUser, userProfile }: LobbyViewProps) {
     setChatMode('room');
     setMobileTab('chat');
   }, []);
+
+  const handleToastClick = useCallback((toast: NotificationToastType) => {
+    if (toast.type === 'room' && toast.roomId) {
+      const room = rooms.find(r => r.id === toast.roomId);
+      if (room) handleRoomSelect(room);
+    } else if (toast.type === 'dm' && toast.dmPartnerId) {
+      handleStartDM(toast.dmPartnerId);
+    }
+    removeToast(toast.id);
+  }, [rooms, handleRoomSelect, handleStartDM, removeToast]);
+
+  // Detect new room messages and trigger notifications
+  useEffect(() => {
+    if (roomMessages.length > prevRoomMessagesRef.current.length) {
+      const newMessages = roomMessages.slice(prevRoomMessagesRef.current.length);
+
+      newMessages.forEach(msg => {
+        // Don't notify for own messages
+        if (msg.sender_id === currentUser.id) return;
+
+        // Don't notify if viewing this room in room mode
+        if (chatMode === 'room' && activeRoom?.id === msg.room_id) return;
+
+        // Trigger notification
+        incrementUnread('room', msg.room_id || '');
+        addToast({
+          type: 'room',
+          senderId: msg.sender_id,
+          senderName: msg.sender.username || 'Unknown',
+          senderAvatar: msg.sender.avatar_url || undefined,
+          message: msg.content,
+          roomId: msg.room_id || undefined,
+          roomName: rooms.find(r => r.id === msg.room_id)?.name,
+        });
+      });
+    }
+
+    prevRoomMessagesRef.current = roomMessages;
+  }, [roomMessages, activeRoom?.id, chatMode, currentUser.id, rooms, incrementUnread, addToast]);
+
+  // Detect new DM messages and trigger notifications
+  useEffect(() => {
+    if (dmMessages.length > prevDmMessagesRef.current.length) {
+      const newMessages = dmMessages.slice(prevDmMessagesRef.current.length);
+
+      newMessages.forEach(msg => {
+        // Don't notify for own messages
+        if (msg.sender_id === currentUser.id) return;
+
+        // Don't notify if currently viewing this DM
+        if (chatMode === 'dm' && dmPartnerId === msg.sender_id) return;
+
+        // Trigger notification
+        incrementUnread('dm', msg.sender_id);
+        addToast({
+          type: 'dm',
+          senderId: msg.sender_id,
+          senderName: msg.sender.username || 'Unknown',
+          senderAvatar: msg.sender.avatar_url || undefined,
+          message: msg.content,
+          dmPartnerId: msg.sender_id,
+        });
+      });
+    }
+
+    prevDmMessagesRef.current = dmMessages;
+  }, [dmMessages, dmPartnerId, chatMode, currentUser.id, incrementUnread, addToast]);
+
+  // Clear unread when switching to room
+  useEffect(() => {
+    if (chatMode === 'room' && activeRoom?.id) {
+      clearUnread('room', activeRoom.id);
+    }
+  }, [chatMode, activeRoom?.id, clearUnread]);
+
+  // Clear unread when switching to DM
+  useEffect(() => {
+    if (chatMode === 'dm' && dmPartnerId) {
+      clearUnread('dm', dmPartnerId);
+    }
+  }, [chatMode, dmPartnerId, clearUnread]);
 
   if (showIndustrySelector) {
     return (
@@ -102,6 +190,7 @@ export function LobbyView({ rooms, currentUser, userProfile }: LobbyViewProps) {
             rooms={rooms}
             activeRoomId={activeRoom?.id || null}
             onSelectRoom={handleRoomSelect}
+            unreadCounts={unreadCounts.rooms}
           />
         </aside>
 
@@ -143,6 +232,19 @@ export function LobbyView({ rooms, currentUser, userProfile }: LobbyViewProps) {
           position={profileCardPosition}
         />
       )}
+
+      {/* Notification Toasts */}
+      <div className="fixed top-4 right-4 z-50 space-y-2">
+        {toasts.map((toast, index) => (
+          <NotificationToast
+            key={toast.id}
+            toast={toast}
+            index={index}
+            onClose={removeToast}
+            onClick={handleToastClick}
+          />
+        ))}
+      </div>
     </div>
   );
 }

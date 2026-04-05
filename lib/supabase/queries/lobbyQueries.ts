@@ -128,5 +128,5 @@ export async function updateUserOnlineStatus(userId: string) {
     .update({ last_seen_at: new Date().toISOString() })
     .eq('id', userId);
 
-  if (error) throw error;
+  if (error) console.error('Failed to update online status:', error);
 }
