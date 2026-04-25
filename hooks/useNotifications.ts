@@ -1,81 +1,88 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { createClient } from '@/lib/supabase/client';
 import type { NotificationToast, UnreadCounts } from '@/lib/types/lobby';
 
 const MAX_TOASTS = 3;
 const TOAST_DURATION = 5000; // 5 seconds
-const LOCALSTORAGE_DEBOUNCE = 500; // 500ms
 
 export function useNotifications(userId: string) {
   const [unreadCounts, setUnreadCounts] = useState<UnreadCounts>({ rooms: {}, dms: {} });
   const [toasts, setToasts] = useState<NotificationToast[]>([]);
-  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const localStorageKey = `lobby_unread_${userId}`;
+  // Track which conversations were already read at mount so we don't
+  // trigger false unreads for historical messages.
+  const lastReadAtRef = useRef<Record<string, string>>({});
 
-  // Load unread counts from localStorage on mount
+  // Load persisted read timestamps from Supabase on mount
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem(localStorageKey);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        setUnreadCounts(parsed);
-      }
-    } catch (error) {
-      console.error('Failed to load unread counts from localStorage:', error);
-    }
-  }, [localStorageKey]);
-
-  // Debounced save to localStorage
-  const saveToLocalStorage = useCallback(
-    (counts: UnreadCounts) => {
-      if (saveTimeoutRef.current) {
-        clearTimeout(saveTimeoutRef.current);
-      }
-
-      saveTimeoutRef.current = setTimeout(() => {
-        try {
-          localStorage.setItem(localStorageKey, JSON.stringify(counts));
-        } catch (error) {
-          console.error('Failed to save unread counts to localStorage:', error);
+    if (!userId) return;
+    const supabase = createClient();
+    supabase
+      .from('conversation_reads')
+      .select('conversation_id, conversation_type, last_read_at')
+      .eq('user_id', userId)
+      .then(({ data }) => {
+        if (!data) return;
+        const map: Record<string, string> = {};
+        for (const row of data) {
+          map[`${row.conversation_type}:${row.conversation_id}`] = row.last_read_at;
         }
-      }, LOCALSTORAGE_DEBOUNCE);
-    },
-    [localStorageKey]
-  );
-
-  // Increment unread count
-  const incrementUnread = useCallback(
-    (type: 'room' | 'dm', id: string) => {
-      setUnreadCounts((prev) => {
-        const newCounts = {
-          ...prev,
-          [type === 'room' ? 'rooms' : 'dms']: {
-            ...(type === 'room' ? prev.rooms : prev.dms),
-            [id]: ((type === 'room' ? prev.rooms[id] : prev.dms[id]) || 0) + 1,
-          },
-        };
-        saveToLocalStorage(newCounts);
-        return newCounts;
+        lastReadAtRef.current = map;
+        // Unread counts start at 0 — messages after last_read_at will
+        // be counted by Realtime listeners as they arrive.
       });
+  }, [userId]);
+
+  // Persist a "read" timestamp to Supabase
+  const persistRead = useCallback(
+    async (type: 'room' | 'dm', id: string) => {
+      const supabase = createClient();
+      const now = new Date().toISOString();
+      lastReadAtRef.current[`${type}:${id}`] = now;
+      await supabase.from('conversation_reads').upsert(
+        {
+          user_id: userId,
+          conversation_id: id,
+          conversation_type: type,
+          last_read_at: now,
+        },
+        { onConflict: 'user_id,conversation_id,conversation_type' }
+      );
     },
-    [saveToLocalStorage]
+    [userId]
   );
 
-  // Clear unread count
+  // Increment unread count — skip if message predates our last read
+  const incrementUnread = useCallback(
+    (type: 'room' | 'dm', id: string, messageTimestamp?: string) => {
+      if (messageTimestamp) {
+        const lastRead = lastReadAtRef.current[`${type}:${id}`];
+        if (lastRead && messageTimestamp <= lastRead) return;
+      }
+      setUnreadCounts((prev) => ({
+        ...prev,
+        [type === 'room' ? 'rooms' : 'dms']: {
+          ...(type === 'room' ? prev.rooms : prev.dms),
+          [id]: ((type === 'room' ? prev.rooms[id] : prev.dms[id]) || 0) + 1,
+        },
+      }));
+    },
+    []
+  );
+
+  // Clear unread count and persist to Supabase
   const clearUnread = useCallback(
     (type: 'room' | 'dm', id: string) => {
       setUnreadCounts((prev) => {
         const targetCounts = type === 'room' ? prev.rooms : prev.dms;
         const { [id]: _, ...rest } = targetCounts;
-
-        const newCounts = {
+        return {
           ...prev,
           [type === 'room' ? 'rooms' : 'dms']: rest,
         };
-        saveToLocalStorage(newCounts);
-        return newCounts;
       });
+      persistRead(type, id);
     },
-    [saveToLocalStorage]
+    [persistRead]
   );
 
   // Add toast notification
@@ -88,11 +95,9 @@ export function useNotifications(userId: string) {
 
     setToasts((prev) => {
       const updated = [...prev, newToast];
-      // Keep only the last MAX_TOASTS (FIFO - remove oldest)
       return updated.slice(-MAX_TOASTS);
     });
 
-    // Auto-dismiss after TOAST_DURATION
     setTimeout(() => {
       setToasts((prev) => prev.filter((t) => t.id !== newToast.id));
     }, TOAST_DURATION);
@@ -101,15 +106,6 @@ export function useNotifications(userId: string) {
   // Remove toast manually
   const removeToast = useCallback((id: string) => {
     setToasts((prev) => prev.filter((t) => t.id !== id));
-  }, []);
-
-  // Cleanup timeout on unmount
-  useEffect(() => {
-    return () => {
-      if (saveTimeoutRef.current) {
-        clearTimeout(saveTimeoutRef.current);
-      }
-    };
   }, []);
 
   return {

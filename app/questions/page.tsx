@@ -10,6 +10,8 @@ import { Footer } from '@/components/layout/Footer';
 import { Header } from '@/components/layout/Header';
 import { QuestionHeader } from '@/components/question/Navigation';
 import { getAttemptedQuestionIds } from '@/lib/supabase/queries/userStats';
+import { FREE_QUESTION_LIMIT } from '@/components/subscription/PaywallBanner';
+import Link from 'next/link';
 
 // --- Types ---
 interface Question {
@@ -53,6 +55,10 @@ export default function QuestionsDashboard() {
   const [difficulty, setDifficulty] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
 
+  // Freemium gating
+  const [isPremium, setIsPremium] = useState<boolean | null>(null);
+  const [usedCount, setUsedCount] = useState(0);
+
   const fetchFilters = useCallback(async () => {
     try {
       const { data, error } = await supabase
@@ -80,6 +86,14 @@ export default function QuestionsDashboard() {
       setUser(session.user);
       setAuthLoading(false);
       fetchFilters();
+
+      // Check premium status
+      supabase
+        .from('user_profiles')
+        .select('is_premium')
+        .eq('id', session.user.id)
+        .single()
+        .then(({ data }) => setIsPremium(data?.is_premium ?? false));
     };
 
     initAuth();
@@ -136,6 +150,20 @@ export default function QuestionsDashboard() {
     fetchQuestions();
   }, [fetchQuestions]);
 
+  // Re-check free quota when exam type filter changes
+  useEffect(() => {
+    if (examType === 'all' || isPremium || !user) return;
+    supabase
+      .from('user_answers')
+      .select('question_id')
+      .eq('user_id', user.id)
+      .eq('exam_type', examType)
+      .then(({ data }) => {
+        const distinct = data ? new Set(data.map((r: any) => r.question_id)).size : 0;
+        setUsedCount(distinct);
+      });
+  }, [examType, isPremium, user]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -170,6 +198,27 @@ export default function QuestionsDashboard() {
         {errorMsg && (
           <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm flex items-center gap-3">
             {errorMsg}
+          </div>
+        )}
+
+        {/* Free-tier upgrade nudge for specific exam filter */}
+        {!isPremium && examType !== 'all' && usedCount >= FREE_QUESTION_LIMIT && (
+          <div className="mb-4 p-4 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-between gap-4 flex-wrap">
+            <div className="flex items-center gap-2 text-sm text-amber-800">
+              <svg className="w-4 h-4 text-amber-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+              <span>
+                <strong>You've used all {FREE_QUESTION_LIMIT} free {examType} questions.</strong>{' '}
+                Upgrade to practice beyond your limit.
+              </span>
+            </div>
+            <Link
+              href="/courses"
+              className="text-xs font-bold px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg transition-colors whitespace-nowrap"
+            >
+              Upgrade for $50 →
+            </Link>
           </div>
         )}
 

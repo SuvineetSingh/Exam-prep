@@ -11,9 +11,10 @@ interface ProfileTabProps {
   userId: string;
   userProfile: LobbyUserProfile | null;
   onUpdate: () => void;
+  authProvider?: string;
 }
 
-export function ProfileTab({ userId, userProfile, onUpdate }: ProfileTabProps) {
+export function ProfileTab({ userId, userProfile, onUpdate, authProvider }: ProfileTabProps) {
   const [formData, setFormData] = useState<ProfileFormData>({
     username: '',
     full_name: null,
@@ -26,6 +27,13 @@ export function ProfileTab({ userId, userProfile, onUpdate }: ProfileTabProps) {
   const [error, setError] = useState<string | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
+  // Password change state
+  const [pwNew, setPwNew] = useState('');
+  const [pwConfirm, setPwConfirm] = useState('');
+  const [pwSaving, setPwSaving] = useState(false);
+  const [pwError, setPwError] = useState<string | null>(null);
+  const [showPwSuccess, setShowPwSuccess] = useState(false);
 
   useEffect(() => {
     if (userProfile) {
@@ -117,6 +125,29 @@ export function ProfileTab({ userId, userProfile, onUpdate }: ProfileTabProps) {
     } finally {
       setSaving(false);
     }
+  };
+
+  const handlePasswordChange = async () => {
+    setPwError(null);
+    if (pwNew.length < 8) {
+      setPwError('Password must be at least 8 characters.');
+      return;
+    }
+    if (pwNew !== pwConfirm) {
+      setPwError('Passwords do not match.');
+      return;
+    }
+    setPwSaving(true);
+    const supabase = createClient();
+    const { error } = await supabase.auth.updateUser({ password: pwNew });
+    if (error) {
+      setPwError(error.message);
+    } else {
+      setPwNew('');
+      setPwConfirm('');
+      setShowPwSuccess(true);
+    }
+    setPwSaving(false);
   };
 
   const handleCancel = () => {
@@ -275,6 +306,70 @@ export function ProfileTab({ userId, userProfile, onUpdate }: ProfileTabProps) {
         isVisible={showSuccess}
         onClose={() => setShowSuccess(false)}
       />
+
+      {authProvider !== 'google' && (
+        <div className="mt-8 pt-8 border-t border-gray-100">
+          <h3 className="text-lg font-bold text-gray-900 mb-4">Change Password</h3>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1 ml-1">
+                New password
+              </label>
+              <input
+                type="password"
+                value={pwNew}
+                onChange={(e) => setPwNew(e.target.value)}
+                placeholder="At least 8 characters"
+                disabled={pwSaving}
+                className="w-full border border-gray-200 rounded-xl p-4 bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1 ml-1">
+                Confirm new password
+              </label>
+              <input
+                type="password"
+                value={pwConfirm}
+                onChange={(e) => setPwConfirm(e.target.value)}
+                placeholder="••••••••"
+                disabled={pwSaving}
+                className="w-full border border-gray-200 rounded-xl p-4 bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+              />
+            </div>
+
+            {pwError && (
+              <div className="p-3 bg-red-50 border border-red-100 text-red-600 text-sm rounded-lg">
+                {pwError}
+              </div>
+            )}
+
+            <div className="flex justify-end">
+              <button
+                type="button"
+                onClick={handlePasswordChange}
+                disabled={pwSaving || !pwNew}
+                className="bg-blue-600 text-white py-3 px-6 rounded-xl font-bold hover:bg-blue-700 transition-all shadow-md active:scale-95 disabled:opacity-50 flex items-center gap-2"
+              >
+                {pwSaving ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Updating...
+                  </>
+                ) : (
+                  'Update Password'
+                )}
+              </button>
+            </div>
+          </div>
+
+          <SuccessMessage
+            message="Password updated successfully!"
+            isVisible={showPwSuccess}
+            onClose={() => setShowPwSuccess(false)}
+          />
+        </div>
+      )}
     </div>
   );
 }

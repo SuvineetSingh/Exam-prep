@@ -99,6 +99,29 @@ export async function fetchDMConversations(userId: string) {
   return Array.from(conversations.values());
 }
 
+export async function fetchUserRoomActivity(userId: string) {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from('lobby_messages')
+    .select('room_id, content, created_at')
+    .eq('sender_id', userId)
+    .eq('message_type', 'room')
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+
+  const roomMap = new Map<string, { room_id: string; last_message: string; last_message_at: string }>();
+  for (const msg of data || []) {
+    if (!msg.room_id || roomMap.has(msg.room_id)) continue;
+    roomMap.set(msg.room_id, {
+      room_id: msg.room_id,
+      last_message: msg.content,
+      last_message_at: msg.created_at,
+    });
+  }
+  return Array.from(roomMap.values());
+}
+
 export async function fetchUserProfile(userId: string): Promise<LobbyUserProfile | null> {
   const supabase = createClient();
   const { data, error } = await supabase

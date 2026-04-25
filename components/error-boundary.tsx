@@ -24,19 +24,12 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    // Log error to monitoring service
     console.error('Error Boundary caught an error:', error, errorInfo);
-    
-    // Call optional error handler
     this.props.onError?.(error, errorInfo);
-    
-    // TODO: Send to Sentry/DataDog
-    // Sentry.captureException(error, { extra: errorInfo });
   }
 
   render() {
     if (this.state.hasError) {
-      // Render fallback UI
       return (
         this.props.fallback || (
           <div className="flex min-h-screen flex-col items-center justify-center p-4">

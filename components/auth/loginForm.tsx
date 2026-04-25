@@ -129,6 +129,12 @@ export function LoginForm() {
             />
           </div>
 
+          <div className="flex justify-end">
+            <Link href="/forgot-password" className="text-xs text-blue-600 hover:underline font-medium">
+              Forgot your password?
+            </Link>
+          </div>
+
           <button
             type="submit"
             disabled={isSubmitting || showSuccess}

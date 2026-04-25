@@ -221,7 +221,11 @@ export function PracticeSessionUI({
   const correctAnswerKey = rawCorrectValue.trim().toLowerCase();
   const isCorrect        = selectedOption?.toLowerCase() === correctAnswerKey;
 
-  const optionsArray: string[] = question.options || [];
+  // Support both formats: DB uses option_a/b/c/d; legacy dummy data used options[]
+  const optionsArray: string[] = (question.options?.length
+    ? question.options
+    : [question.option_a, question.option_b, question.option_c, question.option_d].filter(Boolean)
+  ) as string[];
   const options = optionsArray.map((text: string, idx: number) => ({
     key: String.fromCharCode(97 + idx),
     text,

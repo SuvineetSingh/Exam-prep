@@ -65,15 +65,16 @@ export function useLobbyMessages(roomId: string | null) {
   }, [roomId]);
 
   const sendMessage = useCallback(
-    async (content: string, senderId: string) => {
-      if (!roomId) return;
+    async (content: string, senderId: string): Promise<boolean> => {
+      if (!roomId) return false;
       const supabase = createClient();
-      await supabase.from('lobby_messages').insert({
+      const { error } = await supabase.from('lobby_messages').insert({
         room_id: roomId,
         sender_id: senderId,
         content,
         message_type: 'room',
       });
+      return !error;
     },
     [roomId]
   );

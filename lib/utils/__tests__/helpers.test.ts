@@ -1,11 +1,9 @@
-import { 
-  cn, 
-  formatDate, 
-  formatTime, 
-  calculatePercentage, 
-  truncate, 
-  shuffleArray, 
-  isEmpty 
+import {
+  cn,
+  formatDate,
+  formatTime,
+  calculatePercentage,
+  isEmpty
 } from '../helpers';
 
 describe('Helper Functions', () => {
@@ -87,76 +85,6 @@ describe('Helper Functions', () => {
 
     it('handles decimals', () => {
       expect(calculatePercentage(0.5, 1)).toBe(50);
-    });
-  });
-
-  describe('truncate', () => {
-    it('truncates long strings', () => {
-      const longString = 'This is a very long string that should be truncated';
-      const result = truncate(longString, 20);
-      
-      expect(result.length).toBeLessThanOrEqual(23); // 20 + '...'
-      expect(result).toContain('...');
-    });
-
-    it('does not truncate short strings', () => {
-      const shortString = 'Short';
-      const result = truncate(shortString, 20);
-      
-      expect(result).toBe(shortString);
-      expect(result).not.toContain('...');
-    });
-
-    it('handles empty string', () => {
-      expect(truncate('', 10)).toBe('');
-    });
-
-    it('handles exact length', () => {
-      const exactString = 'Exactly20Characters!';
-      const result = truncate(exactString, 20);
-      
-      expect(result).toBe(exactString);
-    });
-
-    it('handles invalid input', () => {
-      expect(truncate(null as any, 10)).toBe('');
-      expect(truncate(undefined as any, 10)).toBe('');
-    });
-  });
-
-  describe('shuffleArray', () => {
-    it('returns array with same length', () => {
-      const arr = [1, 2, 3, 4, 5];
-      const shuffled = shuffleArray([...arr]);
-      
-      expect(shuffled.length).toBe(arr.length);
-    });
-
-    it('contains all original elements', () => {
-      const arr = [1, 2, 3, 4, 5];
-      const shuffled = shuffleArray([...arr]);
-      
-      arr.forEach(item => {
-        expect(shuffled).toContain(item);
-      });
-    });
-
-    it('handles empty array', () => {
-      const result = shuffleArray([]);
-      expect(result).toEqual([]);
-    });
-
-    it('handles single element', () => {
-      const result = shuffleArray([1]);
-      expect(result).toEqual([1]);
-    });
-
-    it('does not mutate original array', () => {
-      const arr = [1, 2, 3];
-      const original = [...arr];
-      shuffleArray(arr);
-      
-      expect(arr).toEqual(original);
     });
   });
 

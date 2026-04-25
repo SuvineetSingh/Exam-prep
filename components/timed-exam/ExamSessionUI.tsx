@@ -3,10 +3,11 @@
 interface Question {
   id: string;
   question_text: string;
-  option_a: string;
-  option_b: string;
-  option_c: string;
-  option_d: string;
+  options?: string[] | null;
+  option_a?: string | null;
+  option_b?: string | null;
+  option_c?: string | null;
+  option_d?: string | null;
 }
 
 interface ExamSessionUIProps {
@@ -199,16 +200,23 @@ export function ExamSessionUI({
           <div className="bg-white rounded-[2rem] md:rounded-[2.5rem] shadow-xl border border-gray-100 p-6 md:p-10 mb-6 w-full">
             <p className="text-lg md:text-xl font-bold text-gray-800 mb-8 leading-relaxed">{currentQuestion.question_text}</p>
             <div className="space-y-3">
-              {['a', 'b', 'c', 'd'].map((opt) => (
-                <button
-                  key={opt}
-                  onClick={() => setUserAnswers({ ...userAnswers, [currentQuestion.id]: opt.toUpperCase() })}
-                  className={`w-full text-left p-4 md:p-5 rounded-2xl border-2 transition-all font-bold flex items-center gap-4 ${userAnswers[currentQuestion.id] === opt.toUpperCase() ? 'border-blue-600 bg-blue-50 text-blue-700 ring-4 ring-blue-50' : 'border-gray-50 bg-gray-50 hover:border-gray-200 text-gray-600'}`}
-                >
-                   <span className={`w-8 h-8 md:w-10 md:h-10 shrink-0 rounded-xl flex items-center justify-center border-2 font-black ${userAnswers[currentQuestion.id] === opt.toUpperCase() ? 'border-blue-600 bg-blue-600 text-white' : 'border-gray-200 bg-white'}`}>{opt.toUpperCase()}</span>
-                   <span className="text-sm md:text-base">{currentQuestion[`option_${opt}` as keyof Question]}</span>
-                </button>
-              ))}
+              {(currentQuestion.options?.length
+                ? currentQuestion.options
+                : [currentQuestion.option_a, currentQuestion.option_b, currentQuestion.option_c, currentQuestion.option_d].filter(Boolean)
+              ).map((optText, idx) => {
+                const optKey = String.fromCharCode(65 + idx); // A, B, C, D
+                const isSelected = userAnswers[currentQuestion.id] === optKey;
+                return (
+                  <button
+                    key={optKey}
+                    onClick={() => setUserAnswers({ ...userAnswers, [currentQuestion.id]: optKey })}
+                    className={`w-full text-left p-4 md:p-5 rounded-2xl border-2 transition-all font-bold flex items-center gap-4 ${isSelected ? 'border-blue-600 bg-blue-50 text-blue-700 ring-4 ring-blue-50' : 'border-gray-50 bg-gray-50 hover:border-gray-200 text-gray-600'}`}
+                  >
+                    <span className={`w-8 h-8 md:w-10 md:h-10 shrink-0 rounded-xl flex items-center justify-center border-2 font-black ${isSelected ? 'border-blue-600 bg-blue-600 text-white' : 'border-gray-200 bg-white'}`}>{optKey}</span>
+                    <span className="text-sm md:text-base">{optText}</span>
+                  </button>
+                );
+              })}
             </div>
           </div>
           )}

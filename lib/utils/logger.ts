@@ -1,8 +1,3 @@
-/**
- * Centralized logging utility
- * Provides structured logging with different log levels
- */
-
 type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 
 interface LogContext {
@@ -21,28 +16,19 @@ class Logger {
       ...context,
     };
 
-    // Console output in development
     if (this.isDevelopment) {
       console[level === 'debug' ? 'log' : level](
         `[${timestamp}] [${level.toUpperCase()}]`,
         message,
         context || ''
       );
-    }
-
-    // Send to monitoring service in production
-    if (!this.isDevelopment) {
+    } else {
       this.sendToMonitoring(logData);
     }
   }
 
-  private sendToMonitoring(_logData: any) {
-    // TODO: Implement your monitoring service
-    // Examples:
-    // - Sentry.captureMessage()
-    // - DataDog.log()
-    // - Custom API endpoint
-  }
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  private sendToMonitoring(_logData: any) {}
 
   debug(message: string, context?: LogContext) {
     this.log('debug', message, context);

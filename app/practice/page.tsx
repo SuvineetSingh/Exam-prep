@@ -6,18 +6,21 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { v4 as uuidv4 } from 'uuid';
 import { PracticeSetupForm } from '@/components/practice/PracticeSetupForm';
+import { PaywallBanner, RunningLowBanner, FREE_QUESTION_LIMIT, FREE_QUESTION_WARNING } from '@/components/subscription/PaywallBanner';
 
 export default function PracticeSetup() {
   const router = useRouter();
   const supabase = createClient();
 
   const [examTypes, setExamTypes] = useState<string[]>([]);
-  const [categories, setCategories] = useState<string[]>([]);
 
   const [examFilter, setExamFilter] = useState('all');
-  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [categoryFilter] = useState('all');
   const [loading, setLoading] = useState(false);
   const [examError, setExamError] = useState(false);
+
+  const [isPremium, setIsPremium] = useState<boolean | null>(null);
+  const [usedCount, setUsedCount] = useState(0);
 
   // Fetch all distinct exam types once on mount
   const fetchExamTypes = useCallback(async () => {
@@ -36,46 +39,43 @@ export default function PracticeSetup() {
     }
   }, [supabase]);
 
-  // Fetch categories filtered by selected exam type
-  const fetchCategoriesForExam = useCallback(async (exam: string) => {
-    if (!exam || exam === 'all') {
-      setCategories([]);
-      return;
-    }
-
-    const { data, error } = await supabase
-      .from('questions')
-      .select('category')
-      .eq('exam_type', exam);
-
-    if (error) {
-      console.error('Error loading categories:', error.message);
-      return;
-    }
-
-    if (data) {
-      const unique = Array.from(new Set(data.map((i) => i.category).filter(Boolean))).sort();
-      setCategories(unique as string[]);
-    }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
   useEffect(() => {
     fetchExamTypes();
-  }, [fetchExamTypes]);
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) return;
+      supabase
+        .from('user_profiles')
+        .select('is_premium')
+        .eq('id', user.id)
+        .single()
+        .then(({ data }) => setIsPremium(data?.is_premium ?? false));
+    });
+  }, [fetchExamTypes]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Re-fetch categories whenever the exam selection changes
+  // Check freemium quota when exam changes
   useEffect(() => {
-    fetchCategoriesForExam(examFilter);
-    setCategoryFilter('all'); // always reset category on exam change
-  }, [examFilter, fetchCategoriesForExam]);
+    if (!examFilter || examFilter === 'all' || isPremium) return;
+
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) return;
+      supabase
+        .from('user_answers')
+        .select('question_id')
+        .eq('user_id', user.id)
+        .eq('exam_type', examFilter)
+        .then(({ data }) => {
+          const distinct = data ? new Set(data.map((r) => r.question_id)).size : 0;
+          setUsedCount(distinct);
+        });
+    });
+  }, [examFilter, isPremium]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleExamChange = (val: string) => {
     setExamFilter(val);
-    setExamError(false); // clear error as soon as user picks something
+    setExamError(false);
   };
 
   const handleStart = async () => {
-    // Enforce exam selection
     if (examFilter === 'all' || examFilter === '') {
       setExamError(true);
       return;
@@ -120,16 +120,30 @@ export default function PracticeSetup() {
           <p className="text-gray-500 mt-2">Select your focus area to begin.</p>
         </div>
 
-        <PracticeSetupForm
-          examFilter={examFilter}
-          setExamFilter={handleExamChange}
-          categoryFilter={categoryFilter}
-          setCategoryFilter={setCategoryFilter}
-          options={{ examTypes, categories }}
-          onStart={handleStart}
-          loading={loading}
-          examError={examError}
-        />
+        {!isPremium && examFilter !== 'all' && usedCount >= FREE_QUESTION_LIMIT ? (
+          <PaywallBanner examType={examFilter} usedCount={usedCount} />
+        ) : (
+          <>
+            {!isPremium && examFilter !== 'all' && usedCount >= FREE_QUESTION_WARNING && (
+              <div className="mb-4">
+                <RunningLowBanner
+                  examType={examFilter}
+                  remaining={FREE_QUESTION_LIMIT - usedCount}
+                />
+              </div>
+            )}
+            <PracticeSetupForm
+              examFilter={examFilter}
+              setExamFilter={handleExamChange}
+              categoryFilter={categoryFilter}
+              setCategoryFilter={() => {}}
+              options={{ examTypes, categories: [] }}
+              onStart={handleStart}
+              loading={loading}
+              examError={examError}
+            />
+          </>
+        )}
       </div>
     </div>
   );

@@ -3,6 +3,7 @@ import { Header } from '../Header';
 
 jest.mock('next/navigation', () => ({
   useRouter: () => ({ push: jest.fn() }),
+  usePathname: () => '/dashboard',
 }));
 jest.mock('@/lib/supabase/client', () => ({
   createClient: () => ({
@@ -40,8 +41,9 @@ describe('Header', () => {
   it('renders profile dropdown button with email initial', () => {
     render(<Header user={mockUser} />);
 
-    // ProfileDropdown uses email initial
-    expect(screen.getByText('T')).toBeInTheDocument(); // First letter of "test@example.com"
+    // ProfileDropdown renders in both desktop and mobile — expect at least one
+    const initials = screen.getAllByText('T');
+    expect(initials.length).toBeGreaterThan(0); // First letter of "test@example.com"
   });
 
   it('renders profile button with email initial when no username', () => {
@@ -55,17 +57,19 @@ describe('Header', () => {
     } as any;
     render(<Header user={userWithoutUsername} />);
 
-    expect(screen.getByText('U')).toBeInTheDocument(); // First letter of "user@example.com"
+    const initials = screen.getAllByText('U');
+    expect(initials.length).toBeGreaterThan(0); // First letter of "user@example.com"
   });
 
   it('opens profile dropdown when profile button is clicked', () => {
     render(<Header user={mockUser} />);
 
-    const profileButton = screen.getByRole('button', { name: 'T Online' });
-    fireEvent.click(profileButton);
+    const profileButtons = screen.getAllByRole('button', { name: 'T Online' });
+    fireEvent.click(profileButtons[0]!);
 
-    expect(screen.getByText('Exam History')).toBeInTheDocument();
-    expect(screen.getByText('Logout')).toBeInTheDocument();
+    // Multiple "Exam History" links exist (dropdown + mobile drawer) — just check at least one
+    expect(screen.getAllByText('Exam History').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Logout').length).toBeGreaterThan(0);
   });
 
   it('has fixed positioning at top', () => {

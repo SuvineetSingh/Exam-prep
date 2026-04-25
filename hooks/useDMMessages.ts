@@ -72,15 +72,16 @@ export function useDMMessages(userId: string | null, partnerId: string | null) {
   }, [userId, partnerId]);
 
   const sendDM = useCallback(
-    async (content: string) => {
-      if (!userId || !partnerId) return;
+    async (content: string): Promise<boolean> => {
+      if (!userId || !partnerId) return false;
       const supabase = createClient();
-      await supabase.from('lobby_messages').insert({
+      const { error } = await supabase.from('lobby_messages').insert({
         sender_id: userId,
         recipient_id: partnerId,
         content,
         message_type: 'dm',
       });
+      return !error;
     },
     [userId, partnerId]
   );

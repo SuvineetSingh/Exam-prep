@@ -12,7 +12,6 @@ export function getSupabaseConfig(): SupabaseConfig {
       'Missing Supabase environment variables. Please check your .env.local file and ensure NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY are set.';
     
     if (process.env.NODE_ENV === 'production') {
-      // TODO: Integrate with error monitoring (Sentry/DataDog)
       console.error(errorMessage);
     }
     

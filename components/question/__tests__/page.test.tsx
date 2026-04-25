@@ -24,6 +24,8 @@ describe('QuestionsDashboard', () => {
     order: jest.fn().mockReturnThis(),
     range: jest.fn().mockReturnThis(),
     eq: jest.fn().mockReturnThis(),
+    single: jest.fn().mockResolvedValue({ data: { is_premium: false }, error: null }),
+    then: jest.fn(),
   };
 
   const mockQuestions = [
@@ -54,6 +56,7 @@ describe('QuestionsDashboard', () => {
     mockSupabase.order.mockReturnThis();
     mockSupabase.range.mockReturnThis();
     mockSupabase.eq.mockReturnThis();
+    mockSupabase.single.mockResolvedValue({ data: { is_premium: false }, error: null });
     mockSupabase.auth.onAuthStateChange.mockReturnValue({
       data: { subscription: { unsubscribe: jest.fn() } },
     });
@@ -63,12 +66,19 @@ describe('QuestionsDashboard', () => {
       data: { session: { user: { email: 'test@example.com', user_metadata: { full_name: 'Atharva Thube' } } } },
     });
 
-    // select: chain continues for count queries, resolves directly for filter queries
+    // select: chain continues for count/premium/quota queries; resolves directly for filter queries
     mockSupabase.select.mockImplementation((_fields: string, options?: { count?: string }) => {
-      if (options?.count === 'exact') {
-        return mockSupabase; // keep chain going → .order().range() will resolve
-      }
+      if (options?.count === 'exact') return mockSupabase; // → .range() resolves
+      if (_fields === 'is_premium') return mockSupabase;   // → .eq().single() resolves
+      if (_fields === 'question_id') return mockSupabase;  // → .eq().eq().then() resolves
       return Promise.resolve({ data: mockQuestions, error: null });
+    });
+
+    // Make .then() on the chain work for quota queries (user_answers)
+    mockSupabase.eq.mockImplementation(() => {
+      const chain = Object.create(mockSupabase);
+      chain.then = (cb: (v: any) => void) => { cb({ data: [], error: null }); };
+      return chain;
     });
 
     // range: final step of fetchQuestions chain

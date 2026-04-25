@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import Link from 'next/link';
 import { ExamSetupForm } from '@/components/timed-exam/ExamSetupForm';
-// Import the UUID generator
+import { PaywallBanner, RunningLowBanner, FREE_QUESTION_LIMIT, FREE_QUESTION_WARNING } from '@/components/subscription/PaywallBanner';
 import { v4 as uuidv4 } from 'uuid';
 
 export default function ExamSetupPage() {
@@ -20,6 +20,9 @@ export default function ExamSetupPage() {
   const [loading, setLoading] = useState(false);
   const [fetchingFilters, setFetchingFilters] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const [isPremium, setIsPremium] = useState<boolean | null>(null);
+  const [usedCount, setUsedCount] = useState(0);
 
   const fetchExamTypes = useCallback(async () => {
     try {
@@ -38,7 +41,34 @@ export default function ExamSetupPage() {
 
   useEffect(() => {
     fetchExamTypes();
-  }, [fetchExamTypes]);
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) return;
+      supabase
+        .from('user_profiles')
+        .select('is_premium')
+        .eq('id', user.id)
+        .single()
+        .then(({ data }) => setIsPremium(data?.is_premium ?? false));
+    });
+  }, [fetchExamTypes]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    const examType = config.examType;
+    if (!examType || isPremium) return;
+
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) return;
+      supabase
+        .from('user_answers')
+        .select('question_id')
+        .eq('user_id', user.id)
+        .eq('exam_type', examType)
+        .then(({ data }) => {
+          const distinct = data ? new Set(data.map((r) => r.question_id)).size : 0;
+          setUsedCount(distinct);
+        });
+    });
+  }, [config.examType, isPremium]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const timeLimit = config.questionCount * 1.5;
 
@@ -50,7 +80,6 @@ export default function ExamSetupPage() {
     setError(null);
     setLoading(true);
 
-    // FIX: Use uuidv4 instead of crypto.randomUUID()
     const sessionId = uuidv4();
     
     router.push(
@@ -85,19 +114,35 @@ export default function ExamSetupPage() {
         </Link>
       </div>
 
-      <ExamSetupForm
-        examTypes={examTypes}
-        config={config}
-        setConfig={(newConfig) => {
-          setConfig(newConfig);
-          setError(null);
-        }}
-        loading={loading}
-        fetchingFilters={fetchingFilters}
-        error={error}
-        onStart={handleStartExam}
-        timeLimit={timeLimit}
-      />
+      {!isPremium && config.examType && usedCount >= FREE_QUESTION_LIMIT ? (
+        <div className="max-w-md w-full">
+          <PaywallBanner examType={config.examType} usedCount={usedCount} />
+        </div>
+      ) : (
+        <>
+          {!isPremium && config.examType && usedCount >= FREE_QUESTION_WARNING && (
+            <div className="max-w-md w-full mb-4">
+              <RunningLowBanner
+                examType={config.examType}
+                remaining={FREE_QUESTION_LIMIT - usedCount}
+              />
+            </div>
+          )}
+          <ExamSetupForm
+            examTypes={examTypes}
+            config={config}
+            setConfig={(newConfig) => {
+              setConfig(newConfig);
+              setError(null);
+            }}
+            loading={loading}
+            fetchingFilters={fetchingFilters}
+            error={error}
+            onStart={handleStartExam}
+            timeLimit={timeLimit}
+          />
+        </>
+      )}
     </div>
   );
 }

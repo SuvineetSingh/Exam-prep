@@ -42,14 +42,13 @@ export async function updateSession(request: NextRequest) {
   }
 
   const protectedRoutes = ['/questions', '/practice', '/timed-exam', '/dashboard'];
-  const publicRoutes = ['/', '/login', '/register'];
+  // Only login/register redirect authenticated users — homepage (/) is accessible to all
+  const authRoutes = ['/login', '/register'];
 
   const isProtectedRoute = protectedRoutes.some((route) =>
     request.nextUrl.pathname.startsWith(route)
   );
-  const isPublicRoute = publicRoutes.some((route) =>
-    request.nextUrl.pathname === route
-  );
+  const isAuthRoute = authRoutes.includes(request.nextUrl.pathname);
 
   if (isProtectedRoute && !user) {
     const redirectUrl = request.nextUrl.clone();
@@ -58,7 +57,7 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(redirectUrl);
   }
 
-  if (isPublicRoute && user) {
+  if (isAuthRoute && user) {
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname = '/dashboard';
     return NextResponse.redirect(redirectUrl);

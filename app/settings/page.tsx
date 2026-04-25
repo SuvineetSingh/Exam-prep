@@ -6,11 +6,10 @@ import { createClient } from '@/lib/supabase/client';
 import { fetchUserProfile } from '@/lib/supabase/queries/lobbyQueries';
 import type { User } from '@supabase/supabase-js';
 import type { LobbyUserProfile, SettingsTab } from '@/lib/types';
-import { Header } from '@/components/layout/Header';
+import { Header, SubscriptionBadge } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { SettingsTabs } from '@/components/settings/SettingsTabs';
 import { ProfileTab } from '@/components/settings/ProfileTab';
-import { SubscriptionTab } from '@/components/settings/SubscriptionTab';
 import { LobbyPreferencesTab } from '@/components/settings/LobbyPreferencesTab';
 
 export default function SettingsPage() {
@@ -60,7 +59,10 @@ export default function SettingsPage() {
 
       <main className="max-w-6xl mx-auto px-4 py-8 pt-24">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Account Settings</h1>
+          <div className="flex items-center gap-3 mb-2">
+            <h1 className="text-3xl font-bold text-gray-900">Account Settings</h1>
+            <SubscriptionBadge isPremium={userProfile ? (userProfile.is_premium ?? false) : null} />
+          </div>
           <p className="text-gray-600">
             Manage your profile, subscription, and preferences
           </p>
@@ -73,12 +75,11 @@ export default function SettingsPage() {
             userId={user.id}
             userProfile={userProfile}
             onUpdate={handleRefreshProfile}
+            authProvider={user.app_metadata?.provider}
           />
         )}
 
-        {activeTab === 'subscription' && <SubscriptionTab />}
-
-        {activeTab === 'preferences' && (
+          {activeTab === 'preferences' && (
           <LobbyPreferencesTab
             userId={user.id}
             userProfile={userProfile}

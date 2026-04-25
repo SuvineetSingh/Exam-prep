@@ -19,6 +19,7 @@ export interface LobbyUserProfile {
   bio: string | null;
   current_room_id: string | null;
   is_bot: boolean;
+  is_premium: boolean;
   last_seen_at: string;
   created_at: string;
   updated_at: string;
@@ -48,27 +49,6 @@ export interface LobbyMessage {
     exam_type: string | null;
     industry: string | null;
   };
-}
-
-export interface DMConversation {
-  partner_id: string;
-  partner_username: string;
-  partner_avatar_url: string | null;
-  last_message: string;
-  last_message_at: string;
-  unread_count: number;
-}
-
-export interface BotScriptEntry {
-  content: string;
-  room_slug: string;
-  min_delay_ms: number;
-  max_delay_ms: number;
-}
-
-export interface BotScript {
-  messages: BotScriptEntry[];
-  loop: boolean;
 }
 
 export interface NotificationToast {
