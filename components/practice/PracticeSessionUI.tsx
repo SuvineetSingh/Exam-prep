@@ -156,14 +156,14 @@ function SidePanel({
         <div className="px-6 py-5 border-t border-slate-100 space-y-2">
           <button
             onClick={onSaveAndEnd}
-            disabled={saving || log.length === 0}
+            disabled={saving}
             className="w-full py-3.5 bg-slate-900 text-white rounded-2xl font-black text-sm uppercase tracking-wider hover:bg-emerald-600 transition-colors shadow-lg disabled:opacity-50"
           >
-            {saving ? 'Saving…' : 'Save & End Session'}
+            {saving ? 'Saving…' : log.length > 0 ? 'Save & End Session' : 'End Session'}
           </button>
           {log.length === 0 && (
             <p className="text-center text-[11px] text-slate-400">
-              Answer at least one question to save.
+              No answers to save — session will be discarded.
             </p>
           )}
         </div>
@@ -357,7 +357,11 @@ export function PracticeSessionUI({
         open={panelOpen}
         onClose={() => setPanelOpen(false)}
         log={sessionLog}
-        onSaveAndEnd={() => { setPanelOpen(false); setShowSaveExitPopup(true); }}
+        onSaveAndEnd={() => {
+          setPanelOpen(false);
+          if (sessionLog.length > 0) setShowSaveExitPopup(true);
+          else setShowExitPopup(true);
+        }}
         saving={saving}
       />
 
@@ -400,6 +404,12 @@ export function PracticeSessionUI({
             </p>
             {/* Mini summary */}
             <div className="flex gap-3 mb-8">
+              <div className="flex-1 text-center bg-slate-50 rounded-2xl py-3">
+                <p className="text-xl font-black text-slate-700">
+                  {sessionLog.length}
+                </p>
+                <p className="text-[10px] font-bold uppercase text-slate-400">Attempted</p>
+              </div>
               <div className="flex-1 text-center bg-emerald-50 rounded-2xl py-3">
                 <p className="text-xl font-black text-emerald-600">
                   {sessionLog.filter(e => e.isCorrect).length}
@@ -566,11 +576,14 @@ export function PracticeSessionUI({
         {/* Save & End Session — bottom CTA */}
         <div className="mt-4">
           <button
-            onClick={() => setShowSaveExitPopup(true)}
-            disabled={sessionLog.length === 0}
-            className="w-full py-3 rounded-2xl border-2 border-dashed border-slate-300 text-slate-400 font-bold text-sm hover:border-emerald-400 hover:text-emerald-600 hover:bg-emerald-50 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+            onClick={() =>
+              sessionLog.length > 0
+                ? setShowSaveExitPopup(true)
+                : setShowExitPopup(true)
+            }
+            className="w-full py-3 rounded-2xl border-2 border-dashed border-slate-300 text-slate-400 font-bold text-sm hover:border-emerald-400 hover:text-emerald-600 hover:bg-emerald-50 transition-all"
           >
-            💾 Save &amp; End Session
+            {sessionLog.length > 0 ? '💾 Save & End Session' : '✕ End Session'}
           </button>
         </div>
       </div>
