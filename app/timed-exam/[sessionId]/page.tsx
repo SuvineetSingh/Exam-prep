@@ -149,10 +149,11 @@ export default function ExamPage({ params }: { params: Promise<{ sessionId: stri
           user_id: user.id,
           question_id: q.id,
           exam_session_id: sessionId,
-          selected_answer: userChoice, 
+          selected_answer: userChoice,
           is_correct: isCorrect,
           mode: 'timed',
-          time_spent: 0 
+          exam_type: examType,
+          time_spent: 0
         };
       });
 
@@ -164,6 +165,7 @@ export default function ExamPage({ params }: { params: Promise<{ sessionId: stri
         id: sessionId,
         user_id: user.id,
         exam_type: examType,
+        mode: 'timed',
         total_questions: actualCount,
         score: correctCount,
         percentage: Math.round((correctCount / actualCount) * 100),

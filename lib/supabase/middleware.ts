@@ -41,7 +41,7 @@ export async function updateSession(request: NextRequest) {
     console.error('Error refreshing session:', error);
   }
 
-  const protectedRoutes = ['/questions', '/practice', '/timed-exam', '/dashboard'];
+  const protectedRoutes = ['/questions', '/practice', '/timed-exam', '/dashboard', '/lobby', '/history', '/courses', '/settings'];
   // Only login/register redirect authenticated users — homepage (/) is accessible to all
   const authRoutes = ['/login', '/register'];
 

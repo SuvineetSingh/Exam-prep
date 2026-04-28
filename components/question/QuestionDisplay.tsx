@@ -50,7 +50,7 @@ export function QuestionDisplay({ question: q, mode, onAnswer }: QuestionDisplay
     setIsSubmitted(true);
 
     // Save the answer to database for stats tracking
-    await saveUserAnswer(q.id, selectedOption, isCorrect, 0, mode);
+    await saveUserAnswer(q.id, selectedOption, isCorrect, 0, mode, null, q.exam_type);
 
     // Notify parent component if callback provided
     if (onAnswer) {

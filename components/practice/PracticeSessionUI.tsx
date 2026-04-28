@@ -316,6 +316,7 @@ export function PracticeSessionUI({
         selected_answer: entry.selectedAnswer.toUpperCase(),
         is_correct:      entry.isCorrect,
         mode:            'practice' as const,
+        exam_type:       examFilter,
         time_spent:      entry.timeSpent,
       }));
 

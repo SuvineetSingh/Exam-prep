@@ -10,7 +10,8 @@ export async function saveUserAnswer(
   isCorrect: boolean,
   timeSpent: number = 0,
   mode: 'practice' | 'timed' = 'practice',
-  examSessionId: string | null = null
+  examSessionId: string | null = null,
+  examType: string | null = null
 ): Promise<{ success: boolean; error?: string }> {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -27,6 +28,7 @@ export async function saveUserAnswer(
     time_spent: timeSpent,
     mode: mode,
     exam_session_id: examSessionId,
+    exam_type: examType,
   });
 
   if (error) {
