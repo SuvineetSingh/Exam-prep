@@ -16,7 +16,11 @@ export function PaywallBanner({ examType, usedCount }: PaywallBannerProps) {
 
   const handleUpgrade = async () => {
     setCheckoutLoading(true);
-    const res = await fetch('/api/stripe/checkout', { method: 'POST' });
+    const res = await fetch('/api/stripe/checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ course: examType }),
+    });
     const data = await res.json();
     if (data.url) {
       window.location.href = data.url;
@@ -38,7 +42,7 @@ export function PaywallBanner({ examType, usedCount }: PaywallBannerProps) {
           You've used all {FREE_QUESTION_LIMIT} free {examType} questions
         </h3>
         <p className="text-sm text-amber-700 max-w-xs mx-auto">
-          Unlock unlimited access to all {examType} questions — and every other course — for a one-time payment of $50.
+          Unlock unlimited access to all {examType} questions with Pro access for a one-time payment of $50.
         </p>
       </div>
 
@@ -54,7 +58,7 @@ export function PaywallBanner({ examType, usedCount }: PaywallBannerProps) {
               Redirecting...
             </>
           ) : (
-            'Upgrade for $50 →'
+            `Buy ${examType} Pro — $50 →`
           )}
         </button>
         <Link
@@ -86,7 +90,7 @@ export function RunningLowBanner({ examType, remaining }: RunningLowBannerProps)
       <span className="text-yellow-800">
         <strong>{remaining} free {examType} question{remaining === 1 ? '' : 's'} remaining.</strong>{' '}
         <Link href="/courses" className="underline font-semibold hover:text-yellow-900">
-          Upgrade for full access →
+          Get Pro access →
         </Link>
       </span>
     </div>

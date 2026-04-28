@@ -75,6 +75,17 @@ export interface ProfileFormData {
   bio: string | null;
 }
 
+// Course subscription
+export type CourseName = 'CPA' | 'CFA' | 'FE';
+
+export interface CourseSubscription {
+  id: string;
+  user_id: string;
+  course: CourseName;
+  stripe_session_id: string | null;
+  purchased_at: string;
+}
+
 // User stats for dashboard
 export interface UserStats {
   total_answered: number;

@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { CoursesClient } from '@/components/subscription/CoursesClient';
+import type { CourseName } from '@/lib/types';
 
 const COURSES = [
   {
@@ -31,16 +32,19 @@ const COURSES = [
 export default async function CoursesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ success?: string; session_id?: string }>;
+  searchParams: Promise<{ success?: string; session_id?: string; course?: string }>;
 }) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) redirect('/login');
 
-  // Fetch premium status and question counts in parallel
-  const [profileResult, ...countResults] = await Promise.all([
-    supabase.from('user_profiles').select('is_premium').eq('id', user.id).single(),
+  // Fetch course subscriptions and question counts in parallel
+  const [subsResult, ...countResults] = await Promise.all([
+    supabase
+      .from('course_subscriptions')
+      .select('course')
+      .eq('user_id', user.id),
     ...COURSES.map((c) =>
       supabase
         .from('questions')
@@ -49,12 +53,17 @@ export default async function CoursesPage({
     ),
   ]);
 
-  const isPremium = profileResult.data?.is_premium ?? false;
+  const purchasedCourses: CourseName[] = (subsResult.data ?? []).map(
+    (row) => row.course as CourseName
+  );
   const questionCounts: number[] = countResults.map((r) => r.count ?? 0);
 
   const params = await searchParams;
   const successPending = params.success === 'true';
   const sessionId = params.session_id;
+  const successCourse = params.course;
+
+  const hasAnyCourse = purchasedCourses.length > 0;
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -63,17 +72,18 @@ export default async function CoursesPage({
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Courses</h1>
           <p className="text-gray-600">
-            {isPremium
-              ? 'You have full access to all courses.'
-              : 'Get unlimited access to all courses for a one-time payment of $50.'}
+            {hasAnyCourse
+              ? `You have Pro access to ${purchasedCourses.join(', ')}. Buy more courses below.`
+              : 'Get unlimited access to each course for $50 per course.'}
           </p>
         </div>
 
         <CoursesClient
           courses={COURSES.map((c, i) => ({ ...c, questionCount: questionCounts[i] ?? 0 }))}
-          isPremium={isPremium}
+          purchasedCourses={purchasedCourses}
           successPending={successPending}
           sessionId={sessionId}
+          successCourse={successCourse}
         />
       </main>
       <Footer />

@@ -40,31 +40,55 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ upgraded: false });
   }
 
-  // Check if already upgraded (webhook may have already handled it)
+  const course = session.metadata?.course ?? null;
+  const serviceClient = createServiceClient();
+
+  if (course) {
+    // Check if webhook already inserted the course subscription
+    const { data: existingSub } = await serviceClient
+      .from('course_subscriptions')
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('course', course)
+      .maybeSingle();
+
+    if (!existingSub) {
+      // Webhook missed it — insert now
+      const { error: subError } = await serviceClient
+        .from('course_subscriptions')
+        .upsert(
+          { user_id: user.id, course, stripe_session_id: session.id },
+          { onConflict: 'user_id,course', ignoreDuplicates: true }
+        );
+
+      if (subError) {
+        console.error('Verify fallback: course_subscriptions insert failed', subError);
+        return NextResponse.json({ error: 'DB update failed' }, { status: 500 });
+      }
+    }
+  }
+
+  // Ensure is_premium flag is set
   const { data: profile } = await supabase
     .from('user_profiles')
     .select('is_premium')
     .eq('id', user.id)
     .single();
 
-  if (profile?.is_premium) {
-    return NextResponse.json({ upgraded: true });
+  if (!profile?.is_premium) {
+    const { error } = await serviceClient
+      .from('user_profiles')
+      .update({
+        is_premium: true,
+        premium_purchased_at: new Date().toISOString(),
+      })
+      .eq('id', user.id);
+
+    if (error) {
+      console.error('Verify fallback: profile update failed', error);
+      return NextResponse.json({ error: 'DB update failed' }, { status: 500 });
+    }
   }
 
-  // Webhook missed it — upgrade now
-  const serviceClient = createServiceClient();
-  const { error } = await serviceClient
-    .from('user_profiles')
-    .update({
-      is_premium: true,
-      premium_purchased_at: new Date().toISOString(),
-    })
-    .eq('id', user.id);
-
-  if (error) {
-    console.error('Verify fallback: DB update failed', error);
-    return NextResponse.json({ error: 'DB update failed' }, { status: 500 });
-  }
-
-  return NextResponse.json({ upgraded: true });
+  return NextResponse.json({ upgraded: true, course });
 }

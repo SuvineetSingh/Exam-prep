@@ -1,5 +1,22 @@
 import { createClient } from '@/lib/supabase/client';
-import type { UserStats } from '@/lib/types';
+import type { UserStats, CourseName } from '@/lib/types';
+
+/**
+ * Returns the list of course names (CPA, CFA, FE) the user has purchased Pro access for.
+ */
+export async function getUserCourseSubscriptions(): Promise<CourseName[]> {
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return [];
+
+  const { data, error } = await supabase
+    .from('course_subscriptions')
+    .select('course')
+    .eq('user_id', user.id);
+
+  if (error || !data) return [];
+  return data.map((row) => row.course as CourseName);
+}
 
 /**
  * Saves a user's answer to a question

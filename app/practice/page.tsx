@@ -19,7 +19,8 @@ export default function PracticeSetup() {
   const [loading, setLoading] = useState(false);
   const [examError, setExamError] = useState(false);
 
-  const [isPremium, setIsPremium] = useState<boolean | null>(null);
+  const [purchasedCourses, setPurchasedCourses] = useState<string[]>([]);
+  const [coursesLoaded, setCoursesLoaded] = useState(false);
   const [usedCount, setUsedCount] = useState(0);
 
   // Fetch all distinct exam types once on mount
@@ -44,17 +45,20 @@ export default function PracticeSetup() {
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) return;
       supabase
-        .from('user_profiles')
-        .select('is_premium')
-        .eq('id', user.id)
-        .single()
-        .then(({ data }) => setIsPremium(data?.is_premium ?? false));
+        .from('course_subscriptions')
+        .select('course')
+        .eq('user_id', user.id)
+        .then(({ data }) => {
+          setPurchasedCourses((data ?? []).map((r: any) => r.course));
+          setCoursesLoaded(true);
+        });
     });
   }, [fetchExamTypes]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Check freemium quota when exam changes
   useEffect(() => {
-    if (!examFilter || examFilter === 'all' || isPremium) return;
+    const hasCourse = purchasedCourses.includes(examFilter);
+    if (!examFilter || examFilter === 'all' || hasCourse || !coursesLoaded) return;
 
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) return;
@@ -68,7 +72,7 @@ export default function PracticeSetup() {
           setUsedCount(distinct);
         });
     });
-  }, [examFilter, isPremium]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [examFilter, purchasedCourses, coursesLoaded]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleExamChange = (val: string) => {
     setExamFilter(val);
@@ -120,11 +124,11 @@ export default function PracticeSetup() {
           <p className="text-gray-500 mt-2">Select your focus area to begin.</p>
         </div>
 
-        {!isPremium && examFilter !== 'all' && usedCount >= FREE_QUESTION_LIMIT ? (
+        {coursesLoaded && !purchasedCourses.includes(examFilter) && examFilter !== 'all' && usedCount >= FREE_QUESTION_LIMIT ? (
           <PaywallBanner examType={examFilter} usedCount={usedCount} />
         ) : (
           <>
-            {!isPremium && examFilter !== 'all' && usedCount >= FREE_QUESTION_WARNING && (
+            {coursesLoaded && !purchasedCourses.includes(examFilter) && examFilter !== 'all' && usedCount >= FREE_QUESTION_WARNING && (
               <div className="mb-4">
                 <RunningLowBanner
                   examType={examFilter}

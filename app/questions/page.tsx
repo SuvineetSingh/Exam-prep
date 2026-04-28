@@ -55,8 +55,9 @@ export default function QuestionsDashboard() {
   const [difficulty, setDifficulty] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Freemium gating
-  const [isPremium, setIsPremium] = useState<boolean | null>(null);
+  // Freemium gating — per-course
+  const [purchasedCourses, setPurchasedCourses] = useState<string[]>([]);
+  const [coursesLoaded, setCoursesLoaded] = useState(false);
   const [usedCount, setUsedCount] = useState(0);
 
   const fetchFilters = useCallback(async () => {
@@ -87,13 +88,15 @@ export default function QuestionsDashboard() {
       setAuthLoading(false);
       fetchFilters();
 
-      // Check premium status
+      // Load per-course subscriptions
       supabase
-        .from('user_profiles')
-        .select('is_premium')
-        .eq('id', session.user.id)
-        .single()
-        .then(({ data }) => setIsPremium(data?.is_premium ?? false));
+        .from('course_subscriptions')
+        .select('course')
+        .eq('user_id', session.user.id)
+        .then(({ data }) => {
+          setPurchasedCourses((data ?? []).map((r: any) => r.course));
+          setCoursesLoaded(true);
+        });
     };
 
     initAuth();
@@ -152,7 +155,8 @@ export default function QuestionsDashboard() {
 
   // Re-check free quota when exam type filter changes
   useEffect(() => {
-    if (examType === 'all' || isPremium || !user) return;
+    const hasCourse = purchasedCourses.includes(examType);
+    if (examType === 'all' || hasCourse || !user || !coursesLoaded) return;
     supabase
       .from('user_answers')
       .select('question_id')
@@ -162,7 +166,7 @@ export default function QuestionsDashboard() {
         const distinct = data ? new Set(data.map((r: any) => r.question_id)).size : 0;
         setUsedCount(distinct);
       });
-  }, [examType, isPremium, user]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [examType, purchasedCourses, user, coursesLoaded]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -202,7 +206,7 @@ export default function QuestionsDashboard() {
         )}
 
         {/* Free-tier upgrade nudge for specific exam filter */}
-        {!isPremium && examType !== 'all' && usedCount >= FREE_QUESTION_LIMIT && (
+        {coursesLoaded && !purchasedCourses.includes(examType) && examType !== 'all' && usedCount >= FREE_QUESTION_LIMIT && (
           <div className="mb-4 p-4 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-between gap-4 flex-wrap">
             <div className="flex items-center gap-2 text-sm text-amber-800">
               <svg className="w-4 h-4 text-amber-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -217,7 +221,7 @@ export default function QuestionsDashboard() {
               href="/courses"
               className="text-xs font-bold px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg transition-colors whitespace-nowrap"
             >
-              Upgrade for $50 →
+              Get Pro Access →
             </Link>
           </div>
         )}

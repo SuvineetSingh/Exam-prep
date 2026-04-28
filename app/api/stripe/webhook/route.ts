@@ -43,13 +43,32 @@ export async function POST(request: NextRequest) {
     }
 
     const userId = session.metadata?.supabase_user_id;
+    const course = session.metadata?.course;
+
     if (!userId) {
       console.error('Webhook: missing supabase_user_id in session metadata');
       return NextResponse.json({ error: 'Missing user ID' }, { status: 400 });
     }
 
     const supabase = createServiceClient();
-    const { error } = await supabase
+
+    if (course) {
+      // Per-course subscription purchase
+      const { error: subError } = await supabase
+        .from('course_subscriptions')
+        .upsert(
+          { user_id: userId, course, stripe_session_id: session.id },
+          { onConflict: 'user_id,course', ignoreDuplicates: true }
+        );
+
+      if (subError) {
+        console.error('Webhook: failed to insert course subscription', userId, course, subError);
+        return NextResponse.json({ error: 'DB update failed' }, { status: 500 });
+      }
+    }
+
+    // Keep is_premium as a convenience flag — true if user has any course
+    const { error: profileError } = await supabase
       .from('user_profiles')
       .update({
         is_premium: true,
@@ -57,8 +76,8 @@ export async function POST(request: NextRequest) {
       })
       .eq('id', userId);
 
-    if (error) {
-      console.error('Webhook: failed to upgrade user', userId, error);
+    if (profileError) {
+      console.error('Webhook: failed to update user profile', userId, profileError);
       return NextResponse.json({ error: 'DB update failed' }, { status: 500 });
     }
   }
