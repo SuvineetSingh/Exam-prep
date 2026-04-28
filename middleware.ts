@@ -1,27 +1,36 @@
-import { updateSession } from '@/lib/supabase/middleware';
-import type { NextRequest } from 'next/server';
+import { NextResponse, type NextRequest } from 'next/server';
 
-/**
- * Middleware runs before every request
- * Used here to refresh Supabase authentication sessions
- */
-export async function middleware(request: NextRequest) {
-  // Update Supabase session
-  return await updateSession(request);
+const PROTECTED = ['/questions', '/practice', '/timed-exam', '/dashboard', '/lobby', '/history', '/courses', '/settings'];
+const AUTH_ONLY = ['/login', '/register'];
+
+export function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  // Detect a Supabase session purely from cookies — no network call, no timeout.
+  // Pages individually call supabase.auth.getUser() to fully verify the JWT.
+  const hasSession = request.cookies.getAll().some(
+    (c) => c.name.includes('-auth-token') && c.value.length > 0
+  );
+
+  if (PROTECTED.some((r) => pathname.startsWith(r)) && !hasSession) {
+    const url = request.nextUrl.clone();
+    url.pathname = '/login';
+    url.searchParams.set('redirectedFrom', pathname);
+    return NextResponse.redirect(url);
+  }
+
+  if (AUTH_ONLY.includes(pathname) && hasSession) {
+    const url = request.nextUrl.clone();
+    url.pathname = '/dashboard';
+    return NextResponse.redirect(url);
+  }
+
+  return NextResponse.next();
 }
 
-/**
- * Configure which routes should run middleware
- * Match all routes except static files and API routes that don't need auth
- */
 export const config = {
   matcher: [
-    /*
-     * Only run middleware on page routes — skip:
-     * - _next/static / _next/image (assets)
-     * - favicon and public images
-     * - /api/* routes (they handle auth themselves and don't need session refresh)
-     */
+    // Skip static assets, images, and API routes — only run on page routes
     '/((?!_next/static|_next/image|favicon.ico|api/|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 };
