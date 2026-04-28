@@ -34,15 +34,12 @@ export async function updateSession(request: NextRequest) {
     },
   });
 
-  const { data: { user }, error } = await supabase.auth.getUser();
-
-  // Only log real errors, not missing session (status 400)
-  if (error && error.status !== 400) {
-    console.error('Error refreshing session:', error);
-  }
+  // getSession() reads from the cookie — no network call, safe for Edge Runtime.
+  // Individual server components/actions call getUser() to fully verify the JWT.
+  const { data: { session } } = await supabase.auth.getSession();
+  const user = session?.user ?? null;
 
   const protectedRoutes = ['/questions', '/practice', '/timed-exam', '/dashboard', '/lobby', '/history', '/courses', '/settings'];
-  // Only login/register redirect authenticated users — homepage (/) is accessible to all
   const authRoutes = ['/login', '/register'];
 
   const isProtectedRoute = protectedRoutes.some((route) =>
