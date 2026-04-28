@@ -92,17 +92,23 @@ export function CoursesClient({
 
   const handleCheckout = async (course: string) => {
     setLoadingCourse(course);
-    const res = await fetch('/api/stripe/checkout', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ course }),
-    });
-    const data = await res.json();
-    if (data.url) {
-      window.location.href = data.url;
-    } else {
-      setLoadingCourse(null);
+    try {
+      const res = await fetch('/api/stripe/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ course }),
+      });
+      const text = await res.text();
+      const data = text ? JSON.parse(text) : {};
+      if (data.url) {
+        window.location.href = data.url;
+        return;
+      }
+      console.error('Checkout error:', data.error ?? 'No URL returned');
+    } catch (err) {
+      console.error('Checkout request failed:', err);
     }
+    setLoadingCourse(null);
   };
 
   const myCourses = courses.filter((c) => purchasedCourses.includes(c.exam_type as CourseName));
