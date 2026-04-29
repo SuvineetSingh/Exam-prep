@@ -17,7 +17,7 @@ const DEFAULT_STATS: UserStats = {
 export function useUserStats() {
   const [stats, setStats] = useState<UserStats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchStats() {
@@ -25,7 +25,7 @@ export function useUserStats() {
         const result = await getUserStats();
         setStats(result ?? DEFAULT_STATS);
       } catch (err) {
-        console.error('Failed to load user stats:', err);
+        setError(err instanceof Error ? err.message : 'Failed to load stats');
         setStats(DEFAULT_STATS);
       } finally {
         setLoading(false);

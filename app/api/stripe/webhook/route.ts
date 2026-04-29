@@ -1,17 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
-import { createClient } from '@supabase/supabase-js';
+import { createServiceClient } from '@/lib/supabase/service';
 
 function getStripe() {
   return new Stripe(process.env.STRIPE_SECRET_KEY!);
-}
-
-// Service role client — bypasses RLS, only for trusted server code
-function createServiceClient() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
 }
 
 export async function POST(request: NextRequest) {

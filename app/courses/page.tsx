@@ -67,7 +67,7 @@ export default async function CoursesPage({
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      <Header user={user as any} />
+      <Header user={user} />
       <main className="flex-1 max-w-6xl mx-auto px-4 py-8 pt-24 w-full">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Courses</h1>

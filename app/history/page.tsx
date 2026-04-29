@@ -5,20 +5,21 @@ import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
-import { 
-  ExamSession, 
-  FilterMode, 
-  FilterExam, 
-  SummaryBar, 
-  SessionRow, 
-  HistoryFilters 
+import type { User } from '@supabase/supabase-js';
+import {
+  ExamSession,
+  FilterMode,
+  FilterExam,
+  SummaryBar,
+  SessionRow,
+  HistoryFilters
 } from '@/components/history/HistoryComponents';
 
 export default function HistoryPage() {
   const router = useRouter();
   const supabase = createClient();
 
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [sessions, setSessions] = useState<ExamSession[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

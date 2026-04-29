@@ -11,9 +11,9 @@ import { Header } from '@/components/layout/Header';
 import { QuestionHeader } from '@/components/question/Navigation';
 import { getAttemptedQuestionIds } from '@/lib/supabase/queries/userStats';
 import { FREE_QUESTION_LIMIT } from '@/components/subscription/PaywallBanner';
+import type { User } from '@supabase/supabase-js';
 import Link from 'next/link';
 
-// --- Types ---
 interface Question {
   id: number;
   exam_type: string;
@@ -35,7 +35,7 @@ export default function QuestionsDashboard() {
   const router = useRouter();
   const supabase = createClient();
 
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
   const [authLoading, setAuthLoading] = useState(true);
@@ -74,27 +74,26 @@ export default function QuestionsDashboard() {
           difficulties: Array.from(new Set(data.map(i => i.difficulty))).sort() as string[],
         });
       }
-    } catch (err: any) {
-      console.error("Error fetching filters:", err.message);
+    } catch (err) {
+      console.error('Error fetching filters:', err instanceof Error ? err.message : err);
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     const initAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return router.push('/login');
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return router.push('/login');
 
-      setUser(session.user);
+      setUser(user);
       setAuthLoading(false);
       fetchFilters();
 
-      // Load per-course subscriptions
       supabase
         .from('course_subscriptions')
         .select('course')
-        .eq('user_id', session.user.id)
+        .eq('user_id', user.id)
         .then(({ data }) => {
-          setPurchasedCourses((data ?? []).map((r: any) => r.course));
+          setPurchasedCourses((data ?? []).map((r) => r.course as string));
           setCoursesLoaded(true);
         });
     };
@@ -142,8 +141,8 @@ export default function QuestionsDashboard() {
 
       setQuestions(questionsWithStatus as Question[]);
       setTotalCount(count || 0);
-    } catch (err: any) {
-      setErrorMsg(err.message || "Failed to fetch questions.");
+    } catch (err) {
+      setErrorMsg(err instanceof Error ? err.message : 'Failed to fetch questions.');
     } finally {
       setLoading(false);
     }
@@ -163,7 +162,7 @@ export default function QuestionsDashboard() {
       .eq('user_id', user.id)
       .eq('exam_type', examType)
       .then(({ data }) => {
-        const distinct = data ? new Set(data.map((r: any) => r.question_id)).size : 0;
+        const distinct = data ? new Set(data.map((r) => r.question_id)).size : 0;
         setUsedCount(distinct);
       });
   }, [examType, purchasedCourses, user, coursesLoaded]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -185,7 +184,7 @@ export default function QuestionsDashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900 flex flex-col">
-      <Header user={user} />
+      <Header user={user!} />
 
       <main className="flex-1 max-w-5xl mx-auto w-full p-6 pt-24">
         {/* QuestionHeader Component from Navigation.tsx */}

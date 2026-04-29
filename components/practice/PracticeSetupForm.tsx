@@ -3,19 +3,15 @@
 interface PracticeSetupFormProps {
   examFilter: string;
   setExamFilter: (val: string) => void;
-  categoryFilter: string;
-  setCategoryFilter: (val: string) => void;
-  options: {
-    examTypes: string[];
-    categories: string[];
-  };
+  options: { examTypes: string[] };
   onStart: () => void;
   loading: boolean;
   examError: boolean;
 }
 
 export function PracticeSetupForm({
-  examFilter, setExamFilter,
+  examFilter,
+  setExamFilter,
   options,
   onStart,
   loading,
@@ -23,7 +19,6 @@ export function PracticeSetupForm({
 }: PracticeSetupFormProps) {
   return (
     <div className="space-y-6">
-      {/* Exam Type */}
       <div>
         <label className="block text-xs font-bold uppercase text-gray-400 mb-2 ml-1">
           Exam Type <span className="text-red-500">*</span>

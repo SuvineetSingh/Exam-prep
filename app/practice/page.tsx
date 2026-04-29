@@ -15,7 +15,6 @@ export default function PracticeSetup() {
   const [examTypes, setExamTypes] = useState<string[]>([]);
 
   const [examFilter, setExamFilter] = useState('all');
-  const [categoryFilter] = useState('all');
   const [loading, setLoading] = useState(false);
   const [examError, setExamError] = useState(false);
 
@@ -88,15 +87,13 @@ export default function PracticeSetup() {
     setLoading(true);
     const sessionId = uuidv4();
 
-    let query = supabase.from('questions').select('id').order('id', { ascending: true });
-    query = query.eq('exam_type', examFilter);
-    if (categoryFilter !== 'all') query = query.eq('category', categoryFilter);
+    const query = supabase.from('questions').select('id').eq('exam_type', examFilter).order('id', { ascending: true });
 
     const { data } = await query.limit(1).single();
 
     if (data) {
       router.push(
-        `/practice/${data.id}?exam=${examFilter}&cat=${categoryFilter}&session=${sessionId}`
+        `/practice/${data.id}?exam=${examFilter}&session=${sessionId}`
       );
     } else {
       setExamError(true);
@@ -139,9 +136,7 @@ export default function PracticeSetup() {
             <PracticeSetupForm
               examFilter={examFilter}
               setExamFilter={handleExamChange}
-              categoryFilter={categoryFilter}
-              setCategoryFilter={() => {}}
-              options={{ examTypes, categories: [] }}
+              options={{ examTypes }}
               onStart={handleStart}
               loading={loading}
               examError={examError}

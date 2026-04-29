@@ -15,8 +15,8 @@ export default async function FullQuestionPage({
     
     const supabase = await createClient();
     
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) redirect('/login');
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) redirect('/login');
     
     // 3. Use the unwrapped 'id' variable in your query
     const { data: question, error } = await supabase
@@ -47,7 +47,7 @@ export default async function FullQuestionPage({
 
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col">
-        <Header user={session.user} />
+        <Header user={user} />
         <main className="flex-1 max-w-4xl mx-auto w-full p-6 pt-32">
           <QuestionDisplay question={question} mode="practice" />
           <QuestionNavigation prevId={prevId} nextId={nextId} />
