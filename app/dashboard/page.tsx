@@ -5,6 +5,7 @@ import { StatCard } from '@/components/dashboard/StatCard';
 import { QuickActions } from '@/components/dashboard/QuickActions';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
+import { SessionRow, type ExamSession } from '@/components/history/HistoryComponents';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
@@ -16,6 +17,8 @@ export default function DashboardPage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [isPremium, setIsPremium] = useState<boolean | null>(null);
+  const [recentSessions, setRecentSessions] = useState<ExamSession[]>([]);
+  const [sessionsLoading, setSessionsLoading] = useState(true);
 
   useEffect(() => {
     async function checkAuth() {
@@ -31,6 +34,17 @@ export default function DashboardPage() {
           .eq('id', user.id)
           .single()
           .then(({ data }) => setIsPremium(data?.is_premium ?? false));
+
+        supabase
+          .from('exam_sessions')
+          .select('id, exam_type, total_questions, score, percentage, time_taken_seconds, total_time_given_seconds, answered_count, unanswered_count, created_at, mode')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(5)
+          .then(({ data }) => {
+            setRecentSessions((data ?? []) as ExamSession[]);
+            setSessionsLoading(false);
+          });
       }
     }
     checkAuth();
@@ -58,7 +72,6 @@ export default function DashboardPage() {
 
 
       <main className="max-w-6xl mx-auto px-4 py-8 pt-24">
-        {/* ── Free-tier onboarding banner ───────────────────────────────── */}
         {isPremium === false && (
           <div className="mb-6 p-4 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-between gap-4 flex-wrap">
             <div className="flex items-center gap-3 text-sm text-blue-800">
@@ -77,7 +90,6 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* ── Page heading ─────────────────────────────────────────────── */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             Welcome back!
@@ -85,13 +97,7 @@ export default function DashboardPage() {
           <p className="text-gray-600">Here&apos;s your study progress</p>
         </div>
 
-        {/* ── Row 1 — top-level stats (3 cards) ────────────────────────── */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-          {/*
-           * CHANGED: value now comes from stats.total_answered
-           * (previously the hook didn't exist; now it queries
-           *  user_answers WHERE selected_answer != 'UNATTEMPTED')
-           */}
           <StatCard
             title="Questions Answered"
             value={stats?.total_answered ?? 0}
@@ -99,11 +105,6 @@ export default function DashboardPage() {
             icon="📊"
             iconBg="bg-blue-100"
           />
-
-          {/*
-           * UNCHANGED shape — accuracy_rate is now calculated in the hook
-           * as: correct_count / total_answered * 100
-           */}
           <StatCard
             title="Accuracy Rate"
             value={`${stats?.accuracy_rate ?? 0}%`}
@@ -111,8 +112,6 @@ export default function DashboardPage() {
             icon="✓"
             iconBg="bg-green-100"
           />
-
-          {/* UNCHANGED — streak logic moved into the hook */}
           <StatCard
             title="Study Streak"
             value={`${stats?.study_streak ?? 0} days`}
@@ -126,12 +125,6 @@ export default function DashboardPage() {
           />
         </div>
 
-        {/* ── Row 2 — mode breakdown (NEW: 2 cards) ────────────────────── */}
-        {/*
-         * NEW SECTION: breaks down total_answered by mode
-         * (practice vs timed) using the `mode` column in user_answers.
-         * The `mode` column accepts: 'practice' | 'timed'
-         */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           <StatCard
             title="Practice Mode"
@@ -149,8 +142,40 @@ export default function DashboardPage() {
           />
         </div>
 
-        {/* ── Quick actions (unchanged) ─────────────────────────────────── */}
         <QuickActions />
+
+        <div className="mt-10">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-black text-gray-900">Recent Tests</h2>
+            <Link
+              href="/history"
+              className="text-xs font-bold text-blue-600 hover:text-blue-700 transition-colors flex items-center gap-1"
+            >
+              View All History
+              <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+              </svg>
+            </Link>
+          </div>
+
+          {sessionsLoading ? (
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 text-center">
+              <p className="text-gray-400 text-sm font-medium">Loading history...</p>
+            </div>
+          ) : recentSessions.length === 0 ? (
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 text-center">
+              <p className="text-2xl mb-2">📋</p>
+              <p className="text-gray-500 font-bold text-sm">No tests taken yet</p>
+              <p className="text-gray-400 text-xs mt-1">Complete a practice or timed exam to see your history here.</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {recentSessions.map((session, idx) => (
+                <SessionRow key={session.id} session={session} index={idx} />
+              ))}
+            </div>
+          )}
+        </div>
       </main>
 
       <Footer />

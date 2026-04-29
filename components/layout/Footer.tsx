@@ -68,6 +68,11 @@ export function Footer() {
                 </Link>
               </li>
               <li>
+                <Link href="/feedback" className="text-gray-600 hover:text-primary-600 text-sm transition-colors">
+                  Give Feedback
+                </Link>
+              </li>
+              <li>
                 <a href="mailto:support@examprep.com" className="text-gray-600 hover:text-primary-600 text-sm transition-colors">
                   Contact Us
                 </a>

@@ -41,7 +41,7 @@ function ResultsContent() {
   if (!data) return <div className="min-h-screen flex items-center justify-center font-bold">LOADING RESULTS...</div>;
 
   return (
-    <ExamResultsUI 
+    <ExamResultsUI
       score={data.score}
       total={data.total_questions}
       percentage={data.percentage}
@@ -49,6 +49,8 @@ function ResultsContent() {
       timeGiven={data.allowedTimeFormatted}
       answered={data.answered_count}
       unanswered={data.unanswered_count}
+      correct={data.score}
+      incorrect={Math.max(0, data.answered_count - data.score)}
       examType={data.exam_type}
       date={data.dateFormatted}
       sessionId={data.id}

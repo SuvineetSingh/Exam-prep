@@ -21,7 +21,8 @@ export default function ExamSetupPage() {
   const [fetchingFilters, setFetchingFilters] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const [isPremium, setIsPremium] = useState<boolean | null>(null);
+  const [purchasedCourses, setPurchasedCourses] = useState<string[]>([]);
+  const [coursesLoaded, setCoursesLoaded] = useState(false);
   const [usedCount, setUsedCount] = useState(0);
 
   const fetchExamTypes = useCallback(async () => {
@@ -44,17 +45,20 @@ export default function ExamSetupPage() {
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) return;
       supabase
-        .from('user_profiles')
-        .select('is_premium')
-        .eq('id', user.id)
-        .single()
-        .then(({ data }) => setIsPremium(data?.is_premium ?? false));
+        .from('course_subscriptions')
+        .select('course')
+        .eq('user_id', user.id)
+        .then(({ data }) => {
+          setPurchasedCourses((data ?? []).map((r: any) => r.course));
+          setCoursesLoaded(true);
+        });
     });
   }, [fetchExamTypes]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     const examType = config.examType;
-    if (!examType || isPremium) return;
+    const hasCourse = purchasedCourses.includes(examType);
+    if (!examType || hasCourse || !coursesLoaded) return;
 
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) return;
@@ -68,7 +72,7 @@ export default function ExamSetupPage() {
           setUsedCount(distinct);
         });
     });
-  }, [config.examType, isPremium]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [config.examType, purchasedCourses, coursesLoaded]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const timeLimit = config.questionCount * 1.5;
 
@@ -114,13 +118,13 @@ export default function ExamSetupPage() {
         </Link>
       </div>
 
-      {!isPremium && config.examType && usedCount >= FREE_QUESTION_LIMIT ? (
+      {coursesLoaded && !purchasedCourses.includes(config.examType) && config.examType && usedCount >= FREE_QUESTION_LIMIT ? (
         <div className="max-w-md w-full">
           <PaywallBanner examType={config.examType} usedCount={usedCount} />
         </div>
       ) : (
         <>
-          {!isPremium && config.examType && usedCount >= FREE_QUESTION_WARNING && (
+          {coursesLoaded && !purchasedCourses.includes(config.examType) && config.examType && usedCount >= FREE_QUESTION_WARNING && (
             <div className="max-w-md w-full mb-4">
               <RunningLowBanner
                 examType={config.examType}

@@ -216,6 +216,25 @@ export function PracticeSessionUI({
     return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
   }, [timerActive]);
 
+  // ── Already answered this question in this session ───────────────────────
+  const alreadyLogged = sessionLog.some(e => e.questionId === question.id);
+
+  // ── Keyboard shortcuts: A/B/C/D to select, Enter to check ─────────────────
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (isSubmitted) return;
+      const key = e.key.toLowerCase();
+      if (['a', 'b', 'c', 'd'].includes(key)) {
+        setSelectedOption(key);
+      } else if (e.key === 'Enter' && selectedOption) {
+        // Trigger check answer
+        document.getElementById('check-answer-btn')?.click();
+      }
+    };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [isSubmitted, selectedOption, setSelectedOption]);
+
   // ── Answer derivation ─────────────────────────────────────────────────────
   const rawCorrectValue  = String(question.correct_answer || question.correct_option || '');
   const correctAnswerKey = rawCorrectValue.trim().toLowerCase();
@@ -528,13 +547,22 @@ export function PracticeSessionUI({
             })}
           </div>
 
+          {/* Already-answered badge */}
+          {alreadyLogged && !isSubmitted && (
+            <div className="mt-6 px-4 py-2 bg-slate-100 rounded-xl text-xs font-bold text-slate-500 text-center">
+              Already answered this question — selecting again won't overwrite your logged answer.
+            </div>
+          )}
+
           {!isSubmitted ? (
             <button
+              id="check-answer-btn"
               onClick={handleCheckAnswer}
               disabled={!selectedOption}
-              className="w-full mt-10 py-4 bg-slate-900 text-white rounded-2xl font-bold shadow-lg hover:bg-blue-600 disabled:opacity-30 transition-all active:scale-[0.98]"
+              className="w-full mt-6 py-4 bg-slate-900 text-white rounded-2xl font-bold shadow-lg hover:bg-blue-600 disabled:opacity-30 transition-all active:scale-[0.98]"
             >
               Check Answer
+              {selectedOption && <span className="ml-2 text-xs opacity-60 font-normal">or press Enter</span>}
             </button>
           ) : (
             <div className={`mt-8 p-6 rounded-2xl border-l-4 ${
@@ -548,9 +576,13 @@ export function PracticeSessionUI({
                   Time: {formatTime(elapsed)}
                 </span>
               </div>
-              <p className="text-slate-700 text-sm">
-                <span className="font-bold">Explanation:</span> {question.explanation}
-              </p>
+              {question.explanation ? (
+                <p className="text-slate-700 text-sm">
+                  <span className="font-bold">Explanation:</span> {question.explanation}
+                </p>
+              ) : (
+                <p className="text-slate-400 text-sm italic">No explanation provided for this question.</p>
+              )}
             </div>
           )}
         </div>

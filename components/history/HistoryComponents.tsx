@@ -2,7 +2,6 @@
 
 import { useRouter } from 'next/navigation';
 
-// --- Types ---
 export interface ExamSession {
   id: string;
   exam_type: 'CPA' | 'CFA' | 'FE';
@@ -20,7 +19,6 @@ export interface ExamSession {
 export type FilterMode = 'all' | 'practice' | 'timed';
 export type FilterExam = 'all' | 'CPA' | 'CFA' | 'FE';
 
-// --- Helpers ---
 export function formatTime(seconds: number | null): string {
   if (seconds == null) return '—';
   const m = Math.floor(seconds / 60);
@@ -61,11 +59,9 @@ function getScoreBg(pct: number | null): string {
   return 'bg-red-50 border-red-200';
 }
 
-// --- SummaryBar ---
 export function SummaryBar({ sessions }: { sessions: ExamSession[] }) {
   const total = sessions.length;
   const avg = total ? Math.round(sessions.reduce((a, s) => a + (s.percentage ?? 0), 0) / total) : 0;
-  // FIX: removed dead `?? '0%'` — template literal is always truthy so it never fired
   const best = total ? Math.max(...sessions.map(s => s.percentage ?? 0)) : 0;
   const totalQs = sessions.reduce((a, s) => a + (s.answered_count ?? 0), 0);
 
@@ -91,7 +87,6 @@ export function SummaryBar({ sessions }: { sessions: ExamSession[] }) {
   );
 }
 
-// --- SessionRow — FIX: now clickable, navigates to review page, restored Time + chevron ---
 export function SessionRow({ session, index }: { session: ExamSession; index: number }) {
   const router = useRouter();
   const { date, time } = formatDate(session.created_at);
@@ -104,7 +99,6 @@ export function SessionRow({ session, index }: { session: ExamSession; index: nu
       style={{ animationDelay: `${index * 40}ms` }}
     >
       <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-        {/* Exam badge + date */}
         <div className="flex items-center gap-3 min-w-0 flex-1">
           <div className={`w-12 h-12 rounded-xl ${EXAM_COLORS[session.exam_type] ?? 'bg-gray-500'} text-white flex items-center justify-center font-black text-sm flex-shrink-0 shadow`}>
             {session.exam_type}
@@ -117,14 +111,12 @@ export function SessionRow({ session, index }: { session: ExamSession; index: nu
           </div>
         </div>
 
-        {/* Mode badge */}
         {session.mode && (
           <span className={`self-start sm:self-auto text-[10px] font-black uppercase px-2.5 py-1 rounded-lg border ${MODE_STYLE[session.mode]}`}>
             {session.mode === 'timed' ? '⏱ Timed' : '📝 Practice'}
           </span>
         )}
 
-        {/* Stats */}
         <div className="flex items-center gap-6 flex-wrap">
           <div className="text-center">
             <p className="text-[10px] font-bold uppercase text-gray-400 tracking-wide">Questions</p>
@@ -133,7 +125,6 @@ export function SessionRow({ session, index }: { session: ExamSession; index: nu
             </p>
           </div>
 
-          {/* FIX: Time column was missing */}
           <div className="text-center">
             <p className="text-[10px] font-bold uppercase text-gray-400 tracking-wide">Time</p>
             <p className="text-sm font-bold text-gray-700">
@@ -144,7 +135,6 @@ export function SessionRow({ session, index }: { session: ExamSession; index: nu
             </p>
           </div>
 
-          {/* Score pill — FIX: score number now has its own color class */}
           <div className={`px-4 py-2 rounded-xl border ${getScoreBg(pct)} min-w-[80px] text-center`}>
             <p className="text-[10px] font-bold uppercase text-gray-400 tracking-wide">Score</p>
             <p className={`text-xl font-black ${getScoreColor(pct)}`}>
@@ -155,7 +145,6 @@ export function SessionRow({ session, index }: { session: ExamSession; index: nu
             )}
           </div>
 
-          {/* FIX: Chevron arrow was missing */}
           <div className="hidden sm:flex items-center text-gray-300 group-hover:text-blue-500 transition-colors">
             <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
@@ -167,7 +156,6 @@ export function SessionRow({ session, index }: { session: ExamSession; index: nu
   );
 }
 
-// --- HistoryFilters — FIX: Mode filter buttons were missing entirely ---
 export function HistoryFilters({ mode, setMode, exam, setExam, count }: {
   mode: FilterMode;
   setMode: (v: FilterMode) => void;
@@ -177,7 +165,6 @@ export function HistoryFilters({ mode, setMode, exam, setExam, count }: {
 }) {
   return (
     <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 flex flex-wrap items-center gap-4 mb-6">
-      {/* Exam filter */}
       <div className="flex items-center gap-2">
         <span className="text-[10px] font-bold uppercase text-gray-400">Exam</span>
         {(['all', 'CPA', 'CFA', 'FE'] as FilterExam[]).map(e => (
@@ -195,7 +182,6 @@ export function HistoryFilters({ mode, setMode, exam, setExam, count }: {
 
       <div className="w-px h-6 bg-gray-200 hidden sm:block" />
 
-      {/* Mode filter — was completely missing */}
       <div className="flex items-center gap-2">
         <span className="text-[10px] font-bold uppercase text-gray-400">Mode</span>
         {(['all', 'practice', 'timed'] as FilterMode[]).map(m => (

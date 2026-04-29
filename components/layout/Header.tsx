@@ -93,6 +93,16 @@ export function ProfileDropdown({ user, onLogout }: { user: any; onLogout: () =>
               </span>
               Exam History
             </Link>
+            <Link
+              href="/feedback"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+            >
+              <span className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-base">
+                💬
+              </span>
+              Give Feedback
+            </Link>
           </div>
 
           {/* Logout */}
@@ -328,6 +338,15 @@ export function Header({ user }: HeaderProps) {
             }`}
           >
             Exam History
+          </Link>
+          <Link
+            href="/feedback"
+            onClick={() => setMenuOpen(false)}
+            className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium mb-1 transition-colors ${
+              pathname === '/feedback' ? 'text-blue-600 bg-blue-50' : 'text-gray-700 hover:bg-gray-50'
+            }`}
+          >
+            Give Feedback
           </Link>
         </nav>
 

@@ -10,14 +10,16 @@ interface ResultsUIProps {
   timeGiven: string;
   answered: number;
   unanswered: number;
+  correct: number;
+  incorrect: number;
   examType: string;
   date: string;
   sessionId: string;
 }
 
-export function ExamResultsUI({ 
-  score, total, percentage, timeTaken, timeGiven, 
-  answered, unanswered, examType, date, sessionId 
+export function ExamResultsUI({
+  score, total, percentage, timeTaken, timeGiven,
+  answered, unanswered, correct, incorrect, examType, date, sessionId
 }: ResultsUIProps) {
   
   const getStars = (pct: number) => {
@@ -48,18 +50,26 @@ export function ExamResultsUI({
             <div className="bg-gray-50 p-5 rounded-3xl border border-gray-100">
               <span className="text-[10px] font-black text-gray-400 uppercase block mb-1">Time Taken</span>
               <span className="text-lg font-bold text-gray-800">{timeTaken}</span>
-              <span className="text-[10px] text-gray-400 block mt-1">out of {timeGiven}</span>
+              <span className="text-[10px] text-gray-400 block mt-1">of {timeGiven} allowed</span>
             </div>
             <div className="bg-gray-50 p-5 rounded-3xl border border-gray-100">
               <span className="text-[10px] font-black text-gray-400 uppercase block mb-1">Exam Date</span>
               <span className="text-sm font-bold text-gray-800 leading-tight">{date}</span>
             </div>
             <div className="bg-emerald-50 p-5 rounded-3xl border border-emerald-100">
-              <span className="text-[10px] font-black text-emerald-600 uppercase block mb-1">Answered</span>
-              <span className="text-2xl font-black text-emerald-700">{answered}</span>
+              <span className="text-[10px] font-black text-emerald-600 uppercase block mb-1">Correct</span>
+              <span className="text-2xl font-black text-emerald-700">{correct}</span>
+            </div>
+            <div className="bg-red-50 p-5 rounded-3xl border border-red-100">
+              <span className="text-[10px] font-black text-red-500 uppercase block mb-1">Incorrect</span>
+              <span className="text-2xl font-black text-red-600">{incorrect}</span>
+            </div>
+            <div className="bg-blue-50 p-5 rounded-3xl border border-blue-100">
+              <span className="text-[10px] font-black text-blue-500 uppercase block mb-1">Answered</span>
+              <span className="text-2xl font-black text-blue-700">{answered}</span>
             </div>
             <div className="bg-amber-50 p-5 rounded-3xl border border-amber-100">
-              <span className="text-[10px] font-black text-amber-600 uppercase block mb-1">Unanswered</span>
+              <span className="text-[10px] font-black text-amber-600 uppercase block mb-1">Skipped</span>
               <span className="text-2xl font-black text-amber-700">{unanswered}</span>
             </div>
           </div>
@@ -79,8 +89,8 @@ export function ExamResultsUI({
               >
                 Retake Exam
               </Link>
-              <Link 
-                href="/questions" 
+              <Link
+                href="/dashboard"
                 className="text-center py-4 bg-blue-50 text-blue-600 rounded-2xl font-bold hover:bg-blue-100 transition-all"
               >
                 Dashboard
