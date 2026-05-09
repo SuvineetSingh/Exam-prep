@@ -60,13 +60,13 @@ export function MiniProfileCard({ userId, currentUserId, onClose, onSendDM, posi
   const friendButtonProps = (() => {
     switch (friendStatus) {
       case 'accepted':
-        return { label: 'Friends ✓', disabled: true, className: 'bg-emerald-50 text-emerald-700 border border-emerald-200 cursor-default' };
+        return { label: 'Friends', disabled: true, iconClass: 'bg-emerald-100 text-emerald-600 cursor-default' };
       case 'pending_sent':
-        return { label: 'Request Sent', disabled: true, className: 'bg-gray-50 text-gray-500 border border-gray-200 cursor-default' };
+        return { label: 'Request Sent', disabled: true, iconClass: 'bg-gray-100 text-gray-400 cursor-default' };
       case 'pending_received':
-        return { label: 'Accept Request', disabled: false, className: 'bg-blue-600 text-white hover:bg-blue-700' };
+        return { label: 'Accept Request', disabled: false, iconClass: 'bg-blue-100 text-blue-600 hover:bg-blue-200' };
       default:
-        return { label: 'Add Friend', disabled: false, className: 'bg-gray-100 text-gray-700 hover:bg-gray-200' };
+        return { label: 'Add Friend', disabled: false, iconClass: 'bg-gray-100 text-gray-500 hover:bg-gray-200' };
     }
   })();
 
@@ -83,20 +83,44 @@ export function MiniProfileCard({ userId, currentUserId, onClose, onSendDM, posi
         ) : profile ? (
           <div>
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-12 h-12 rounded-full bg-primary-600 flex items-center justify-center text-white text-lg font-semibold">
+              <div className="w-12 h-12 rounded-full bg-primary-600 flex items-center justify-center text-white text-lg font-semibold flex-shrink-0">
                 {initial}
               </div>
-              <div>
+              <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1.5">
-                  <span className="font-semibold text-gray-900">{profile.username || 'Unknown'}</span>
+                  <span className="font-semibold text-gray-900 truncate">{profile.username || 'Unknown'}</span>
                   {profile.is_bot && (
                     <span className="text-[10px] text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded-full">bot</span>
                   )}
                 </div>
                 {profile.full_name && (
-                  <p className="text-xs text-gray-500">{profile.full_name}</p>
+                  <p className="text-xs text-gray-500 truncate">{profile.full_name}</p>
                 )}
               </div>
+              {!profile.is_bot && (
+                <button
+                  onClick={handleFriendAction}
+                  disabled={friendLoading || friendButtonProps.disabled}
+                  title={friendButtonProps.label}
+                  className={`flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center transition-colors disabled:opacity-50 ${friendButtonProps.iconClass}`}
+                >
+                  {friendLoading ? (
+                    <span className="w-3 h-3 border-2 border-current/30 border-t-current rounded-full animate-spin" />
+                  ) : friendStatus === 'accepted' ? (
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                    </svg>
+                  ) : friendStatus === 'pending_sent' ? (
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  ) : (
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
+                    </svg>
+                  )}
+                </button>
+              )}
             </div>
 
             <div className="space-y-1.5 mb-4">
@@ -118,27 +142,12 @@ export function MiniProfileCard({ userId, currentUserId, onClose, onSendDM, posi
             </div>
 
             {!profile.is_bot && (
-              <div className="space-y-2">
-                <button
-                  onClick={handleFriendAction}
-                  disabled={friendLoading || friendButtonProps.disabled}
-                  className={`w-full py-2 text-sm font-medium rounded-lg transition-colors disabled:opacity-60 ${friendButtonProps.className}`}
-                >
-                  {friendLoading ? (
-                    <span className="flex items-center justify-center gap-2">
-                      <span className="w-3 h-3 border-2 border-current/30 border-t-current rounded-full animate-spin" />
-                      {friendButtonProps.label}
-                    </span>
-                  ) : friendButtonProps.label}
-                </button>
-
-                <button
-                  onClick={() => { onSendDM(userId); onClose(); }}
-                  className="w-full py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700 transition-colors"
-                >
-                  Send Message
-                </button>
-              </div>
+              <button
+                onClick={() => { onSendDM(userId); onClose(); }}
+                className="w-full py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700 transition-colors"
+              >
+                Send Message
+              </button>
             )}
           </div>
         ) : (
