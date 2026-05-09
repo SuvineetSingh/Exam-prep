@@ -144,6 +144,45 @@ export async function updateUserProfile(userId: string, updates: Partial<LobbyUs
   if (error) throw error;
 }
 
+export type FriendshipStatus = 'none' | 'pending_sent' | 'pending_received' | 'accepted';
+
+export async function fetchFriendshipStatus(
+  currentUserId: string,
+  targetUserId: string
+): Promise<FriendshipStatus> {
+  const supabase = createClient();
+  const { data } = await supabase
+    .from('friendships')
+    .select('requester_id, status')
+    .or(
+      `and(requester_id.eq.${currentUserId},addressee_id.eq.${targetUserId}),` +
+      `and(requester_id.eq.${targetUserId},addressee_id.eq.${currentUserId})`
+    )
+    .maybeSingle();
+
+  if (!data) return 'none';
+  if (data.status === 'accepted') return 'accepted';
+  return data.requester_id === currentUserId ? 'pending_sent' : 'pending_received';
+}
+
+export async function sendFriendRequest(requesterId: string, addresseeId: string) {
+  const supabase = createClient();
+  const { error } = await supabase
+    .from('friendships')
+    .insert({ requester_id: requesterId, addressee_id: addresseeId });
+  if (error) throw error;
+}
+
+export async function acceptFriendRequest(requesterId: string, addresseeId: string) {
+  const supabase = createClient();
+  const { error } = await supabase
+    .from('friendships')
+    .update({ status: 'accepted' })
+    .eq('requester_id', requesterId)
+    .eq('addressee_id', addresseeId);
+  if (error) throw error;
+}
+
 export async function updateUserOnlineStatus(userId: string) {
   const supabase = createClient();
   const { error } = await supabase

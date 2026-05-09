@@ -2,24 +2,54 @@
 
 import { useEffect, useState } from 'react';
 import { fetchUserProfile } from '@/lib/supabase/queries/lobbyQueries';
+import {
+  fetchFriendshipStatus,
+  sendFriendRequest,
+  acceptFriendRequest,
+  type FriendshipStatus,
+} from '@/lib/supabase/queries/lobbyQueries';
 import type { LobbyUserProfile } from '@/lib/types/lobby';
 
 interface MiniProfileCardProps {
   userId: string;
+  currentUserId: string;
   onClose: () => void;
   onSendDM: (userId: string) => void;
   position?: { top: number; left: number };
 }
 
-export function MiniProfileCard({ userId, onClose, onSendDM, position }: MiniProfileCardProps) {
+export function MiniProfileCard({ userId, currentUserId, onClose, onSendDM, position }: MiniProfileCardProps) {
   const [profile, setProfile] = useState<LobbyUserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [friendStatus, setFriendStatus] = useState<FriendshipStatus>('none');
+  const [friendLoading, setFriendLoading] = useState(false);
 
   useEffect(() => {
-    fetchUserProfile(userId)
-      .then(setProfile)
-      .finally(() => setLoading(false));
-  }, [userId]);
+    Promise.all([
+      fetchUserProfile(userId),
+      fetchFriendshipStatus(currentUserId, userId),
+    ]).then(([p, fs]) => {
+      setProfile(p);
+      setFriendStatus(fs);
+    }).finally(() => setLoading(false));
+  }, [userId, currentUserId]);
+
+  const handleFriendAction = async () => {
+    setFriendLoading(true);
+    try {
+      if (friendStatus === 'none') {
+        await sendFriendRequest(currentUserId, userId);
+        setFriendStatus('pending_sent');
+      } else if (friendStatus === 'pending_received') {
+        await acceptFriendRequest(userId, currentUserId);
+        setFriendStatus('accepted');
+      }
+    } catch {
+      // silently fail — user sees no change
+    } finally {
+      setFriendLoading(false);
+    }
+  };
 
   const initial = profile?.username?.[0]?.toUpperCase() || '?';
 
@@ -27,12 +57,25 @@ export function MiniProfileCard({ userId, onClose, onSendDM, position }: MiniPro
     ? { top: `${position.top}px`, left: `${position.left}px` }
     : { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' };
 
+  const friendButtonProps = (() => {
+    switch (friendStatus) {
+      case 'accepted':
+        return { label: 'Friends ✓', disabled: true, className: 'bg-emerald-50 text-emerald-700 border border-emerald-200 cursor-default' };
+      case 'pending_sent':
+        return { label: 'Request Sent', disabled: true, className: 'bg-gray-50 text-gray-500 border border-gray-200 cursor-default' };
+      case 'pending_received':
+        return { label: 'Accept Request', disabled: false, className: 'bg-blue-600 text-white hover:bg-blue-700' };
+      default:
+        return { label: 'Add Friend', disabled: false, className: 'bg-gray-100 text-gray-700 hover:bg-gray-200' };
+    }
+  })();
+
   return (
     <>
       <div className="fixed inset-0 z-40" onClick={onClose} />
 
       <div
-        className="fixed z-50 w-64 bg-white rounded-lg shadow-xl border border-gray-200 p-4 animate-fade-in"
+        className="fixed z-50 w-64 bg-white rounded-xl shadow-xl border border-gray-200 p-4 animate-fade-in"
         style={cardStyle}
       >
         {loading ? (
@@ -70,20 +113,32 @@ export function MiniProfileCard({ userId, onClose, onSendDM, position }: MiniPro
                 </div>
               )}
               {profile.bio && (
-                <p className="text-xs text-gray-500 mt-2">{profile.bio}</p>
+                <p className="text-xs text-gray-500 mt-2 leading-relaxed">{profile.bio}</p>
               )}
             </div>
 
             {!profile.is_bot && (
-              <button
-                onClick={() => {
-                  onSendDM(userId);
-                  onClose();
-                }}
-                className="w-full py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700 transition-colors"
-              >
-                Send Message
-              </button>
+              <div className="space-y-2">
+                <button
+                  onClick={handleFriendAction}
+                  disabled={friendLoading || friendButtonProps.disabled}
+                  className={`w-full py-2 text-sm font-medium rounded-lg transition-colors disabled:opacity-60 ${friendButtonProps.className}`}
+                >
+                  {friendLoading ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <span className="w-3 h-3 border-2 border-current/30 border-t-current rounded-full animate-spin" />
+                      {friendButtonProps.label}
+                    </span>
+                  ) : friendButtonProps.label}
+                </button>
+
+                <button
+                  onClick={() => { onSendDM(userId); onClose(); }}
+                  className="w-full py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700 transition-colors"
+                >
+                  Send Message
+                </button>
+              </div>
             )}
           </div>
         ) : (

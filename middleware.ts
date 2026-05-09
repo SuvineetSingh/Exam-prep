@@ -21,7 +21,7 @@ export function middleware(request: NextRequest) {
 
   if (AUTH_ONLY.includes(pathname) && hasSession) {
     const url = request.nextUrl.clone();
-    url.pathname = '/dashboard';
+    url.pathname = '/courses';
     return NextResponse.redirect(url);
   }
 

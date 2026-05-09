@@ -29,7 +29,7 @@ export async function GET(request: Request) {
         .update({ last_seen_at: new Date().toISOString() })
         .eq('id', data.user.id);
 
-      return NextResponse.redirect(`${origin}/questions`);
+      return NextResponse.redirect(`${origin}/courses`);
     }
   }
 

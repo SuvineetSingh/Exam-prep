@@ -63,24 +63,33 @@ export default async function CoursesPage({
   const sessionId = params.session_id;
   const successCourse = params.course;
 
+  const displayName =
+    user.user_metadata?.full_name ||
+    user.user_metadata?.username ||
+    user.email?.split('@')[0] ||
+    'there';
+
   const hasAnyCourse = purchasedCourses.length > 0;
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <Header user={user} />
       <main className="flex-1 max-w-6xl mx-auto px-4 py-8 pt-24 w-full">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Courses</h1>
-          <p className="text-gray-600">
+        <div className="mb-10">
+          <h1 className="text-3xl font-bold text-gray-900 mb-1">
+            Welcome back, {displayName}
+          </h1>
+          <p className="text-gray-500">
             {hasAnyCourse
-              ? `You have Pro access to ${purchasedCourses.join(', ')}. Buy more courses below.`
-              : 'Get unlimited access to each course for $50 per course.'}
+              ? `You have Pro access to ${purchasedCourses.join(', ')}. Browse your courses or unlock more below.`
+              : 'Get unlimited access to any course for $50. 20 free questions per course to start.'}
           </p>
         </div>
 
         <CoursesClient
           courses={COURSES.map((c, i) => ({ ...c, questionCount: questionCounts[i] ?? 0 }))}
           purchasedCourses={purchasedCourses}
+          displayName={displayName}
           successPending={successPending}
           sessionId={sessionId}
           successCourse={successCourse}

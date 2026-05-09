@@ -49,7 +49,7 @@ export function LoginForm() {
 
       // Keep isSubmitting true during the redirect phase
       setTimeout(() => {
-        router.push('/questions');
+        router.push('/courses');
         router.refresh();
       }, 1200);
     }

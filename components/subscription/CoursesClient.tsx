@@ -17,6 +17,7 @@ interface CourseData {
 interface CoursesClientProps {
   courses: CourseData[];
   purchasedCourses: CourseName[];
+  displayName: string;
   successPending: boolean;
   sessionId?: string;
   successCourse?: string;
@@ -52,6 +53,7 @@ const DEFAULT_COLOR = colorMap.blue;
 export function CoursesClient({
   courses,
   purchasedCourses: initialPurchased,
+  displayName: _displayName,
   successPending,
   sessionId,
   successCourse,
@@ -114,7 +116,7 @@ export function CoursesClient({
   const myCourses = courses.filter((c) => purchasedCourses.includes(c.exam_type as CourseName));
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-10">
       {/* Success banner */}
       {showSuccessBanner && (
         <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center gap-3">
@@ -146,114 +148,17 @@ export function CoursesClient({
         </div>
       )}
 
-      {/* Course cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {courses.map((course) => {
-          const colors = colorMap[course.color as keyof typeof colorMap] ?? DEFAULT_COLOR;
-          const isPro = purchasedCourses.includes(course.exam_type as CourseName);
-          const isLoading = loadingCourse === course.exam_type;
-          const borderClass = isPro ? colors.border : 'border-gray-200';
-
-          return (
-            <div
-              key={course.exam_type}
-              className={`bg-white rounded-2xl shadow-sm border-2 overflow-hidden transition-all hover:shadow-md ${borderClass}`}
-            >
-              {/* Card header */}
-              <div className={`px-6 py-5 ${isPro ? colors.bg : 'bg-gray-50'}`}>
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-3xl">{course.icon}</span>
-                  {isPro ? (
-                    <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700">
-                      Pro ✓
-                    </span>
-                  ) : (
-                    <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-gray-100 text-gray-500">
-                      {FREE_QUESTION_LIMIT} Free
-                    </span>
-                  )}
-                </div>
-                <h3 className="font-bold text-gray-900 leading-tight">{course.name}</h3>
-              </div>
-
-              {/* Card body */}
-              <div className="px-6 py-5 space-y-4">
-                <p className="text-sm text-gray-500 leading-relaxed">{course.description}</p>
-
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <svg className="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  <span>
-                    {isPro ? (
-                      <><strong className="text-gray-900">{course.questionCount.toLocaleString()}</strong> questions</>
-                    ) : (
-                      <><strong className="text-gray-900">{FREE_QUESTION_LIMIT}</strong> of {course.questionCount.toLocaleString()} questions free</>
-                    )}
-                  </span>
-                </div>
-
-                {!isPro && (
-                  <div className="w-full bg-gray-100 rounded-full h-1.5">
-                    <div
-                      className="bg-blue-500 h-1.5 rounded-full"
-                      style={{ width: `${Math.min((FREE_QUESTION_LIMIT / Math.max(course.questionCount, 1)) * 100, 100)}%` }}
-                    />
-                  </div>
-                )}
-
-                {isPro ? (
-                  <Link
-                    href={`/questions?exam=${course.exam_type}`}
-                    className={`block w-full text-center py-2.5 px-4 rounded-xl text-white text-sm font-bold transition-colors ${colors.button}`}
-                  >
-                    Browse Questions →
-                  </Link>
-                ) : (
-                  <div className="space-y-2">
-                    <button
-                      onClick={() => handleCheckout(course.exam_type)}
-                      disabled={isLoading || loadingCourse !== null}
-                      className={`block w-full text-center py-2.5 px-4 rounded-xl text-white text-sm font-bold transition-colors disabled:opacity-60 ${colors.button}`}
-                    >
-                      {isLoading ? (
-                        <span className="flex items-center justify-center gap-2">
-                          <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                          Redirecting...
-                        </span>
-                      ) : (
-                        'Buy Pro Access — $50'
-                      )}
-                    </button>
-                    <Link
-                      href={`/questions?exam=${course.exam_type}`}
-                      className="block w-full text-center py-2 px-4 rounded-xl bg-gray-100 text-gray-600 text-sm font-medium hover:bg-gray-200 transition-colors"
-                    >
-                      Browse Free Questions
-                    </Link>
-                  </div>
-                )}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* My Courses section */}
-      <div className="mt-10">
-        <h2 className="text-xl font-bold text-gray-900 mb-4">My Courses</h2>
-        {myCourses.length === 0 ? (
-          <div className="bg-white rounded-2xl border border-gray-200 px-6 py-10 text-center text-gray-500">
-            <p className="text-sm">No courses yet. Purchase a course above to get started.</p>
-          </div>
-        ) : (
+      {/* My Courses — shown first if user has purchases */}
+      {myCourses.length > 0 && (
+        <div>
+          <h2 className="text-lg font-bold text-gray-900 mb-4">My Courses</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             {myCourses.map((course) => {
               const colors = colorMap[course.color as keyof typeof colorMap] ?? DEFAULT_COLOR;
               return (
                 <div
                   key={course.exam_type}
-                  className={`bg-white rounded-xl border-2 ${colors.border} px-5 py-4 flex items-center gap-4 shadow-sm`}
+                  className={`bg-white rounded-2xl border-2 ${colors.border} ${colors.bg} px-5 py-4 flex items-center gap-4 shadow-sm`}
                 >
                   <span className="text-2xl">{course.icon}</span>
                   <div className="flex-1 min-w-0">
@@ -270,7 +175,103 @@ export function CoursesClient({
               );
             })}
           </div>
-        )}
+        </div>
+      )}
+
+      {/* All Courses */}
+      <div>
+        <h2 className="text-lg font-bold text-gray-900 mb-4">All Courses</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {courses.map((course) => {
+            const colors = colorMap[course.color as keyof typeof colorMap] ?? DEFAULT_COLOR;
+            const isPro = purchasedCourses.includes(course.exam_type as CourseName);
+            const isLoading = loadingCourse === course.exam_type;
+            const borderClass = isPro ? colors.border : 'border-gray-200';
+
+            return (
+              <div
+                key={course.exam_type}
+                className={`bg-white rounded-2xl shadow-sm border-2 overflow-hidden transition-all hover:shadow-md ${borderClass}`}
+              >
+                {/* Card header */}
+                <div className={`px-6 py-5 ${isPro ? colors.bg : 'bg-gray-50'}`}>
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-3xl">{course.icon}</span>
+                    {isPro ? (
+                      <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700">
+                        Pro ✓
+                      </span>
+                    ) : (
+                      <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-gray-100 text-gray-500">
+                        {FREE_QUESTION_LIMIT} Free
+                      </span>
+                    )}
+                  </div>
+                  <h3 className="font-bold text-gray-900 leading-tight">{course.name}</h3>
+                </div>
+
+                {/* Card body */}
+                <div className="px-6 py-5 space-y-4">
+                  <p className="text-sm text-gray-500 leading-relaxed">{course.description}</p>
+
+                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <svg className="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span>
+                      {isPro ? (
+                        <><strong className="text-gray-900">{course.questionCount.toLocaleString()}</strong> questions</>
+                      ) : (
+                        <><strong className="text-gray-900">{FREE_QUESTION_LIMIT}</strong> of {course.questionCount.toLocaleString()} questions free</>
+                      )}
+                    </span>
+                  </div>
+
+                  {!isPro && (
+                    <div className="w-full bg-gray-100 rounded-full h-1.5">
+                      <div
+                        className="bg-blue-500 h-1.5 rounded-full"
+                        style={{ width: `${Math.min((FREE_QUESTION_LIMIT / Math.max(course.questionCount, 1)) * 100, 100)}%` }}
+                      />
+                    </div>
+                  )}
+
+                  {isPro ? (
+                    <Link
+                      href={`/questions?exam=${course.exam_type}`}
+                      className={`block w-full text-center py-2.5 px-4 rounded-xl text-white text-sm font-bold transition-colors ${colors.button}`}
+                    >
+                      Browse Questions →
+                    </Link>
+                  ) : (
+                    <div className="space-y-2">
+                      <button
+                        onClick={() => handleCheckout(course.exam_type)}
+                        disabled={isLoading || loadingCourse !== null}
+                        className={`block w-full text-center py-2.5 px-4 rounded-xl text-white text-sm font-bold transition-colors disabled:opacity-60 ${colors.button}`}
+                      >
+                        {isLoading ? (
+                          <span className="flex items-center justify-center gap-2">
+                            <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                            Redirecting...
+                          </span>
+                        ) : (
+                          'Buy Pro Access — $50'
+                        )}
+                      </button>
+                      <Link
+                        href={`/questions?exam=${course.exam_type}`}
+                        className="block w-full text-center py-2 px-4 rounded-xl bg-gray-100 text-gray-600 text-sm font-medium hover:bg-gray-200 transition-colors"
+                      >
+                        Browse Free Questions
+                      </Link>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

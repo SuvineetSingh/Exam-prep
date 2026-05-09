@@ -302,6 +302,7 @@ export function LobbyView({ rooms, currentUser, userProfile }: LobbyViewProps) {
       {profileCardUserId && (
         <MiniProfileCard
           userId={profileCardUserId}
+          currentUserId={currentUser.id}
           onClose={() => setProfileCardUserId(null)}
           onSendDM={handleStartDM}
           position={profileCardPosition}

@@ -146,6 +146,12 @@ export function RoomList({
 }: RoomListProps) {
   const { pinnedIds, togglePin } = usePinnedRooms(currentUserId);
   const [showPrefs, setShowPrefs] = useState(false);
+  const [query, setQuery] = useState('');
+
+  const q = query.trim().toLowerCase();
+  const filtered = q
+    ? rooms.filter(r => r.name.toLowerCase().includes(q) || r.industry.toLowerCase().includes(q))
+    : null;
 
   const pinnedOrdered = pinnedIds
     .map(id => rooms.find(r => r.id === id))
@@ -178,7 +184,8 @@ export function RoomList({
       )}
 
       <div className="p-3 space-y-1">
-        <div className="flex items-center justify-between px-3 mb-3">
+        {/* Header row */}
+        <div className="flex items-center justify-between px-3 mb-2">
           <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
             {hasPins ? (
               <span className="flex items-center gap-1">
@@ -202,17 +209,49 @@ export function RoomList({
           </button>
         </div>
 
-        {hasPins && (
+        {/* Search input */}
+        <div className="relative px-1 mb-3">
+          <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          <input
+            type="text"
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            placeholder="Search rooms…"
+            className="w-full pl-8 pr-3 py-1.5 text-xs bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary-400 focus:border-primary-400 placeholder-gray-400"
+          />
+          {query && (
+            <button
+              onClick={() => setQuery('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            >
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          )}
+        </div>
+
+        {/* Filtered results */}
+        {filtered ? (
+          filtered.length > 0
+            ? filtered.map(renderRoom)
+            : <p className="text-xs text-gray-400 text-center py-4 px-3">No rooms match "{query}"</p>
+        ) : (
           <>
-            {pinnedOrdered.map(renderRoom)}
-            <div className="my-2 border-t border-gray-100" />
-            <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider px-3 mb-2">
-              All Rooms
-            </h2>
+            {hasPins && (
+              <>
+                {pinnedOrdered.map(renderRoom)}
+                <div className="my-2 border-t border-gray-100" />
+                <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider px-3 mb-2">
+                  All Rooms
+                </h2>
+              </>
+            )}
+            {(hasPins ? unpinned : rooms).map(renderRoom)}
           </>
         )}
-
-        {(hasPins ? unpinned : rooms).map(renderRoom)}
       </div>
     </>
   );
