@@ -1,8 +1,6 @@
-/**
- * Application-wide constants
- */
+export const MINS_PER_QUESTION = 1.5;
+export const STRIPE_COURSE_PRICE_CENTS = 5000;
 
-// Exam types supported by the platform
 export const EXAM_TYPES = {
   CPA: 'CPA',
   CFA: 'CFA',

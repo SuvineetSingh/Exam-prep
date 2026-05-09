@@ -51,8 +51,12 @@ export function AnswerReviewUI({ questions, summary }: AnswerReviewUIProps) {
         {/* --- QUESTIONS LIST --- */}
         <div className="space-y-4">
           {questions.map((q, idx) => {
-            const correctAnswerKey = (q.correct_option || "").trim().toLowerCase();
+            const correctAnswerKey = (q.correct_option || q.correct_answer || "").trim().toLowerCase();
             const selectedOption = (q.userAnswer || "").trim().toLowerCase();
+            const OPTION_LETTERS = ['a', 'b', 'c', 'd'];
+            const optionsArr: string[] = q.options?.length
+              ? q.options
+              : OPTION_LETTERS.map((l: string) => q[`option_${l}`]).filter(Boolean);
             
             const isCorrect = selectedOption === correctAnswerKey;
             const isUnattempted = selectedOption === 'unattempted' || selectedOption === '';
@@ -88,11 +92,12 @@ export function AnswerReviewUI({ questions, summary }: AnswerReviewUIProps) {
                     <p className="text-xl font-bold text-slate-800 mb-8 leading-relaxed">{q.question_text}</p>
                     
                     <div className="space-y-3">
-                      {['a', 'b', 'c', 'd'].map((l) => {
-                        const optionKey = l.toLowerCase();
-                        const isThisCorrect = optionKey === correctAnswerKey;
-                        const isThisUserSelection = selectedOption === optionKey;
-                        
+                      {optionsArr.map((optText, idx) => {
+                        const l = OPTION_LETTERS[idx];
+                        if (!l) return null;
+                        const isThisCorrect = l === correctAnswerKey;
+                        const isThisUserSelection = selectedOption === l;
+
                         let containerStyle = "border-slate-100 bg-slate-50 text-slate-400";
                         if (isThisCorrect) {
                           containerStyle = "border-emerald-500 bg-emerald-50 ring-1 ring-emerald-500 text-emerald-700";
@@ -103,13 +108,13 @@ export function AnswerReviewUI({ questions, summary }: AnswerReviewUIProps) {
                         return (
                           <div key={l} className={`p-5 rounded-2xl border-2 flex items-center gap-5 transition-all ${containerStyle}`}>
                             <span className={`w-8 h-8 rounded-lg flex items-center justify-center font-black text-sm ${
-                              isThisCorrect ? 'bg-emerald-500 text-white' : 
-                              (isThisUserSelection && !isCorrect) ? 'bg-rose-500 text-white' : 
+                              isThisCorrect ? 'bg-emerald-500 text-white' :
+                              (isThisUserSelection && !isCorrect) ? 'bg-rose-500 text-white' :
                               'bg-white border border-slate-200 text-slate-400'
                             }`}>
                               {l.toUpperCase()}
                             </span>
-                            <span className="font-bold text-lg">{q[`option_${l}`]}</span>
+                            <span className="font-bold text-lg">{optText}</span>
                           </div>
                         );
                       })}

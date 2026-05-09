@@ -3,18 +3,15 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import { formatTime } from '@/lib/utils/helpers';
 import type { Question } from '@/lib/types';
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Types
-// ─────────────────────────────────────────────────────────────────────────────
 
 export interface QuestionLog {
   questionId: string;
   questionText: string;
   selectedAnswer: string;
   isCorrect: boolean;
-  timeSpent: number; // seconds
+  timeSpent: number;
 }
 
 export interface PracticeSessionUIProps {
@@ -32,20 +29,6 @@ export interface PracticeSessionUIProps {
   sessionLog: QuestionLog[];
   onLogUpdate: (updater: (prev: QuestionLog[]) => QuestionLog[]) => void;
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Helpers
-// ─────────────────────────────────────────────────────────────────────────────
-
-function formatTime(seconds: number) {
-  const m = Math.floor(seconds / 60).toString().padStart(2, '0');
-  const s = (seconds % 60).toString().padStart(2, '0');
-  return `${m}:${s}`;
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Side Panel
-// ─────────────────────────────────────────────────────────────────────────────
 
 function SidePanel({
   open,
@@ -78,7 +61,6 @@ function SidePanel({
           open ? 'translate-x-0' : 'translate-x-full'
         }`}
       >
-        {/* Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100">
           <h2 className="text-base font-black text-slate-900 tracking-tight uppercase">
             Session Stats
@@ -91,7 +73,6 @@ function SidePanel({
           </button>
         </div>
 
-        {/* Totals */}
         <div className="grid grid-cols-3 gap-3 px-6 py-5 border-b border-slate-100">
           <div className="text-center">
             <p className="text-2xl font-black text-slate-900">{attempted}</p>
@@ -107,7 +88,6 @@ function SidePanel({
           </div>
         </div>
 
-        {/* Per-question log */}
         <div className="flex-1 overflow-y-auto px-4 py-4 space-y-2">
           {log.length === 0 && (
             <p className="text-center text-slate-400 text-sm mt-8">
@@ -152,7 +132,6 @@ function SidePanel({
           ))}
         </div>
 
-        {/* Save & End */}
         <div className="px-6 py-5 border-t border-slate-100 space-y-2">
           <button
             onClick={onSaveAndEnd}
@@ -172,9 +151,98 @@ function SidePanel({
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Main Component
-// ─────────────────────────────────────────────────────────────────────────────
+function ExitConfirmModal({
+  answeredCount,
+  onStay,
+  onExit,
+}: {
+  answeredCount: number;
+  onStay: () => void;
+  onExit: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+      <div className="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl">
+        <h3 className="text-xl font-bold text-slate-900 mb-2">Exit Practice?</h3>
+        <p className="text-slate-500 mb-8 leading-relaxed">
+          Your progress will <span className="font-bold text-red-500">not</span> be saved.
+          {answeredCount > 0 && (
+            <> You have answered <span className="font-bold text-slate-700">{answeredCount}</span> question{answeredCount !== 1 ? 's' : ''} that will be discarded.</>
+          )}
+        </p>
+        <div className="flex gap-3">
+          <button
+            onClick={onStay}
+            className="flex-1 py-3 bg-slate-100 text-slate-600 rounded-xl font-bold hover:bg-slate-200 transition-colors"
+          >
+            Stay
+          </button>
+          <button
+            onClick={onExit}
+            className="flex-1 py-3 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 shadow-lg shadow-red-200 transition-colors"
+          >
+            Exit & Discard
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SaveExitModal({
+  sessionLog,
+  saving,
+  onKeepPracticing,
+  onSaveAndExit,
+}: {
+  sessionLog: QuestionLog[];
+  saving: boolean;
+  onKeepPracticing: () => void;
+  onSaveAndExit: () => void;
+}) {
+  const correctCount = sessionLog.filter(e => e.isCorrect).length;
+  const incorrectCount = sessionLog.filter(e => !e.isCorrect).length;
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+      <div className="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl">
+        <h3 className="text-xl font-bold text-slate-900 mb-2">Save & End Session?</h3>
+        <p className="text-slate-500 mb-2 leading-relaxed">
+          This will save all <span className="font-bold text-slate-700">{sessionLog.length}</span> answered question{sessionLog.length !== 1 ? 's' : ''} to your history.
+        </p>
+        <div className="flex gap-3 mb-8">
+          <div className="flex-1 text-center bg-slate-50 rounded-2xl py-3">
+            <p className="text-xl font-black text-slate-700">{sessionLog.length}</p>
+            <p className="text-[10px] font-bold uppercase text-slate-400">Attempted</p>
+          </div>
+          <div className="flex-1 text-center bg-emerald-50 rounded-2xl py-3">
+            <p className="text-xl font-black text-emerald-600">{correctCount}</p>
+            <p className="text-[10px] font-bold uppercase text-slate-400">Correct</p>
+          </div>
+          <div className="flex-1 text-center bg-red-50 rounded-2xl py-3">
+            <p className="text-xl font-black text-red-500">{incorrectCount}</p>
+            <p className="text-[10px] font-bold uppercase text-slate-400">Incorrect</p>
+          </div>
+        </div>
+        <div className="flex gap-3">
+          <button
+            onClick={onKeepPracticing}
+            className="flex-1 py-3 bg-slate-100 text-slate-600 rounded-xl font-bold hover:bg-slate-200 transition-colors"
+          >
+            Keep Practicing
+          </button>
+          <button
+            onClick={onSaveAndExit}
+            disabled={saving}
+            className="flex-1 py-3 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 shadow-lg shadow-emerald-200 transition-colors disabled:opacity-60"
+          >
+            {saving ? 'Saving…' : 'Save & Exit'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export function PracticeSessionUI({
   question,
@@ -198,7 +266,6 @@ export function PracticeSessionUI({
   const [panelOpen, setPanelOpen]                 = useState(false);
   const [saving, setSaving]                       = useState(false);
 
-  // ── Timer ─────────────────────────────────────────────────────────────────
   const [elapsed, setElapsed]         = useState(0);
   const [timerActive, setTimerActive] = useState(true);
   const intervalRef                   = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -216,10 +283,8 @@ export function PracticeSessionUI({
     return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
   }, [timerActive]);
 
-  // ── Already answered this question in this session ───────────────────────
-  const alreadyLogged = sessionLog.some(e => e.questionId === question.id);
+  const alreadyLogged = sessionLog.some(e => e.questionId === String(question.id));
 
-  // ── Keyboard shortcuts: A/B/C/D to select, Enter to check ─────────────────
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
       if (isSubmitted) return;
@@ -227,7 +292,6 @@ export function PracticeSessionUI({
       if (['a', 'b', 'c', 'd'].includes(key)) {
         setSelectedOption(key);
       } else if (e.key === 'Enter' && selectedOption) {
-        // Trigger check answer
         document.getElementById('check-answer-btn')?.click();
       }
     };
@@ -235,7 +299,6 @@ export function PracticeSessionUI({
     return () => window.removeEventListener('keydown', handleKey);
   }, [isSubmitted, selectedOption, setSelectedOption]);
 
-  // ── Answer derivation ─────────────────────────────────────────────────────
   const rawCorrectValue  = String(question.correct_answer || question.correct_option || '');
   const correctAnswerKey = rawCorrectValue.trim().toLowerCase();
   const isCorrect        = selectedOption?.toLowerCase() === correctAnswerKey;
@@ -250,7 +313,7 @@ export function PracticeSessionUI({
     text,
   }));
 
-  // ── Handle Check Answer (local-only, no DB write) ─────────────────────────
+  // No DB write on check — answers persist to DB only when user ends session
   const handleCheckAnswer = useCallback(() => {
     if (!selectedOption) return;
 
@@ -259,35 +322,29 @@ export function PracticeSessionUI({
     setIsSubmitted(true);
 
     const entry: QuestionLog = {
-      questionId:     question.id,
+      questionId:     String(question.id),
       questionText:   question.question_text,
       selectedAnswer: selectedOption,
       isCorrect:      selectedOption.toLowerCase() === correctAnswerKey,
       timeSpent,
     };
 
-    // Append to the parent's in-memory / sessionStorage log only —
-    // nothing is written to the DB until the user explicitly saves.
     onLogUpdate(prev => {
-      if (prev.find(e => e.questionId === question.id)) return prev;
+      if (prev.find(e => e.questionId === String(question.id))) return prev;
       return [...prev, entry];
     });
   }, [selectedOption, elapsed, question, correctAnswerKey, setIsSubmitted, onLogUpdate]);
 
-  // ── Navigation ────────────────────────────────────────────────────────────
   const handleNext = () => { setElapsed(0); setTimerActive(true); navigate('next'); };
   const handlePrev = () => { setElapsed(0); setTimerActive(true); navigate('prev'); };
 
-  // ── Exit without saving ───────────────────────────────────────────────────
   const handleExitDiscard = () => {
-    // Clear the sessionStorage log so nothing lingers
     if (sessionId) {
       try { sessionStorage.removeItem(`practice_log_${sessionId}`); } catch {}
     }
     router.push('/practice');
   };
 
-  // ── Save all answers to DB then exit ─────────────────────────────────────
   const handleSaveAndExit = useCallback(async () => {
     if (sessionLog.length === 0) {
       router.push('/practice');
@@ -303,15 +360,12 @@ export function PracticeSessionUI({
       const totalTime    = sessionLog.reduce((sum, e) => sum + e.timeSpent, 0);
       const pct          = Math.round((correctCount / sessionLog.length) * 100);
 
-      // ── Step 1: create the exam_session row ──────────────────────────────
-      // A fresh DB-generated UUID is used as the real FK anchor.
-      // The client-side sessionId (from the URL) was only used for
-      // sessionStorage keying and is not persisted to the DB.
+      // Uses DB-generated UUID; URL sessionId is for sessionStorage keying only
       const { data: sessionData, error: sessionError } = await supabase
         .from('exam_sessions')
         .insert({
           user_id:            user.id,
-          exam_type:          examFilter,   // e.g. 'CPA', 'CFA', 'FE'
+          exam_type:          examFilter,
           mode:               'practice',
           total_questions:    sessionLog.length,
           answered_count:     sessionLog.length,
@@ -327,7 +381,6 @@ export function PracticeSessionUI({
 
       const dbSessionId = sessionData.id;
 
-      // ── Step 2: bulk-insert user_answers linked to that session ──────────
       const rows = sessionLog.map(entry => ({
         user_id:         user.id,
         question_id:     entry.questionId,
@@ -345,7 +398,6 @@ export function PracticeSessionUI({
 
       if (answersError) throw answersError;
 
-      // ── Cleanup ───────────────────────────────────────────────────────────
       if (sessionId) {
         try { sessionStorage.removeItem(`practice_log_${sessionId}`); } catch {}
       }
@@ -359,7 +411,6 @@ export function PracticeSessionUI({
     }
   }, [sessionLog, sessionId, examFilter, supabase, router]);
 
-  // ── Timer colour ──────────────────────────────────────────────────────────
   const timerColour = isSubmitted
     ? 'text-slate-400'
     : elapsed >= 60
@@ -368,7 +419,6 @@ export function PracticeSessionUI({
     ? 'text-amber-500'
     : 'text-slate-700';
 
-  // ─────────────────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-slate-50 p-4 md:p-8 relative">
 
@@ -384,86 +434,25 @@ export function PracticeSessionUI({
         saving={saving}
       />
 
-      {/* ── Exit (discard) confirmation ─────────────────────────────────── */}
       {showExitPopup && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-          <div className="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl">
-            <h3 className="text-xl font-bold text-slate-900 mb-2">Exit Practice?</h3>
-            <p className="text-slate-500 mb-8 leading-relaxed">
-              Your progress will <span className="font-bold text-red-500">not</span> be saved.
-              {sessionLog.length > 0 && (
-                <> You have answered <span className="font-bold text-slate-700">{sessionLog.length}</span> question{sessionLog.length !== 1 ? 's' : ''} that will be discarded.</>
-              )}
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setShowExitPopup(false)}
-                className="flex-1 py-3 bg-slate-100 text-slate-600 rounded-xl font-bold hover:bg-slate-200 transition-colors"
-              >
-                Stay
-              </button>
-              <button
-                onClick={handleExitDiscard}
-                className="flex-1 py-3 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 shadow-lg shadow-red-200 transition-colors"
-              >
-                Exit & Discard
-              </button>
-            </div>
-          </div>
-        </div>
+        <ExitConfirmModal
+          answeredCount={sessionLog.length}
+          onStay={() => setShowExitPopup(false)}
+          onExit={handleExitDiscard}
+        />
       )}
 
-      {/* ── Save & Exit confirmation ────────────────────────────────────── */}
       {showSaveExitPopup && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-          <div className="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl">
-            <h3 className="text-xl font-bold text-slate-900 mb-2">Save & End Session?</h3>
-            <p className="text-slate-500 mb-2 leading-relaxed">
-              This will save all <span className="font-bold text-slate-700">{sessionLog.length}</span> answered question{sessionLog.length !== 1 ? 's' : ''} to your history.
-            </p>
-            {/* Mini summary */}
-            <div className="flex gap-3 mb-8">
-              <div className="flex-1 text-center bg-slate-50 rounded-2xl py-3">
-                <p className="text-xl font-black text-slate-700">
-                  {sessionLog.length}
-                </p>
-                <p className="text-[10px] font-bold uppercase text-slate-400">Attempted</p>
-              </div>
-              <div className="flex-1 text-center bg-emerald-50 rounded-2xl py-3">
-                <p className="text-xl font-black text-emerald-600">
-                  {sessionLog.filter(e => e.isCorrect).length}
-                </p>
-                <p className="text-[10px] font-bold uppercase text-slate-400">Correct</p>
-              </div>
-              <div className="flex-1 text-center bg-red-50 rounded-2xl py-3">
-                <p className="text-xl font-black text-red-500">
-                  {sessionLog.filter(e => !e.isCorrect).length}
-                </p>
-                <p className="text-[10px] font-bold uppercase text-slate-400">Incorrect</p>
-              </div>
-            </div>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setShowSaveExitPopup(false)}
-                className="flex-1 py-3 bg-slate-100 text-slate-600 rounded-xl font-bold hover:bg-slate-200 transition-colors"
-              >
-                Keep Practicing
-              </button>
-              <button
-                onClick={handleSaveAndExit}
-                disabled={saving}
-                className="flex-1 py-3 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 shadow-lg shadow-emerald-200 transition-colors disabled:opacity-60"
-              >
-                {saving ? 'Saving…' : 'Save & Exit'}
-              </button>
-            </div>
-          </div>
-        </div>
+        <SaveExitModal
+          sessionLog={sessionLog}
+          saving={saving}
+          onKeepPracticing={() => setShowSaveExitPopup(false)}
+          onSaveAndExit={handleSaveAndExit}
+        />
       )}
 
       <div className="max-w-3xl mx-auto">
 
-        {/* Top bar */}
         <div className="flex justify-between items-center mb-8">
           <button
             onClick={() => setShowExitPopup(true)}
@@ -504,7 +493,6 @@ export function PracticeSessionUI({
           </div>
         </div>
 
-        {/* Question card */}
         <div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-8">
           <div className="flex items-center justify-between mb-6">
             <p className="text-xs font-bold uppercase text-slate-400 tracking-wider">Question</p>
@@ -547,7 +535,6 @@ export function PracticeSessionUI({
             })}
           </div>
 
-          {/* Already-answered badge */}
           {alreadyLogged && !isSubmitted && (
             <div className="mt-6 px-4 py-2 bg-slate-100 rounded-xl text-xs font-bold text-slate-500 text-center">
               Already answered this question — selecting again won't overwrite your logged answer.
@@ -587,7 +574,6 @@ export function PracticeSessionUI({
           )}
         </div>
 
-        {/* Footer nav */}
         <div className="mt-8 flex justify-between gap-4">
           <button
             onClick={handlePrev}
@@ -605,7 +591,6 @@ export function PracticeSessionUI({
           </button>
         </div>
 
-        {/* Save & End Session — bottom CTA */}
         <div className="mt-4">
           <button
             onClick={() =>

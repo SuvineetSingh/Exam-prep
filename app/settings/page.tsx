@@ -16,6 +16,7 @@ export default function SettingsPage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [userProfile, setUserProfile] = useState<LobbyUserProfile | null>(null);
+  const [isPro, setIsPro] = useState<boolean | null>(null);
   const [activeTab, setActiveTab] = useState<SettingsTab>('profile');
   const [loading, setLoading] = useState(true);
 
@@ -31,8 +32,13 @@ export default function SettingsPage() {
 
       setUser(user);
 
-      const profile = await fetchUserProfile(user.id);
+      const [profile, proRes] = await Promise.all([
+        fetchUserProfile(user.id),
+        fetch('/api/me/pro').then(r => r.json()),
+      ]);
+
       setUserProfile(profile);
+      setIsPro(proRes.isPro ?? false);
       setLoading(false);
     }
 
@@ -61,7 +67,7 @@ export default function SettingsPage() {
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-2">
             <h1 className="text-3xl font-bold text-gray-900">Account Settings</h1>
-            <SubscriptionBadge isPremium={userProfile ? (userProfile.is_premium ?? false) : null} />
+            <SubscriptionBadge isPremium={isPro} />
           </div>
           <p className="text-gray-600">
             Manage your profile, subscription, and preferences

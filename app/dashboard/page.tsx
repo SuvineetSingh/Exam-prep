@@ -1,56 +1,46 @@
 'use client';
 
 import { useUserStats } from '@/hooks/useUserStats';
+import { useRequireAuth } from '@/hooks/useRequireAuth';
 import { StatCard } from '@/components/dashboard/StatCard';
 import { QuickActions } from '@/components/dashboard/QuickActions';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { SessionRow, type ExamSession } from '@/components/history/HistoryComponents';
-import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import type { User } from '@supabase/supabase-js';
 import Link from 'next/link';
 
 export default function DashboardPage() {
   const { stats, loading, error } = useUserStats();
-  const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
+  const { user, loading: authLoading } = useRequireAuth();
   const [isPremium, setIsPremium] = useState<boolean | null>(null);
   const [recentSessions, setRecentSessions] = useState<ExamSession[]>([]);
   const [sessionsLoading, setSessionsLoading] = useState(true);
 
   useEffect(() => {
-    async function checkAuth() {
-      const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        router.push('/login');
-      } else {
-        setUser(user);
-        supabase
-          .from('user_profiles')
-          .select('is_premium')
-          .eq('id', user.id)
-          .single()
-          .then(({ data }) => setIsPremium(data?.is_premium ?? false));
+    if (!user) return;
+    const supabase = createClient();
 
-        supabase
-          .from('exam_sessions')
-          .select('id, exam_type, total_questions, score, percentage, time_taken_seconds, total_time_given_seconds, answered_count, unanswered_count, created_at, mode')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false })
-          .limit(5)
-          .then(({ data }) => {
-            setRecentSessions((data ?? []) as ExamSession[]);
-            setSessionsLoading(false);
-          });
-      }
-    }
-    checkAuth();
-  }, [router]);
+    supabase
+      .from('course_subscriptions')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .then(({ count }) => setIsPremium((count ?? 0) > 0));
 
-  if (loading || !user) {
+    supabase
+      .from('exam_sessions')
+      .select('id, exam_type, total_questions, score, percentage, time_taken_seconds, total_time_given_seconds, answered_count, unanswered_count, created_at, mode')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(5)
+      .then(({ data }) => {
+        setRecentSessions((data ?? []) as ExamSession[]);
+        setSessionsLoading(false);
+      });
+  }, [user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (loading || authLoading || !user) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <p className="text-gray-600">Loading your dashboard...</p>
@@ -69,7 +59,6 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Header user={user} />
-
 
       <main className="max-w-6xl mx-auto px-4 py-8 pt-24">
         {isPremium === false && (

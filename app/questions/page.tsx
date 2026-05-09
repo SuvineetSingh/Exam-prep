@@ -11,6 +11,7 @@ import { Header } from '@/components/layout/Header';
 import { QuestionHeader } from '@/components/question/Navigation';
 import { getAttemptedQuestionIds } from '@/lib/supabase/queries/userStats';
 import { FREE_QUESTION_LIMIT } from '@/components/subscription/PaywallBanner';
+import { usePurchasedCourses } from '@/hooks/usePurchasedCourses';
 import type { User } from '@supabase/supabase-js';
 import Link from 'next/link';
 
@@ -55,10 +56,8 @@ export default function QuestionsDashboard() {
   const [difficulty, setDifficulty] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Freemium gating — per-course
-  const [purchasedCourses, setPurchasedCourses] = useState<string[]>([]);
-  const [coursesLoaded, setCoursesLoaded] = useState(false);
   const [usedCount, setUsedCount] = useState(0);
+  const { purchasedCourses, coursesLoaded } = usePurchasedCourses(user?.id);
 
   const fetchFilters = useCallback(async () => {
     try {
@@ -87,15 +86,6 @@ export default function QuestionsDashboard() {
       setUser(user);
       setAuthLoading(false);
       fetchFilters();
-
-      supabase
-        .from('course_subscriptions')
-        .select('course')
-        .eq('user_id', user.id)
-        .then(({ data }) => {
-          setPurchasedCourses((data ?? []).map((r) => r.course as string));
-          setCoursesLoaded(true);
-        });
     };
 
     initAuth();

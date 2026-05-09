@@ -1,5 +1,7 @@
 'use client';
 
+import { useState } from 'react';
+
 interface Question {
   id: string;
   question_text: string;
@@ -18,8 +20,6 @@ interface ExamSessionUIProps {
   setUserAnswers: (answers: Record<string, string>) => void;
   timeLeft: number;
   formatTime: (seconds: number) => string;
-  isSidebarOpen: boolean;
-  setIsSidebarOpen: (open: boolean) => void;
   isSubmitting: boolean;
   submitError: string | null;
   modals: {
@@ -42,14 +42,15 @@ export function ExamSessionUI({
   setUserAnswers,
   timeLeft,
   formatTime,
-  isSidebarOpen,
-  setIsSidebarOpen,
   isSubmitting,
   submitError,
   modals,
   onSubmit,
   onExit,
 }: ExamSessionUIProps) {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(
+    () => typeof window !== 'undefined' && window.innerWidth >= 768
+  );
   const currentQuestion = questions[currentIndex];
   const answeredCount = Object.keys(userAnswers).length;
   const unattemptedCount = questions.length - answeredCount;
@@ -59,7 +60,7 @@ export function ExamSessionUI({
 
   return (
     <div
-      className="min-h-screen bg-gray-50 flex overflow-hidden relative select-none"
+      className="h-screen bg-gray-50 flex overflow-hidden relative select-none"
       onContextMenu={(e) => e.preventDefault()}
       onCopy={(e) => e.preventDefault()}
     >
@@ -155,7 +156,7 @@ export function ExamSessionUI({
       )}
 
       {/* Sidebar */}
-      <aside className={`fixed md:relative inset-y-0 left-0 bg-white border-r border-gray-100 transition-all duration-300 flex flex-col flex-shrink-0 z-[150] md:z-30 ${isSidebarOpen ? 'w-64 translate-x-0' : 'w-0 -translate-x-full md:w-0'}`}>
+      <aside className={`fixed md:relative inset-y-0 left-0 bg-white border-r border-gray-100 transition-all duration-300 flex flex-col flex-shrink-0 z-[150] md:z-30 overflow-hidden ${isSidebarOpen ? 'w-64 translate-x-0' : 'w-0 -translate-x-full md:w-0'}`}>
         <div className="p-6 overflow-y-auto flex-1 min-w-[16rem] flex flex-col">
           <div className="flex justify-between items-center mb-6">
             <h3 className="text-xs font-black uppercase text-gray-400 tracking-widest">Question Map</h3>
@@ -210,8 +211,8 @@ export function ExamSessionUI({
       </aside>
 
       {/* Main content */}
-      <main className="flex-1 overflow-y-auto bg-gray-50 flex flex-col items-center p-4 md:p-8">
-        <div className="w-full max-w-3xl flex-1 flex flex-col justify-center">
+      <main className="flex-1 min-w-0 overflow-y-auto bg-gray-50">
+        <div className="w-full max-w-3xl mx-auto px-4 md:px-8 py-4 md:py-8">
 
           {/* Header bar */}
           <div className="flex justify-between items-center mb-6 bg-white p-4 rounded-2xl shadow-sm border border-gray-100 w-full">

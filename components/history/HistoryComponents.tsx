@@ -61,8 +61,11 @@ function getScoreBg(pct: number | null): string {
 
 export function SummaryBar({ sessions }: { sessions: ExamSession[] }) {
   const total = sessions.length;
-  const avg = total ? Math.round(sessions.reduce((a, s) => a + (s.percentage ?? 0), 0) / total) : 0;
-  const best = total ? Math.max(...sessions.map(s => s.percentage ?? 0)) : 0;
+  const scoredSessions = sessions.filter(s => s.percentage != null);
+  const avg = scoredSessions.length
+    ? Math.round(scoredSessions.reduce((a, s) => a + s.percentage!, 0) / scoredSessions.length)
+    : 0;
+  const best = scoredSessions.length ? Math.max(...scoredSessions.map(s => s.percentage!)) : 0;
   const totalQs = sessions.reduce((a, s) => a + (s.answered_count ?? 0), 0);
 
   const stats = [

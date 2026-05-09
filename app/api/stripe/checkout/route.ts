@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { createClient } from '@/lib/supabase/server';
+import { STRIPE_COURSE_PRICE_CENTS } from '@/lib/utils/constants';
 
 const VALID_COURSES = ['CPA', 'CFA', 'FE'] as const;
 type CourseName = typeof VALID_COURSES[number];
@@ -82,7 +83,7 @@ export async function POST(request: Request) {
               name: `${course} Pro Access`,
               description: `Unlimited access to all ${COURSE_LABELS[course]} exam questions`,
             },
-            unit_amount: 5000, // $50.00
+            unit_amount: STRIPE_COURSE_PRICE_CENTS,
           },
           quantity: 1,
         },

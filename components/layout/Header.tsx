@@ -150,17 +150,11 @@ export function Header({ user }: HeaderProps) {
   // Track user activity and update online status
   useUserActivity(user.id);
 
-  // Fetch subscription status
   useEffect(() => {
-    const supabase = createClient();
-    supabase
-      .from('user_profiles')
-      .select('is_premium')
-      .eq('id', user.id)
-      .single()
-      .then(({ data }) => {
-        setIsPremium(data?.is_premium ?? false);
-      });
+    fetch('/api/me/pro')
+      .then(r => r.json())
+      .then(({ isPro }: { isPro: boolean }) => setIsPremium(isPro))
+      .catch(() => setIsPremium(false));
   }, [user.id]);
 
   // Close drawer on Escape key

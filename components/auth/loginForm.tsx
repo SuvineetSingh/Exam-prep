@@ -97,7 +97,7 @@ export function LoginForm() {
         )}
 
         <form onSubmit={handleEmailLogin} className="space-y-5">
-          <div>
+          <div suppressHydrationWarning>
             <label htmlFor="email" className="block text-sm font-semibold text-slate-700 mb-1 ml-1">
               Email
             </label>
@@ -110,10 +110,11 @@ export function LoginForm() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               disabled={isSubmitting || showSuccess}
+              suppressHydrationWarning
             />
           </div>
 
-          <div>
+          <div suppressHydrationWarning>
             <label htmlFor="password" className="block text-sm font-semibold text-slate-700 mb-1 ml-1">
               Password
             </label>
@@ -126,6 +127,7 @@ export function LoginForm() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               disabled={isSubmitting || showSuccess}
+              suppressHydrationWarning
             />
           </div>
 

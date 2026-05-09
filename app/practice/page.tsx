@@ -7,20 +7,21 @@ import Link from 'next/link';
 import { v4 as uuidv4 } from 'uuid';
 import { PracticeSetupForm } from '@/components/practice/PracticeSetupForm';
 import { PaywallBanner, RunningLowBanner, FREE_QUESTION_LIMIT, FREE_QUESTION_WARNING } from '@/components/subscription/PaywallBanner';
+import { usePurchasedCourses } from '@/hooks/usePurchasedCourses';
 
 export default function PracticeSetup() {
   const router = useRouter();
   const supabase = createClient();
 
   const [examTypes, setExamTypes] = useState<string[]>([]);
+  const [userId, setUserId] = useState<string | undefined>(undefined);
 
   const [examFilter, setExamFilter] = useState('all');
   const [loading, setLoading] = useState(false);
   const [examError, setExamError] = useState(false);
-
-  const [purchasedCourses, setPurchasedCourses] = useState<string[]>([]);
-  const [coursesLoaded, setCoursesLoaded] = useState(false);
   const [usedCount, setUsedCount] = useState(0);
+
+  const { purchasedCourses, coursesLoaded } = usePurchasedCourses(userId);
 
   // Fetch all distinct exam types once on mount
   const fetchExamTypes = useCallback(async () => {
@@ -42,36 +43,24 @@ export default function PracticeSetup() {
   useEffect(() => {
     fetchExamTypes();
     supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) return;
-      supabase
-        .from('course_subscriptions')
-        .select('course')
-        .eq('user_id', user.id)
-        .then(({ data }) => {
-          setPurchasedCourses((data ?? []).map((r: any) => r.course));
-          setCoursesLoaded(true);
-        });
+      if (user) setUserId(user.id);
     });
   }, [fetchExamTypes]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Check freemium quota when exam changes
   useEffect(() => {
     const hasCourse = purchasedCourses.includes(examFilter);
-    if (!examFilter || examFilter === 'all' || hasCourse || !coursesLoaded) return;
+    if (!examFilter || examFilter === 'all' || hasCourse || !coursesLoaded || !userId) return;
 
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) return;
-      supabase
-        .from('user_answers')
-        .select('question_id')
-        .eq('user_id', user.id)
-        .eq('exam_type', examFilter)
-        .then(({ data }) => {
-          const distinct = data ? new Set(data.map((r) => r.question_id)).size : 0;
-          setUsedCount(distinct);
-        });
-    });
-  }, [examFilter, purchasedCourses, coursesLoaded]); // eslint-disable-line react-hooks/exhaustive-deps
+    supabase
+      .from('user_answers')
+      .select('question_id')
+      .eq('user_id', userId)
+      .eq('exam_type', examFilter)
+      .then(({ data }) => {
+        const distinct = data ? new Set(data.map((r) => r.question_id)).size : 0;
+        setUsedCount(distinct);
+      });
+  }, [examFilter, purchasedCourses, coursesLoaded, userId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleExamChange = (val: string) => {
     setExamFilter(val);
@@ -89,7 +78,7 @@ export default function PracticeSetup() {
 
     const query = supabase.from('questions').select('id').eq('exam_type', examFilter).order('id', { ascending: true });
 
-    const { data } = await query.limit(1).single();
+    const { data } = await query.limit(1).maybeSingle();
 
     if (data) {
       router.push(

@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback, use, useRef } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { ExamSessionUI } from '@/components/timed-exam/ExamSessionUI';
+import { MINS_PER_QUESTION } from '@/lib/utils/constants';
 
 export default function ExamPage({ params }: { params: Promise<{ sessionId: string }> }) {
   const { sessionId } = use(params);
@@ -25,7 +26,6 @@ export default function ExamPage({ params }: { params: Promise<{ sessionId: stri
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [showSummaryModal, setShowSummaryModal] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
@@ -56,7 +56,7 @@ export default function ExamPage({ params }: { params: Promise<{ sessionId: stri
         if (savedTime) {
           setTimeLeft(parseInt(savedTime));
         } else {
-          const initialTime = actualCount * 1.5 * 60;
+          const initialTime = actualCount * MINS_PER_QUESTION * 60;
           setTimeLeft(initialTime);
           localStorage.setItem(`exam_timer_${sessionId}`, initialTime.toString());
         }
@@ -66,7 +66,12 @@ export default function ExamPage({ params }: { params: Promise<{ sessionId: stri
         setLoading(false);
       }
     };
-    if (examType) fetchQuestions();
+    if (!examType) {
+      setFetchError('No exam type specified. Please go back and try again.');
+      setLoading(false);
+      return;
+    }
+    fetchQuestions();
   }, [examType, requestedCount, supabase, sessionId]);
 
   useEffect(() => {
@@ -153,7 +158,7 @@ export default function ExamPage({ params }: { params: Promise<{ sessionId: stri
       });
 
       const actualCount = questions.length;
-      const totalAllowedSeconds = actualCount * 1.5 * 60;
+      const totalAllowedSeconds = actualCount * MINS_PER_QUESTION * 60;
       const timeSpent = totalAllowedSeconds - timeLeft;
 
       const { error: sErr } = await supabase.from('exam_sessions').insert({
@@ -278,7 +283,7 @@ export default function ExamPage({ params }: { params: Promise<{ sessionId: stri
             </div>
             <div className="bg-gray-50 p-5 rounded-2xl border border-gray-100">
               <span className="text-[10px] font-bold uppercase text-gray-400 block mb-1">Duration</span>
-              <span className="text-lg font-bold text-gray-900">{Math.floor(questions.length * 1.5)} Mins</span>
+              <span className="text-lg font-bold text-gray-900">{Math.floor(questions.length * MINS_PER_QUESTION)} Mins</span>
             </div>
           </div>
           <div className="flex items-center gap-2 text-amber-600 bg-amber-50 px-4 py-2 rounded-full text-xs font-bold mb-8 border border-amber-100">
@@ -302,8 +307,6 @@ export default function ExamPage({ params }: { params: Promise<{ sessionId: stri
           setUserAnswers={setUserAnswers}
           timeLeft={timeLeft}
           formatTime={formatTime}
-          isSidebarOpen={isSidebarOpen}
-          setIsSidebarOpen={setIsSidebarOpen}
           isSubmitting={isSubmitting}
           submitError={submitError}
           modals={{

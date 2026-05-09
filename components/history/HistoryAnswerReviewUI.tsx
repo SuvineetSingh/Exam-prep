@@ -153,8 +153,12 @@ function ReviewFilters({ active, setActive, counts }: {
 function QuestionCard({ question, index }: { question: ReviewQuestion; index: number }) {
   const [expanded, setExpanded] = useState(false);
 
-  const correctKey   = (question.correct_option || '').trim().toLowerCase();
+  const correctKey   = (question.correct_option || question.correct_answer || '').trim().toLowerCase();
   const selectedKey  = (question.userAnswer || '').trim().toLowerCase();
+  const OPTION_LETTERS = ['a', 'b', 'c', 'd'];
+  const optionsArr: string[] = question.options?.length
+    ? question.options
+    : OPTION_LETTERS.map(l => String(question[`option_${l}`] ?? '')).filter(Boolean);
   const isCorrect    = selectedKey === correctKey;
   const isUnanswered = selectedKey === 'unattempted' || selectedKey === '';
 
@@ -210,7 +214,9 @@ function QuestionCard({ question, index }: { question: ReviewQuestion; index: nu
           </p>
 
           <div className="space-y-2.5 mb-5">
-            {['a', 'b', 'c', 'd'].map((l) => {
+            {optionsArr.map((optText, idx) => {
+              const l = OPTION_LETTERS[idx];
+              if (!l) return null;
               const isThisCorrect  = l === correctKey;
               const isThisSelected = l === selectedKey && !isUnanswered;
 
@@ -230,7 +236,7 @@ function QuestionCard({ question, index }: { question: ReviewQuestion; index: nu
                   <span className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs font-black flex-shrink-0 ${badgeStyle}`}>
                     {l.toUpperCase()}
                   </span>
-                  <span className="font-medium text-sm">{String(question[`option_${l}`] ?? '')}</span>
+                  <span className="font-medium text-sm">{optText}</span>
                   {isThisCorrect && (
                     <span className="ml-auto text-[10px] font-black uppercase text-emerald-600 tracking-wide">Correct Answer</span>
                   )}
