@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { CoursesClient } from '@/components/subscription/CoursesClient';
-import type { CourseName } from '@/lib/types';
+import type { CourseName, UserStats } from '@/lib/types';
 
 const COURSES = [
   {
@@ -39,11 +39,15 @@ export default async function CoursesPage({
 
   if (!user) redirect('/login');
 
-  // Fetch course subscriptions and question counts in parallel
-  const [subsResult, ...countResults] = await Promise.all([
+  // Fetch course subscriptions, question counts, and user stats in parallel
+  const [subsResult, answersResult, ...countResults] = await Promise.all([
     supabase
       .from('course_subscriptions')
       .select('course')
+      .eq('user_id', user.id),
+    supabase
+      .from('user_answers')
+      .select('is_correct, mode, created_at')
       .eq('user_id', user.id),
     ...COURSES.map((c) =>
       supabase
@@ -57,6 +61,29 @@ export default async function CoursesPage({
     (row) => row.course as CourseName
   );
   const questionCounts: number[] = countResults.map((r) => r.count ?? 0);
+
+  // Compute stats server-side
+  const answers = answersResult.data ?? [];
+  const totalAnswered = answers.length;
+  const correctCount = answers.filter((a) => a.is_correct).length;
+  const accuracyRate = totalAnswered > 0 ? Math.round((correctCount / totalAnswered) * 100) : 0;
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const todayCount = answers.filter((a) => a.created_at.startsWith(todayStr)).length;
+  const uniqueDays = new Set(answers.map((a) => a.created_at.slice(0, 10)));
+  const MS = 86400000;
+  let cursor = new Date(todayStr + 'T00:00:00Z');
+  if (!uniqueDays.has(todayStr)) cursor = new Date(cursor.getTime() - MS);
+  let streak = 0;
+  while (uniqueDays.has(cursor.toISOString().slice(0, 10))) { streak++; cursor = new Date(cursor.getTime() - MS); }
+  const stats: UserStats = {
+    total_answered: totalAnswered,
+    practice_answered: answers.filter((a) => a.mode === 'practice').length,
+    timed_answered: answers.filter((a) => a.mode === 'timed').length,
+    accuracy_rate: accuracyRate,
+    study_streak: streak,
+    today_count: todayCount,
+    this_week_improvement: 0,
+  };
 
   const params = await searchParams;
   const successPending = params.success === 'true';
@@ -90,6 +117,7 @@ export default async function CoursesPage({
           courses={COURSES.map((c, i) => ({ ...c, questionCount: questionCounts[i] ?? 0 }))}
           purchasedCourses={purchasedCourses}
           displayName={displayName}
+          stats={stats}
           successPending={successPending}
           sessionId={sessionId}
           successCourse={successCourse}
