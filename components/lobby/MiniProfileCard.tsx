@@ -142,12 +142,22 @@ export function MiniProfileCard({ userId, currentUserId, onClose, onSendDM, posi
             </div>
 
             {!profile.is_bot && (
-              <button
-                onClick={() => { onSendDM(userId); onClose(); }}
-                className="w-full py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700 transition-colors"
-              >
-                Send Message
-              </button>
+              friendStatus === 'accepted' ? (
+                <button
+                  onClick={() => { onSendDM(userId); onClose(); }}
+                  className="w-full py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700 transition-colors"
+                >
+                  Send Message
+                </button>
+              ) : (
+                <p className="text-center text-xs text-gray-400 py-1">
+                  {friendStatus === 'pending_sent'
+                    ? 'Waiting for them to accept your request'
+                    : friendStatus === 'pending_received'
+                    ? 'Accept their friend request to message'
+                    : 'Add as a friend to send a message'}
+                </p>
+              )
             )}
           </div>
         ) : (
