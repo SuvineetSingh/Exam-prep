@@ -67,7 +67,7 @@ export default function DashboardPage() {
               <span className="text-xl">🎓</span>
               <span>
                 <strong>You have 15 free questions per course.</strong>{' '}
-                Upgrade to unlock unlimited access — CPA $59, CFA &amp; FE $49 each.
+                Upgrade to unlock unlimited access — CMA $59, CFA &amp; FE $49 each.
               </span>
             </div>
             <Link

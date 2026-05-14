@@ -29,7 +29,7 @@ export function Footer() {
               </span>
             </div>
             <p className="text-gray-600 text-sm max-w-md">
-              Master your CPA, CFA, and FE exams with our comprehensive question bank platform. 
+              Master your CMA, CFA, and FE exams with our comprehensive question bank platform.
               Practice, learn, and succeed with confidence.
             </p>
           </div>

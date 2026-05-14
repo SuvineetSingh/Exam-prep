@@ -23,7 +23,7 @@ export const metadata: Metadata = {
     template: `%s | ${APP_CONFIG.NAME}`,
   },
   description: APP_CONFIG.DESCRIPTION,
-  keywords: ['CPA', 'CFA', 'FE', 'exam prep', 'question bank', 'practice tests'],
+  keywords: ['CMA', 'CFA', 'FE', 'exam prep', 'question bank', 'practice tests'],
   authors: [{ name: 'Suvineet Singh' }],
   creator: 'Suvineet Singh',
   metadataBase: new URL(APP_CONFIG.URL),

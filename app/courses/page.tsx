@@ -7,9 +7,9 @@ import type { CourseName, UserStats } from '@/lib/types';
 
 const COURSES = [
   {
-    exam_type: 'CPA',
-    name: 'CPA — Certified Public Accountant',
-    description: 'Financial accounting, auditing, regulation, and business environments & concepts.',
+    exam_type: 'CMA',
+    name: 'CMA — Certified Management Accountant',
+    description: 'Financial planning, analysis, control, decision support, and professional ethics.',
     icon: '📊',
     color: 'blue',
   },
@@ -109,7 +109,7 @@ export default async function CoursesPage({
           <p className="text-gray-500">
             {hasAnyCourse
               ? `You have Pro access to ${purchasedCourses.join(', ')}. Browse your courses or unlock more below.`
-              : 'Get unlimited access — CPA $59, CFA $49, FE $49. 15 free questions per course to start.'}
+              : 'Get unlimited access — CMA $59, CFA $49, FE $49. 15 free questions per course to start.'}
           </p>
         </div>
 

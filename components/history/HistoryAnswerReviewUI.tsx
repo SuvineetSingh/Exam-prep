@@ -31,7 +31,7 @@ interface HistoryAnswerReviewUIProps {
 
 // --- Helpers ---
 const EXAM_COLORS: Record<string, string> = {
-  CPA: 'bg-blue-600',
+  CMA: 'bg-blue-600',
   CFA: 'bg-violet-600',
   FE:  'bg-teal-600',
 };

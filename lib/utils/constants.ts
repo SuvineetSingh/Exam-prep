@@ -1,19 +1,19 @@
 export const MINS_PER_QUESTION = 1.5;
 
 export const COURSE_PRICES_CENTS: Record<string, number> = {
-  CPA: 5900,
+  CMA: 5900,
   CFA: 4900,
   FE:  4900,
 };
 
 export const COURSE_PRICE_DISPLAY: Record<string, string> = {
-  CPA: '$59',
+  CMA: '$59',
   CFA: '$49',
   FE:  '$49',
 };
 
 export const EXAM_TYPES = {
-  CPA: 'CPA',
+  CMA: 'CMA',
   CFA: 'CFA',
   FE: 'FE',
 } as const;

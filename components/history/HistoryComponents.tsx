@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 
 export interface ExamSession {
   id: string;
-  exam_type: 'CPA' | 'CFA' | 'FE';
+  exam_type: 'CMA' | 'CFA' | 'FE';
   total_questions: number;
   score: number | null;
   percentage: number | null;
@@ -17,7 +17,7 @@ export interface ExamSession {
 }
 
 export type FilterMode = 'all' | 'practice' | 'timed';
-export type FilterExam = 'all' | 'CPA' | 'CFA' | 'FE';
+export type FilterExam = 'all' | 'CMA' | 'CFA' | 'FE';
 
 export function formatTime(seconds: number | null): string {
   if (seconds == null) return '—';
@@ -35,7 +35,7 @@ export function formatDate(iso: string): { date: string; time: string } {
 }
 
 const EXAM_COLORS: Record<string, string> = {
-  CPA: 'bg-blue-600',
+  CMA: 'bg-blue-600',
   CFA: 'bg-violet-600',
   FE:  'bg-teal-600',
 };
@@ -170,7 +170,7 @@ export function HistoryFilters({ mode, setMode, exam, setExam, count }: {
     <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 flex flex-wrap items-center gap-4 mb-6">
       <div className="flex items-center gap-2">
         <span className="text-[10px] font-bold uppercase text-gray-400">Exam</span>
-        {(['all', 'CPA', 'CFA', 'FE'] as FilterExam[]).map(e => (
+        {(['all', 'CMA', 'CFA', 'FE'] as FilterExam[]).map(e => (
           <button
             key={e}
             onClick={() => setExam(e)}

@@ -47,7 +47,7 @@ export interface ProfileFormData {
 }
 
 // Course subscription
-export type CourseName = 'CPA' | 'CFA' | 'FE';
+export type CourseName = 'CMA' | 'CFA' | 'FE';
 
 export interface CourseSubscription {
   id: string;

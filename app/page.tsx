@@ -50,7 +50,7 @@ const STEPS = [
   {
     number: '01',
     title: 'Choose Your Path',
-    body: 'Pick your exam — CPA, CFA, FE, or CMA — and tell us a little about your professional background.',
+    body: 'Pick your exam — CMA, CFA, or FE — and tell us a little about your professional background.',
   },
   {
     number: '02',
@@ -250,7 +250,7 @@ export default async function Home() {
                 We built this platform because we lived the struggle — studying for high-stakes professional exams after a full day of work, with no one around who truly got it.
               </p>
               <p>
-                <strong className="text-white">We&apos;re not just a question bank.</strong> We&apos;re a community of working professionals who show up every night, open their laptops, and chip away at something that matters. The CPA. The CFA. The FE. The CMA.
+                <strong className="text-white">We&apos;re not just a question bank.</strong> We&apos;re a community of working professionals who show up every night, open their laptops, and chip away at something that matters. The CMA. The CFA. The FE.
               </p>
               <p>
                 Every feature on this platform — the chat rooms, the study twins, the after-work study groups — exists because of one belief: you go further when you go together.

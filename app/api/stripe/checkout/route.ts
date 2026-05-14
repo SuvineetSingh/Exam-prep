@@ -3,11 +3,11 @@ import Stripe from 'stripe';
 import { createClient } from '@/lib/supabase/server';
 import { COURSE_PRICES_CENTS } from '@/lib/utils/constants';
 
-const VALID_COURSES = ['CPA', 'CFA', 'FE'] as const;
+const VALID_COURSES = ['CMA', 'CFA', 'FE'] as const;
 type CourseName = typeof VALID_COURSES[number];
 
 const COURSE_LABELS: Record<CourseName, string> = {
-  CPA: 'CPA (Certified Public Accountant)',
+  CMA: 'CMA (Certified Management Accountant)',
   CFA: 'CFA (Chartered Financial Analyst)',
   FE: 'FE (Fundamentals of Engineering)',
 };
