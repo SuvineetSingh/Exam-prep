@@ -28,6 +28,7 @@ export default function SingleQuestionPractice() {
     next: null,
   });
   const [starredIds, setStarredIds]         = useState<number[]>([]);
+  const [questionNumber, setQuestionNumber] = useState(1);
 
   // ── SESSION LOG ────────────────────────────────────────────────────────────
   // Root cause of the bug: PracticeSessionUI kept the log in its own state,
@@ -104,6 +105,7 @@ export default function SingleQuestionPractice() {
           prev: idx > 0 ? (ids[idx - 1] ?? null) : null,
           next: idx >= 0 && idx < ids.length - 1 ? (ids[idx + 1] ?? null) : null,
         });
+        if (idx >= 0) setQuestionNumber(idx + 1);
       } else {
         let prevQuery = supabase
           .from('questions')
@@ -145,6 +147,9 @@ export default function SingleQuestionPractice() {
   const handleNavigate = (direction: 'prev' | 'next') => {
     const targetId = direction === 'prev' ? navIds.prev : navIds.next;
     if (targetId) {
+      if (!starredMode) {
+        setQuestionNumber(n => direction === 'next' ? n + 1 : Math.max(1, n - 1));
+      }
       const params = starredMode
         ? `session=${sessionId}&starred=true`
         : `exam=${exam}&cat=${cat}&session=${sessionId}`;
@@ -174,9 +179,10 @@ export default function SingleQuestionPractice() {
       sessionId={sessionId}
       examFilter={exam}
       categoryFilter={cat}
-      // Pass the persisted log down and the setter so child can append to it
       sessionLog={sessionLog}
       onLogUpdate={setSessionLog}
+      questionNumber={questionNumber}
+      totalQuestions={starredMode ? starredIds.length || undefined : undefined}
     />
   );
 }

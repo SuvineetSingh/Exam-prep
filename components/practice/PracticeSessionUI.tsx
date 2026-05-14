@@ -27,6 +27,8 @@ export interface PracticeSessionUIProps {
   sessionId: string;
   examFilter: string;
   categoryFilter: string;
+  questionNumber?: number;
+  totalQuestions?: number;
   sessionLog: QuestionLog[];
   onLogUpdate: (updater: (prev: QuestionLog[]) => QuestionLog[]) => void;
 }
@@ -258,6 +260,8 @@ export function PracticeSessionUI({
   examFilter,
   sessionLog,
   onLogUpdate,
+  questionNumber,
+  totalQuestions,
 }: PracticeSessionUIProps) {
   const router   = useRouter();
   const supabase = createClient();
@@ -524,7 +528,13 @@ export function PracticeSessionUI({
 
         <div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-8">
           <div className="flex items-center justify-between mb-6">
-            <p className="text-xs font-bold uppercase text-slate-400 tracking-wider">Question</p>
+            <p className="text-xs font-bold uppercase text-slate-400 tracking-wider">
+              Question{questionNumber != null
+                ? totalQuestions != null
+                  ? ` ${questionNumber} / ${totalQuestions}`
+                  : ` ${questionNumber}`
+                : ''}
+            </p>
             <div className="flex items-center gap-3">
               {/* Per-question elapsed timer */}
               <div className={`flex items-center gap-1.5 font-mono font-black text-sm transition-colors ${timerColour}`} title="Time spent on this question">
