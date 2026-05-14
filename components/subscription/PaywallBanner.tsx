@@ -3,8 +3,8 @@
 import { useState } from 'react';
 import Link from 'next/link';
 
-export const FREE_QUESTION_LIMIT = 20;
-export const FREE_QUESTION_WARNING = 15;
+export const FREE_QUESTION_LIMIT = 15;
+export const FREE_QUESTION_WARNING = 10;
 
 interface PaywallBannerProps {
   examType: string;

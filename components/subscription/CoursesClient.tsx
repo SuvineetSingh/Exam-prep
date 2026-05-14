@@ -24,7 +24,7 @@ interface CoursesClientProps {
   successCourse?: string;
 }
 
-const FREE_QUESTION_LIMIT = 20;
+const FREE_QUESTION_LIMIT = 15;
 
 const colorMap = {
   blue: {

@@ -85,8 +85,9 @@ export default function ExamPage({ params }: { params: Promise<{ sessionId: stri
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [hasStarted, isSubmitting]);
 
+  // Throttle localStorage writes — every 5 seconds instead of every tick
   useEffect(() => {
-    if (hasStarted && !loading && timeLeft > 0) {
+    if (hasStarted && !loading && timeLeft > 0 && timeLeft % 5 === 0) {
       localStorage.setItem(`exam_timer_${sessionId}`, timeLeft.toString());
     }
   }, [timeLeft, hasStarted, loading, sessionId]);

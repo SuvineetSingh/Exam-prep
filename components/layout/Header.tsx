@@ -11,7 +11,7 @@ const NAV_LINKS = [
   { href: '/dashboard', label: 'Dashboard' },
   { href: '/courses', label: 'Courses' },
   { href: '/questions', label: 'Questions' },
-  { href: '/lobby', label: 'Lobby' },
+  { href: '/lobby', label: 'Chat Room' },
 ];
 
 // ── Shared dropdown — exported for use in Navigation.tsx (questions page) ──

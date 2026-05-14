@@ -73,11 +73,14 @@ export default function SingleQuestionPractice() {
     setLoading(true);
     const currentId = Number(id);
 
-    const { data } = await supabase
+    let questionQuery = supabase
       .from('questions')
       .select('*')
-      .eq('id', currentId)
-      .single();
+      .eq('id', currentId);
+    if (!starredMode && exam !== 'all') {
+      questionQuery = questionQuery.eq('exam_type', exam);
+    }
+    const { data } = await questionQuery.maybeSingle();
 
     if (data) {
       setQuestion(data);
