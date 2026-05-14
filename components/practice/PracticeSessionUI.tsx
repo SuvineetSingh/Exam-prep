@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { formatTime } from '@/lib/utils/helpers';
+import { toggleStar, isQuestionStarred } from '@/lib/supabase/queries/starredQueries';
 import type { Question } from '@/lib/types';
 
 export interface QuestionLog {
@@ -270,10 +271,38 @@ export function PracticeSessionUI({
   const [timerActive, setTimerActive] = useState(true);
   const intervalRef                   = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  const [starred, setStarred]         = useState(false);
+  const [starLoading, setStarLoading] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) setCurrentUserId(user.id);
+    });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   useEffect(() => {
     setElapsed(0);
     setTimerActive(true);
-  }, [question?.id]);
+    // Check star status for new question
+    if (currentUserId && question?.id) {
+      isQuestionStarred(currentUserId, Number(question.id)).then(setStarred);
+    }
+  }, [question?.id, currentUserId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleToggleStar = useCallback(async () => {
+    if (!currentUserId || !question) return;
+    setStarLoading(true);
+    const next = !starred;
+    setStarred(next);
+    try {
+      await toggleStar(currentUserId, Number(question.id), question.exam_type, !next);
+    } catch {
+      setStarred(!next); // revert on failure
+    } finally {
+      setStarLoading(false);
+    }
+  }, [currentUserId, question, starred]);
 
   useEffect(() => {
     if (intervalRef.current) clearInterval(intervalRef.current);
@@ -496,9 +525,25 @@ export function PracticeSessionUI({
         <div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-8">
           <div className="flex items-center justify-between mb-6">
             <p className="text-xs font-bold uppercase text-slate-400 tracking-wider">Question</p>
-            <div className={`flex items-center gap-1.5 font-mono font-black text-sm transition-colors ${timerColour}`}>
-              <span className={`w-2 h-2 rounded-full ${timerActive && !isSubmitted ? 'bg-green-400 animate-pulse' : 'bg-slate-300'}`} />
-              {formatTime(elapsed)}
+            <div className="flex items-center gap-3">
+              {/* Per-question elapsed timer */}
+              <div className={`flex items-center gap-1.5 font-mono font-black text-sm transition-colors ${timerColour}`} title="Time spent on this question">
+                <span className={`w-2 h-2 rounded-full ${timerActive && !isSubmitted ? 'bg-green-400 animate-pulse' : 'bg-slate-300'}`} />
+                {formatTime(elapsed)}
+              </div>
+              {/* Star button */}
+              <button
+                onClick={handleToggleStar}
+                disabled={starLoading || !currentUserId}
+                title={starred ? 'Unstar this question' : 'Star this question for later review'}
+                className={`w-7 h-7 flex items-center justify-center rounded-full transition-all disabled:opacity-40 ${
+                  starred ? 'text-amber-400 hover:text-amber-500' : 'text-slate-300 hover:text-amber-400'
+                }`}
+              >
+                <svg className="w-5 h-5" viewBox="0 0 24 24" fill={starred ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                </svg>
+              </button>
             </div>
           </div>
 

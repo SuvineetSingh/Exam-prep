@@ -12,9 +12,10 @@ export default function SingleQuestionPractice() {
   const searchParams = useSearchParams();
   const supabase = createClient();
 
-  const exam      = searchParams.get('exam')    || 'all';
-  const cat       = searchParams.get('cat')     || 'all';
-  const sessionId = searchParams.get('session') || '';
+  const exam        = searchParams.get('exam')    || 'all';
+  const cat         = searchParams.get('cat')     || 'all';
+  const sessionId   = searchParams.get('session') || '';
+  const starredMode = searchParams.get('starred') === 'true';
 
   const [question, setQuestion]             = useState<any>(null);
   const [loading, setLoading]               = useState(true);
@@ -26,6 +27,7 @@ export default function SingleQuestionPractice() {
     prev: null,
     next: null,
   });
+  const [starredIds, setStarredIds]         = useState<number[]>([]);
 
   // ── SESSION LOG ────────────────────────────────────────────────────────────
   // Root cause of the bug: PracticeSessionUI kept the log in its own state,
@@ -57,6 +59,15 @@ export default function SingleQuestionPractice() {
     }
   }, [sessionLog, storageKey]);
 
+  // Load starred IDs from sessionStorage when in starred mode
+  useEffect(() => {
+    if (!starredMode || !sessionId) return;
+    try {
+      const raw = sessionStorage.getItem(`starred_ids_${sessionId}`);
+      if (raw) setStarredIds(JSON.parse(raw) as number[]);
+    } catch {}
+  }, [starredMode, sessionId]);
+
   // ── FETCH QUESTION + NEIGHBOURS ───────────────────────────────────────────
   const fetchQuestionAndBoundaries = useCallback(async () => {
     setLoading(true);
@@ -73,37 +84,56 @@ export default function SingleQuestionPractice() {
       setIsSubmitted(false);
       setSelectedOption(null);
 
-      let prevQuery = supabase
-        .from('questions')
-        .select('id')
-        .lt('id', currentId)
-        .order('id', { ascending: false });
-      let nextQuery = supabase
-        .from('questions')
-        .select('id')
-        .gt('id', currentId)
-        .order('id', { ascending: true });
+      if (starredMode) {
+        // Navigation within the ordered starred IDs list
+        let ids = starredIds;
+        if (ids.length === 0) {
+          // Try reading from sessionStorage as a fallback (first render race)
+          try {
+            const raw = sessionStorage.getItem(`starred_ids_${sessionId}`);
+            if (raw) ids = JSON.parse(raw) as number[];
+          } catch {}
+        }
+        const idx = ids.indexOf(currentId);
+        setIsFirst(idx <= 0);
+        setIsLast(idx >= ids.length - 1 || idx === -1);
+        setNavIds({
+          prev: idx > 0 ? (ids[idx - 1] ?? null) : null,
+          next: idx >= 0 && idx < ids.length - 1 ? (ids[idx + 1] ?? null) : null,
+        });
+      } else {
+        let prevQuery = supabase
+          .from('questions')
+          .select('id')
+          .lt('id', currentId)
+          .order('id', { ascending: false });
+        let nextQuery = supabase
+          .from('questions')
+          .select('id')
+          .gt('id', currentId)
+          .order('id', { ascending: true });
 
-      if (exam !== 'all') {
-        prevQuery = prevQuery.eq('exam_type', exam);
-        nextQuery = nextQuery.eq('exam_type', exam);
+        if (exam !== 'all') {
+          prevQuery = prevQuery.eq('exam_type', exam);
+          nextQuery = nextQuery.eq('exam_type', exam);
+        }
+        if (cat !== 'all') {
+          prevQuery = prevQuery.eq('category', cat);
+          nextQuery = nextQuery.eq('category', cat);
+        }
+
+        const [{ data: prevData }, { data: nextData }] = await Promise.all([
+          prevQuery.limit(1).maybeSingle(),
+          nextQuery.limit(1).maybeSingle(),
+        ]);
+
+        setIsFirst(!prevData);
+        setIsLast(!nextData);
+        setNavIds({ prev: prevData ? prevData.id : null, next: nextData ? nextData.id : null });
       }
-      if (cat !== 'all') {
-        prevQuery = prevQuery.eq('category', cat);
-        nextQuery = nextQuery.eq('category', cat);
-      }
-
-      const [{ data: prevData }, { data: nextData }] = await Promise.all([
-        prevQuery.limit(1).maybeSingle(),
-        nextQuery.limit(1).maybeSingle(),
-      ]);
-
-      setIsFirst(!prevData);
-      setIsLast(!nextData);
-      setNavIds({ prev: prevData ? prevData.id : null, next: nextData ? nextData.id : null });
     }
     setLoading(false);
-  }, [id, exam, cat]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [id, exam, cat, starredMode, starredIds]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     fetchQuestionAndBoundaries();
@@ -112,7 +142,10 @@ export default function SingleQuestionPractice() {
   const handleNavigate = (direction: 'prev' | 'next') => {
     const targetId = direction === 'prev' ? navIds.prev : navIds.next;
     if (targetId) {
-      router.push(`/practice/${targetId}?exam=${exam}&cat=${cat}&session=${sessionId}`);
+      const params = starredMode
+        ? `session=${sessionId}&starred=true`
+        : `exam=${exam}&cat=${cat}&session=${sessionId}`;
+      router.push(`/practice/${targetId}?${params}`);
     }
   };
 

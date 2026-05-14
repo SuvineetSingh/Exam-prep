@@ -1,9 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { Footer } from '@/components/layout/Footer';
 import { Header } from '@/components/layout/Header';
+import { createClient } from '@/lib/supabase/client';
+import { toggleStar, isQuestionStarred } from '@/lib/supabase/queries/starredQueries';
 import type { User } from '@supabase/supabase-js';
 import type { ExamSession } from '@/components/history/HistoryComponents';
 
@@ -69,12 +71,22 @@ function ReviewSummary({ summary }: { summary: HistoryAnswerReviewUIProps['summa
             <p className="text-sm text-gray-400">{summary?.dateFormatted}</p>
           </div>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 print:hidden">
           {summary?.mode && (
             <span className={`text-[10px] font-black uppercase px-2.5 py-1 rounded-lg border ${MODE_STYLE[summary.mode] ?? ''}`}>
               {summary.mode === 'timed' ? '⏱ Timed' : '📝 Practice'}
             </span>
           )}
+          <button
+            onClick={() => window.print()}
+            title="Print this session"
+            className="flex items-center gap-1.5 text-sm font-bold text-gray-500 hover:text-blue-600 transition-colors"
+          >
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+            </svg>
+            Print
+          </button>
           <Link
             href="/history"
             className="flex items-center gap-1.5 text-sm font-bold text-gray-500 hover:text-blue-600 transition-colors"
@@ -150,8 +162,30 @@ function ReviewFilters({ active, setActive, counts }: {
 }
 
 // --- Single question card ---
-function QuestionCard({ question, index }: { question: ReviewQuestion; index: number }) {
+function QuestionCard({ question, index, userId }: { question: ReviewQuestion; index: number; userId?: string }) {
   const [expanded, setExpanded] = useState(false);
+  const [starred, setStarred] = useState(false);
+  const [starLoading, setStarLoading] = useState(false);
+
+  useEffect(() => {
+    if (!userId || !question.id) return;
+    isQuestionStarred(userId, Number(question.id)).then(setStarred);
+  }, [userId, question.id]);
+
+  const handleToggleStar = useCallback(async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!userId || !question.id) return;
+    setStarLoading(true);
+    const next = !starred;
+    setStarred(next);
+    try {
+      await toggleStar(userId, Number(question.id), question.exam_type, !next);
+    } catch {
+      setStarred(!next);
+    } finally {
+      setStarLoading(false);
+    }
+  }, [userId, question.id, question.exam_type, starred]);
 
   const correctKey   = (question.correct_option || question.correct_answer || '').trim().toLowerCase();
   const selectedKey  = (question.userAnswer || '').trim().toLowerCase();
@@ -199,12 +233,28 @@ function QuestionCard({ question, index }: { question: ReviewQuestion; index: nu
           </p>
         )}
 
-        <svg
-          width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}
-          className={`flex-shrink-0 text-gray-300 transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`}
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-        </svg>
+        <div className="flex items-center gap-2 flex-shrink-0 print:hidden">
+          {userId && (
+            <button
+              onClick={handleToggleStar}
+              disabled={starLoading}
+              title={starred ? 'Unstar question' : 'Star for later review'}
+              className={`w-7 h-7 flex items-center justify-center rounded-full transition-all ${
+                starred ? 'text-amber-400 hover:text-amber-500' : 'text-gray-200 hover:text-amber-400'
+              }`}
+            >
+              <svg className="w-4.5 h-4.5" viewBox="0 0 24 24" fill={starred ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+              </svg>
+            </button>
+          )}
+          <svg
+            width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}
+            className={`text-gray-300 transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`}
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+          </svg>
+        </div>
       </button>
 
       {expanded && (
@@ -263,6 +313,15 @@ function QuestionCard({ question, index }: { question: ReviewQuestion; index: nu
 // --- Main component ---
 export function HistoryAnswerReviewUI({ questions, summary, user }: HistoryAnswerReviewUIProps) {
   const [filter, setFilter] = useState<ReviewFilter>('all');
+  const [userId, setUserId] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    if (user) { setUserId(user.id); return; }
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data: { user: u } }) => {
+      if (u) setUserId(u.id);
+    });
+  }, [user]);
 
   const counts: Record<ReviewFilter, number> = {
     all:        questions.length,
@@ -289,7 +348,17 @@ export function HistoryAnswerReviewUI({ questions, summary, user }: HistoryAnswe
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      {/* FIX: replaced hardcoded div navbar with real Header so ProfileDropdown works */}
+      {/* Print styles: hide chrome, expand all cards */}
+      <style>{`
+        @media print {
+          .print\\:hidden { display: none !important; }
+          header, footer, nav { display: none !important; }
+          body { background: white; }
+          .rounded-2xl { border-radius: 8px; }
+          .shadow-sm { box-shadow: none; }
+        }
+      `}</style>
+
       {user && <Header user={user} />}
 
       <main className="flex-1 max-w-4xl mx-auto w-full px-4 py-8 pt-24">
@@ -299,7 +368,7 @@ export function HistoryAnswerReviewUI({ questions, summary, user }: HistoryAnswe
         {filtered.length > 0 ? (
           <div className="space-y-3">
             {filtered.map((q, i) => (
-              <QuestionCard key={q.id ?? i} question={q} index={questions.indexOf(q)} />
+              <QuestionCard key={q.id ?? i} question={q} index={questions.indexOf(q)} userId={userId} />
             ))}
           </div>
         ) : (
