@@ -109,7 +109,7 @@ export default async function CoursesPage({
           <p className="text-gray-500">
             {hasAnyCourse
               ? `You have Pro access to ${purchasedCourses.join(', ')}. Browse your courses or unlock more below.`
-              : 'Get unlimited access to any course for $50. 20 free questions per course to start.'}
+              : 'Get unlimited access — CPA $59, CFA $49, FE $49. 15 free questions per course to start.'}
           </p>
         </div>
 

@@ -66,8 +66,8 @@ export default function DashboardPage() {
             <div className="flex items-center gap-3 text-sm text-blue-800">
               <span className="text-xl">🎓</span>
               <span>
-                <strong>You have 20 free questions per course.</strong>{' '}
-                Upgrade once for $50 to unlock unlimited access to all CPA, CFA, and FE questions.
+                <strong>You have 15 free questions per course.</strong>{' '}
+                Upgrade to unlock unlimited access — CPA $59, CFA &amp; FE $49 each.
               </span>
             </div>
             <Link

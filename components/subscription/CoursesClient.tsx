@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { CourseName, UserStats } from '@/lib/types';
+import { COURSE_PRICE_DISPLAY } from '@/lib/utils/constants';
 
 interface CourseData {
   exam_type: string;
@@ -326,7 +327,7 @@ export function CoursesClient({
                             Redirecting...
                           </span>
                         ) : (
-                          'Buy Pro Access — $50'
+                          `Buy Pro Access — ${COURSE_PRICE_DISPLAY[course.exam_type] ?? '$49'}`
                         )}
                       </button>
                       <Link

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { COURSE_PRICE_DISPLAY } from '@/lib/utils/constants';
 
 export const FREE_QUESTION_LIMIT = 15;
 export const FREE_QUESTION_WARNING = 10;
@@ -42,7 +43,7 @@ export function PaywallBanner({ examType, usedCount }: PaywallBannerProps) {
           You've used all {FREE_QUESTION_LIMIT} free {examType} questions
         </h3>
         <p className="text-sm text-amber-700 max-w-xs mx-auto">
-          Unlock unlimited access to all {examType} questions with Pro access for a one-time payment of $50.
+          Unlock unlimited access to all {examType} questions with Pro access for a one-time payment of {COURSE_PRICE_DISPLAY[examType] ?? '$49'}.
         </p>
       </div>
 
@@ -58,7 +59,7 @@ export function PaywallBanner({ examType, usedCount }: PaywallBannerProps) {
               Redirecting...
             </>
           ) : (
-            `Buy ${examType} Pro — $50 →`
+            `Buy ${examType} Pro — ${COURSE_PRICE_DISPLAY[examType] ?? '$49'} →`
           )}
         </button>
         <Link

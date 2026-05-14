@@ -60,8 +60,8 @@ const FEATURES = [
 
 const STEPS = [
   { number: '01', title: 'Create a free account', body: 'Sign up in under a minute — no credit card required.' },
-  { number: '02', title: 'Pick your exam and start', body: 'Choose CPA, CFA, or FE and dive into 20 free questions per course.' },
-  { number: '03', title: 'Upgrade when you\'re ready', body: 'Unlock unlimited questions for any course with a one-time $50 payment.' },
+  { number: '02', title: 'Pick your exam and start', body: 'Choose CPA, CFA, or FE and dive into 15 free questions per course.' },
+  { number: '03', title: 'Upgrade when you\'re ready', body: 'Unlock unlimited questions — CPA for $59, CFA and FE for $49 each.' },
 ];
 
 export default async function Home() {
@@ -136,7 +136,7 @@ export default async function Home() {
                 Browse Courses →
               </Link>
             </div>
-            <p className="mt-5 text-sm text-gray-400">20 free questions per course · No credit card · Cancel anytime</p>
+            <p className="mt-5 text-sm text-gray-400">15 free questions per course · No credit card · Cancel anytime</p>
           </div>
         </section>
 
@@ -183,7 +183,7 @@ export default async function Home() {
                     <span className="text-gray-400">
                       <strong className="text-gray-700">{questionCounts[i]?.toLocaleString() ?? '—'}</strong> questions
                     </span>
-                    <span className="text-blue-600 font-bold">$50 Pro · 20 Free</span>
+                    <span className="text-blue-600 font-bold">{course.exam_type === 'CPA' ? '$59' : '$49'} Pro · 15 Free</span>
                   </div>
                 </div>
               ))}
