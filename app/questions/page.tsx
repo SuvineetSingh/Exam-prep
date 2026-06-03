@@ -6,8 +6,7 @@ import { useRouter } from 'next/navigation';
 import { QuestionFilters } from '@/components/question/QuestionFilters';
 import { QuestionCard } from '@/components/question/QuestionCard';
 import { Pagination } from '@/components/ui/Pagination';
-import { Footer } from '@/components/layout/Footer';
-import { Header } from '@/components/layout/Header';
+import { AppShell } from '@/components/layout/AppShell';
 import { QuestionHeader } from '@/components/question/Navigation';
 import { getAttemptedQuestionIds } from '@/lib/supabase/queries/userStats';
 import { FREE_QUESTION_LIMIT } from '@/components/subscription/PaywallBanner';
@@ -173,10 +172,7 @@ export default function QuestionsDashboard() {
   const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900 flex flex-col">
-      <Header user={user!} />
-
-      <main className="flex-1 max-w-5xl mx-auto w-full p-6 pt-24">
+    <AppShell user={user!}>
         {/* QuestionHeader Component from Navigation.tsx */}
         <QuestionHeader />
 
@@ -242,9 +238,6 @@ export default function QuestionsDashboard() {
             />
           </div>
         )}
-      </main>
-
-      <Footer />
-    </div>
+    </AppShell>
   );
 }

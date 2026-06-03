@@ -3,6 +3,10 @@ const nextConfig = {
   // Enable React strict mode for better development experience
   reactStrictMode: true,
 
+  experimental: {
+    turbopackUseSystemTlsCerts: true,
+  },
+
   // Image optimization configuration
   images: {
     domains: [], // Add your image domains here (e.g., Supabase storage)

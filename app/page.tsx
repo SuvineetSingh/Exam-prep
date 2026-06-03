@@ -1,232 +1,359 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { APP_CONFIG } from '@/lib/utils/constants';
-import { Footer } from '@/components/layout/Footer';
 import { createClient } from '@/lib/supabase/server';
 
+/* ── Data ──────────────────────────────────────────── */
 const COURSES = [
   {
     exam_type: 'CMA',
-    name: 'CMA — Certified Management Accountant',
+    name: 'Certified Management Accountant',
     description: 'Financial planning, analysis, control, decision support, and professional ethics.',
     icon: '📊',
-    tag: 'Most Popular',
+    price: '$59',
+    color: 'from-amber-400 to-orange-400',
+    badge: 'Most Popular',
+    badgeColor: 'bg-amber-500',
   },
   {
     exam_type: 'CFA',
-    name: 'CFA — Chartered Financial Analyst',
+    name: 'Chartered Financial Analyst',
     description: 'Portfolio management, equity analysis, fixed income, derivatives, and ethics.',
     icon: '📈',
-    tag: null,
+    price: '$49',
+    color: 'from-violet-400 to-purple-500',
+    badge: null,
+    badgeColor: '',
   },
   {
     exam_type: 'FE',
-    name: 'FE — Fundamentals of Engineering',
+    name: 'Fundamentals of Engineering',
     description: 'Mathematics, engineering sciences, and discipline-specific technical topics.',
     icon: '⚙️',
-    tag: null,
-  },
-];
-
-const HOOKS = [
-  {
-    icon: '🌙',
-    headline: 'Working late? Others are too.',
-    body: 'Our after-work study rooms are full of professionals putting in the hours after a long day — just like you.',
-  },
-  {
-    icon: '🌍',
-    headline: 'Same goals, different time zones.',
-    body: 'Connect with candidates from around the world who are sitting the same exam and feeling the same pressure.',
-  },
-  {
-    icon: '🤝',
-    headline: 'Stop grinding alone. Start growing together.',
-    body: 'Share strategies, swap resources, and hold each other accountable — because the pass rate goes up when you have people in your corner.',
-  },
-];
-
-const STEPS = [
-  {
-    number: '01',
-    title: 'Choose Your Path',
-    body: 'Pick your exam — CMA, CFA, or FE — and tell us a little about your professional background.',
-  },
-  {
-    number: '02',
-    title: 'Find Your Study Partner',
-    body: 'Jump into Chat Rooms built around your schedule, like "CMA After Work Hours" or "FE for Professionals."',
-  },
-  {
-    number: '03',
-    title: 'Practice with Purpose',
-    body: 'Work through a targeted question bank — 15 free questions per course, unlimited with Pro access.',
-  },
-  {
-    number: '04',
-    title: 'Real-Time Support',
-    body: 'Got a question at 11 PM? Post it in the Developer Feedback room or your course chat — someone\'s always around.',
+    price: '$49',
+    color: 'from-teal-400 to-cyan-500',
+    badge: null,
+    badgeColor: '',
   },
 ];
 
 const FEATURES = [
   {
-    icon: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-      </svg>
-    ),
-    label: 'Practice Mode',
+    icon: '🎯',
+    title: 'Adaptive Practice',
+    body: 'Questions that surface your weak spots and target them until you\'re strong.',
   },
   {
-    icon: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-      </svg>
-    ),
-    label: 'Timed Exams',
+    icon: '⏱',
+    title: 'Timed Exam Simulator',
+    body: 'Full mock exams under real conditions — timer, question navigation, auto-submit.',
   },
   {
-    icon: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-      </svg>
-    ),
-    label: 'Exam History',
-  },
-  {
-    icon: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-      </svg>
-    ),
-    label: 'Starred Questions',
-  },
-  {
-    icon: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z" />
-      </svg>
-    ),
-    label: 'Live Chat Rooms',
-  },
-  {
-    icon: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-      </svg>
-    ),
-    label: 'Find Study Partners',
+    icon: '👥',
+    title: 'Study Community',
+    body: 'Live chat rooms full of professionals grinding the same exam as you. At 11 PM.',
   },
 ];
 
+const HOW_STEPS = [
+  { num: '01', title: 'Sign up free', body: 'No credit card needed. 15 free questions per course, immediately.' },
+  { num: '02', title: 'Pick your exam', body: 'CMA, CFA, or FE — tell us your goal and we\'ll tailor the experience.' },
+  { num: '03', title: 'Start practicing', body: 'Work through questions, build streaks, and track your progress daily.' },
+];
+
+const STATS = [
+  { value: '10,000+', label: 'Questions in the bank' },
+  { value: '3',       label: 'Professional exams covered' },
+  { value: '15',      label: 'Free questions to start' },
+  { value: '24/7',    label: 'Community always online' },
+];
+
+/* ── Landing Page ──────────────────────────────────── */
 export default async function Home() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  const questionCounts: number[] = user
-    ? []
-    : await Promise.all(
-        COURSES.map(async (c) => {
-          const { count } = await supabase
-            .from('questions')
-            .select('id', { count: 'exact', head: true })
-            .eq('exam_type', c.exam_type);
-          return count ?? 0;
-        })
-      );
-
-  if (user) {
-    redirect('/courses');
-  }
+  if (user) redirect('/dashboard');
 
   return (
-    <div className="min-h-screen bg-white flex flex-col">
-      {/* Nav */}
-      <header className="sticky top-0 z-50 bg-white/90 backdrop-blur border-b border-gray-100">
-        <nav className="max-w-7xl mx-auto px-6 lg:px-8 h-16 flex items-center justify-between">
-          <Link href="/" className="font-bold text-xl text-blue-600 tracking-tight">
-            {APP_CONFIG.NAME}
-          </Link>
-          <div className="flex items-center gap-4">
-            <Link href="/login" className="text-sm font-semibold text-gray-600 hover:text-gray-900 transition-colors">
+    <div className="min-h-screen bg-white flex flex-col font-jakarta">
+
+      {/* ── Navbar ── */}
+      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur border-b border-neutral-200">
+        <nav className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 bg-brand-green rounded-xl flex items-center justify-center">
+              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5}
+                  d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+              </svg>
+            </div>
+            <span className="text-lg font-extrabold text-neutral-900 tracking-tight">{APP_CONFIG.NAME}</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <Link href="/login"
+              className="text-sm font-semibold text-neutral-600 hover:text-neutral-900 transition-colors">
               Log in
             </Link>
-            <Link
-              href="/register"
-              className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold px-4 py-2 rounded-lg transition-colors"
-            >
-              Sign up free
+            <Link href="/register" className="btn-primary text-sm">
+              Start free →
             </Link>
           </div>
         </nav>
       </header>
 
       <main className="flex-1">
+
         {/* ── Hero ── */}
-        <section className="relative overflow-hidden bg-white py-24 sm:py-32">
-          <div className="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80" aria-hidden="true">
-            <div className="relative left-[calc(50%-11rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-[#0070f3] to-[#9089fc] opacity-20 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem]" />
-          </div>
-          <div className="mx-auto max-w-3xl px-6 text-center">
-            <div className="inline-flex items-center gap-2 bg-blue-50 border border-blue-100 text-blue-700 text-xs font-bold px-3 py-1.5 rounded-full mb-8 tracking-wider uppercase">
-              CMA · CFA · FE
+        <section className="relative overflow-hidden bg-gradient-to-br from-white via-green-50 to-amber-50 py-24 sm:py-32">
+          {/* Decorative blobs */}
+          <div className="absolute -top-24 -right-24 w-96 h-96 bg-brand-green/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-24 -left-24 w-80 h-80 bg-brand-amber/10 rounded-full blur-3xl pointer-events-none" />
+
+          <div className="relative max-w-6xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            {/* Left: copy */}
+            <div>
+              <div className="inline-flex items-center gap-2 bg-green-100 border border-green-200 text-green-800
+                              text-xs font-bold px-3 py-1.5 rounded-full mb-6 tracking-wide">
+                🎓 CMA · CFA · FE Exam Prep
+              </div>
+              <h1 className="text-5xl sm:text-6xl font-extrabold text-neutral-900 tracking-tight leading-[1.05] mb-5">
+                Ace Your Exam.<br />
+                <span className="text-brand-green">One Question</span><br />
+                at a Time.
+              </h1>
+              <p className="text-lg text-neutral-500 leading-relaxed mb-8 max-w-md">
+                Adaptive practice questions, timed mock exams, streaks — and a community of professionals
+                studying the same exam as you.
+              </p>
+              <div className="flex flex-col sm:flex-row items-start gap-3">
+                <Link href="/register" className="btn-primary-lg">
+                  Start for free →
+                </Link>
+                <Link href="#how-it-works"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl px-8 py-4 text-base
+                             font-semibold text-neutral-600 border border-neutral-200 hover:border-neutral-300
+                             hover:bg-neutral-50 transition-all">
+                  See how it works
+                </Link>
+              </div>
+              <p className="text-xs text-neutral-400 mt-4 font-medium">
+                15 free questions · No credit card · Join instantly
+              </p>
             </div>
-            <h1 className="text-5xl sm:text-6xl font-extrabold text-gray-900 tracking-tight leading-tight mb-4">
-              Don&apos;t Study Alone.
-            </h1>
-            <h2 className="text-4xl sm:text-5xl font-extrabold text-blue-600 tracking-tight leading-tight mb-6">
-              Connect with Professionals Worldwide.
-            </h2>
-            <p className="text-lg sm:text-xl text-gray-500 leading-relaxed mb-10 max-w-2xl mx-auto">
-              Find your study partner — someone working the same exam, the same schedule, the same grind. Practice together, hold each other accountable, and actually pass.
-            </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link
-                href="/register"
-                className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold px-8 py-4 rounded-xl text-base transition-all shadow-lg shadow-blue-200 hover:-translate-y-0.5"
-              >
-                Find Your Study Partner →
-              </Link>
-              <Link
-                href="/courses"
-                className="w-full sm:w-auto text-gray-600 hover:text-gray-900 font-semibold px-8 py-4 rounded-xl text-base transition-colors border border-gray-200 hover:border-gray-300"
-              >
-                Browse Courses
-              </Link>
+
+            {/* Right: mock question card */}
+            <div className="relative flex items-center justify-center lg:justify-end">
+              <div className="relative w-full max-w-sm">
+                {/* Floating decorative card behind */}
+                <div className="absolute -top-4 -right-4 w-full h-full bg-brand-amber/20 rounded-3xl rotate-3" />
+                <div className="relative bg-white rounded-3xl shadow-card-hover p-6 border border-neutral-100">
+                  {/* Progress bar */}
+                  <div className="flex items-center justify-between mb-4">
+                    <span className="text-xs font-bold text-neutral-500">Question 3 of 10</span>
+                    <span className="text-xs font-bold text-brand-green">🔥 3 streak</span>
+                  </div>
+                  <div className="h-1.5 bg-neutral-100 rounded-full mb-5">
+                    <div className="h-full bg-brand-green rounded-full" style={{ width: '30%' }} />
+                  </div>
+
+                  <p className="text-xs font-bold text-brand-amber mb-2 uppercase tracking-wide">
+                    Financial Reporting
+                  </p>
+                  <p className="text-sm font-semibold text-neutral-800 mb-5 leading-snug">
+                    Under IFRS, which method is required for investment property valuation?
+                  </p>
+
+                  {/* Options */}
+                  {['Cost model only', 'Fair value model or cost model', 'Historical cost only', 'Net realisable value'].map((opt, i) => (
+                    <div
+                      key={opt}
+                      className={`flex items-center gap-3 px-4 py-3 rounded-xl border-2 mb-2 text-sm font-semibold
+                        ${i === 1
+                          ? 'border-brand-green bg-green-50 text-green-800'
+                          : 'border-neutral-100 text-neutral-600 bg-neutral-50'}`}
+                    >
+                      <span className={`w-6 h-6 rounded-lg flex items-center justify-center text-xs font-black flex-shrink-0
+                        ${i === 1 ? 'bg-brand-green text-white' : 'bg-neutral-200 text-neutral-500'}`}>
+                        {['A','B','C','D'][i]}
+                      </span>
+                      {opt}
+                      {i === 1 && <span className="ml-auto">✓</span>}
+                    </div>
+                  ))}
+
+                  <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-xl">
+                    <p className="text-xs text-green-800 font-semibold">
+                      ✓ Correct! +10 XP earned
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
-            <p className="mt-5 text-sm text-gray-400">15 free questions · No credit card · Join your people</p>
           </div>
         </section>
 
-        {/* ── Situation Hook Strip ── */}
-        <section className="bg-gray-50 py-16 px-6">
-          <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
-            {HOOKS.map((h) => (
-              <div key={h.headline} className="bg-white rounded-2xl p-7 border border-gray-100 shadow-sm flex flex-col gap-3">
-                <span className="text-3xl">{h.icon}</span>
-                <h3 className="font-black text-gray-900 text-lg leading-snug">{h.headline}</h3>
-                <p className="text-gray-500 text-sm leading-relaxed">{h.body}</p>
+        {/* ── Stats strip ── */}
+        <section className="bg-neutral-900 py-10">
+          <div className="max-w-4xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+            {STATS.map(({ value, label }) => (
+              <div key={label}>
+                <p className="text-2xl font-extrabold text-brand-green">{value}</p>
+                <p className="text-xs text-neutral-400 font-medium mt-0.5">{label}</p>
               </div>
             ))}
           </div>
         </section>
 
-        {/* ── How It Works ── */}
+        {/* ── Features ── */}
+        <section className="bg-neutral-100 py-20 px-6">
+          <div className="max-w-5xl mx-auto">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl font-extrabold text-neutral-900 tracking-tight mb-3">
+                Everything you need to pass
+              </h2>
+              <p className="text-neutral-500 max-w-lg mx-auto">
+                Built by professionals who passed these exams and know what actually works.
+              </p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {FEATURES.map(({ icon, title, body }) => (
+                <div key={title} className="card-hover p-7 flex flex-col gap-4">
+                  <div className="w-12 h-12 bg-green-100 rounded-2xl flex items-center justify-center text-2xl">
+                    {icon}
+                  </div>
+                  <div>
+                    <h3 className="font-extrabold text-neutral-900 text-base mb-1">{title}</h3>
+                    <p className="text-sm text-neutral-500 leading-relaxed">{body}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── How it works ── */}
+        <section id="how-it-works" className="bg-white py-20 px-6">
+          <div className="max-w-4xl mx-auto">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl font-extrabold text-neutral-900 tracking-tight mb-3">
+                Up and studying in 2 minutes
+              </h2>
+              <p className="text-neutral-500">No setup. No credit card. Just start.</p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {HOW_STEPS.map(({ num, title, body }) => (
+                <div key={num} className="flex flex-col">
+                  <div className="w-12 h-12 bg-brand-green text-white font-black text-sm rounded-2xl
+                                  flex items-center justify-center mb-5 flex-shrink-0">
+                    {num}
+                  </div>
+                  <h3 className="font-extrabold text-neutral-900 mb-2">{title}</h3>
+                  <p className="text-sm text-neutral-500 leading-relaxed">{body}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── Gamification preview ── */}
+        <section className="bg-gradient-to-br from-amber-50 to-green-50 py-20 px-6">
+          <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+            <div>
+              <p className="section-label mb-3">Built to keep you motivated</p>
+              <h2 className="text-3xl font-extrabold text-neutral-900 tracking-tight mb-4">
+                Study streaks, XP, and badges — because you deserve a reward for showing up.
+              </h2>
+              <p className="text-neutral-500 text-sm leading-relaxed mb-6">
+                Every question you answer earns XP. Build streaks. Unlock badges. See your skill
+                level improve by topic. It&apos;s not just studying — it&apos;s progress you can feel.
+              </p>
+              <Link href="/register" className="btn-primary">
+                Start earning XP →
+              </Link>
+            </div>
+
+            {/* Mock gamification UI */}
+            <div className="bg-white rounded-3xl shadow-card p-6 border border-neutral-100 space-y-4">
+              {/* Streak */}
+              <div className="flex items-center gap-3 p-4 bg-amber-50 rounded-2xl border border-amber-100">
+                <span className="text-3xl">🔥</span>
+                <div>
+                  <p className="font-extrabold text-amber-800">14 Day Streak</p>
+                  <p className="text-xs text-amber-600">You&apos;re on fire! Don&apos;t break it.</p>
+                </div>
+                <span className="ml-auto text-2xl font-black text-amber-500">14</span>
+              </div>
+
+              {/* XP bar */}
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-xs font-bold text-neutral-600">⚡ Level 7 — 2,340 XP</span>
+                  <span className="text-xs text-neutral-400">660 to Level 8</span>
+                </div>
+                <div className="progress-bar">
+                  <div className="progress-fill" style={{ width: '78%' }} />
+                </div>
+              </div>
+
+              {/* Badges */}
+              <div>
+                <p className="text-xs font-bold text-neutral-500 uppercase tracking-wide mb-2">Recent Badges</p>
+                <div className="flex gap-2 flex-wrap">
+                  {[
+                    { icon: '🎯', name: 'Sharp Shooter', color: 'bg-blue-100' },
+                    { icon: '🔥', name: 'On Fire', color: 'bg-amber-100' },
+                    { icon: '📚', name: 'Bookworm', color: 'bg-green-100' },
+                    { icon: '⚡', name: 'Speed Demon', color: 'bg-purple-100' },
+                  ].map(b => (
+                    <div key={b.name} title={b.name}
+                      className={`w-10 h-10 ${b.color} rounded-xl flex items-center justify-center text-xl`}>
+                      {b.icon}
+                    </div>
+                  ))}
+                  <div className="w-10 h-10 bg-neutral-100 rounded-xl flex items-center justify-center text-neutral-400 text-xs font-bold">
+                    +12
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ── Courses ── */}
         <section className="bg-white py-20 px-6">
           <div className="max-w-5xl mx-auto">
-            <div className="text-center mb-14">
-              <h2 className="text-3xl font-bold text-gray-900 mb-3">How it works</h2>
-              <p className="text-gray-500 max-w-xl mx-auto">From zero to study group in under five minutes.</p>
+            <div className="text-center mb-12">
+              <h2 className="text-3xl font-extrabold text-neutral-900 tracking-tight mb-3">
+                Choose your exam
+              </h2>
+              <p className="text-neutral-500">15 free questions per course. Unlock unlimited with Pro.</p>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-              {STEPS.map((step) => (
-                <div key={step.number} className="flex flex-col">
-                  <div className="w-12 h-12 bg-blue-600 text-white font-black text-sm rounded-2xl flex items-center justify-center mb-4 flex-shrink-0">
-                    {step.number}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {COURSES.map((course) => (
+                <div key={course.exam_type}
+                  className="card-hover p-7 relative overflow-hidden group">
+                  {course.badge && (
+                    <span className={`absolute top-4 right-4 text-[10px] font-black uppercase tracking-widest
+                                     ${course.badgeColor} text-white px-2.5 py-1 rounded-full`}>
+                      {course.badge}
+                    </span>
+                  )}
+                  <div className={`w-14 h-14 bg-gradient-to-br ${course.color} rounded-2xl flex items-center
+                                   justify-center text-3xl mb-5 shadow-sm`}>
+                    {course.icon}
                   </div>
-                  <h3 className="font-bold text-gray-900 mb-2">{step.title}</h3>
-                  <p className="text-sm text-gray-500 leading-relaxed">{step.body}</p>
+                  <p className="text-xs font-black uppercase tracking-widest text-neutral-400 mb-1">
+                    {course.exam_type}
+                  </p>
+                  <h3 className="font-extrabold text-neutral-900 mb-2 text-base leading-snug">
+                    {course.name}
+                  </h3>
+                  <p className="text-sm text-neutral-500 leading-relaxed mb-6">{course.description}</p>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-bold text-neutral-400">15 free questions</span>
+                    <span className="text-sm font-extrabold text-brand-green">{course.price} Pro</span>
+                  </div>
                 </div>
               ))}
             </div>
@@ -234,98 +361,76 @@ export default async function Home() {
         </section>
 
         {/* ── About Us ── */}
-        <section className="bg-blue-600 py-20 px-6">
-          <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+        <section className="bg-neutral-900 py-20 px-6">
+          <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
             <div>
-              <p className="text-blue-200 text-xs font-bold uppercase tracking-widest mb-4">About Us</p>
-              <h2 className="text-4xl sm:text-5xl font-extrabold text-white leading-tight mb-4">
-                Connect.<br />Collaborate.<br />Conquer.
+              <p className="section-label text-neutral-500 mb-3">About Us</p>
+              <h2 className="text-4xl font-extrabold text-white leading-tight mb-4 tracking-tight">
+                Built by professionals,<br />for professionals.
               </h2>
-              <p className="text-blue-200 text-sm font-semibold">
-                Built by professionals, for professionals.
-              </p>
             </div>
-            <div className="space-y-5 text-blue-100 text-base leading-relaxed">
+            <div className="space-y-4 text-neutral-400 text-sm leading-relaxed">
               <p>
-                We built this platform because we lived the struggle — studying for high-stakes professional exams after a full day of work, with no one around who truly got it.
+                We built this because we lived the struggle — studying for high-stakes exams after a full
+                day of work, with no one around who truly got it.
               </p>
               <p>
-                <strong className="text-white">We&apos;re not just a question bank.</strong> We&apos;re a community of working professionals who show up every night, open their laptops, and chip away at something that matters. The CMA. The CFA. The FE.
+                <strong className="text-white">We&apos;re not just a question bank.</strong> We&apos;re a
+                community of working professionals who show up every night and chip away at something
+                that matters.
               </p>
               <p>
-                Every feature on this platform — the chat rooms, the study twins, the after-work study groups — exists because of one belief: you go further when you go together.
+                Every chat room, every badge, every question — built because you go further when you
+                go together.
               </p>
             </div>
           </div>
         </section>
 
-        {/* ── Courses ── */}
-        <section className="bg-white py-20 px-6">
-          <div className="max-w-6xl mx-auto">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold text-gray-900 mb-3">Courses available</h2>
-              <p className="text-gray-500 max-w-xl mx-auto">15 free questions per course. Go Pro for unlimited access.</p>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {COURSES.map((course, i) => (
-                <div key={course.exam_type} className="bg-gray-50 rounded-2xl border border-gray-200 p-8 relative overflow-hidden hover:shadow-md transition-shadow">
-                  {course.tag && (
-                    <span className="absolute top-4 right-4 text-[10px] font-black uppercase tracking-widest bg-blue-600 text-white px-2.5 py-1 rounded-full">
-                      {course.tag}
-                    </span>
-                  )}
-                  <div className="text-4xl mb-4">{course.icon}</div>
-                  <h3 className="font-bold text-gray-900 mb-2 leading-tight">{course.name}</h3>
-                  <p className="text-sm text-gray-500 leading-relaxed mb-6">{course.description}</p>
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-400">
-                      <strong className="text-gray-700">{questionCounts[i]?.toLocaleString() ?? '—'}</strong> questions
-                    </span>
-                    <span className="text-blue-600 font-bold">{course.exam_type === 'CMA' ? '$59' : '$49'} Pro · 15 Free</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* ── Feature Pills ── */}
-        <section className="bg-gray-50 py-14 px-6">
-          <div className="max-w-4xl mx-auto text-center">
-            <p className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-6">Everything included</p>
-            <div className="flex flex-wrap justify-center gap-3">
-              {FEATURES.map((f) => (
-                <div
-                  key={f.label}
-                  className="flex items-center gap-2 bg-white border border-gray-200 text-gray-700 text-sm font-semibold px-4 py-2.5 rounded-full shadow-sm"
-                >
-                  <span className="text-blue-600">{f.icon}</span>
-                  {f.label}
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* ── Bottom CTA ── */}
-        <section className="bg-gray-900 py-20 px-6 text-center">
+        {/* ── Final CTA ── */}
+        <section className="bg-gradient-to-br from-brand-green to-teal-500 py-20 px-6 text-center">
           <div className="max-w-2xl mx-auto">
-            <h2 className="text-3xl font-bold text-white mb-4">Ready to meet your study partner?</h2>
-            <p className="text-gray-400 mb-8 leading-relaxed">
-              Join professionals around the world preparing for the CMA, CFA, and FE. Free to start — no card required. Your people are already inside.
+            <h2 className="text-4xl font-extrabold text-white tracking-tight mb-4">
+              Ready to start? It&apos;s free.
+            </h2>
+            <p className="text-green-100 mb-8 leading-relaxed">
+              Join professionals around the world preparing for the CMA, CFA, and FE.
+              15 free questions. No card required.
             </p>
             <Link
               href="/register"
-              className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-bold px-10 py-4 rounded-xl text-base transition-colors shadow-xl"
+              className="inline-flex items-center gap-2 bg-white text-brand-green font-extrabold
+                         px-10 py-4 rounded-xl text-base hover:bg-green-50 transition-all shadow-xl
+                         hover:-translate-y-0.5 active:scale-[0.98]"
             >
-              Join the Community →
+              Join the community →
             </Link>
-            <p className="mt-4 text-sm text-gray-500">15 free questions per course · Cancel anytime</p>
           </div>
         </section>
       </main>
 
-      <Footer />
+      {/* ── Footer ── */}
+      <footer className="bg-neutral-900 border-t border-neutral-800 py-10 px-6">
+        <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-2.5">
+            <div className="w-7 h-7 bg-brand-green rounded-lg flex items-center justify-center">
+              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5}
+                  d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+              </svg>
+            </div>
+            <span className="font-bold text-white text-sm">{APP_CONFIG.NAME}</span>
+          </div>
+          <div className="flex items-center gap-6">
+            <Link href="/login" className="text-xs text-neutral-500 hover:text-white transition-colors">Log in</Link>
+            <Link href="/register" className="text-xs text-neutral-500 hover:text-white transition-colors">Sign up</Link>
+            <Link href="/courses" className="text-xs text-neutral-500 hover:text-white transition-colors">Courses</Link>
+          </div>
+          <p className="text-xs text-neutral-600">
+            © {new Date().getFullYear()} {APP_CONFIG.NAME}
+          </p>
+        </div>
+      </footer>
     </div>
   );
 }

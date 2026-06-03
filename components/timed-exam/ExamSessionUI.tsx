@@ -60,7 +60,7 @@ export function ExamSessionUI({
 
   return (
     <div
-      className="h-screen bg-gray-50 flex overflow-hidden relative select-none"
+      className="h-screen bg-neutral-100 flex overflow-hidden relative select-none"
       onContextMenu={(e) => e.preventDefault()}
       onCopy={(e) => e.preventDefault()}
     >
@@ -134,7 +134,7 @@ export function ExamSessionUI({
       {/* Cancel button */}
       <button
         onClick={() => modals.setShowExit(true)}
-        className="fixed top-6 right-6 z-50 p-2 px-4 bg-white/80 hover:bg-red-50 text-red-600 rounded-xl font-bold text-sm shadow-sm border border-red-100 transition-all flex items-center gap-2"
+        className="fixed top-4 right-4 z-50 p-2 px-4 bg-white hover:bg-red-50 text-red-500 rounded-xl font-bold text-sm shadow-card border border-neutral-200 transition-all flex items-center gap-2"
       >
         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
@@ -156,11 +156,11 @@ export function ExamSessionUI({
       )}
 
       {/* Sidebar */}
-      <aside className={`fixed md:relative inset-y-0 left-0 bg-white border-r border-gray-100 transition-all duration-300 flex flex-col flex-shrink-0 z-[150] md:z-30 overflow-hidden ${isSidebarOpen ? 'w-64 translate-x-0' : 'w-0 -translate-x-full md:w-0'}`}>
-        <div className="p-6 overflow-y-auto flex-1 min-w-[16rem] flex flex-col">
-          <div className="flex justify-between items-center mb-6">
-            <h3 className="text-xs font-black uppercase text-gray-400 tracking-widest">Question Map</h3>
-            <button onClick={() => setIsSidebarOpen(false)} className="p-2 hover:bg-gray-50 rounded-lg text-gray-400">
+      <aside className={`fixed md:relative inset-y-0 left-0 bg-white border-r border-neutral-200 shadow-sidebar transition-all duration-300 flex flex-col flex-shrink-0 z-[150] md:z-30 overflow-hidden ${isSidebarOpen ? 'w-64 translate-x-0' : 'w-0 -translate-x-full md:w-0'}`}>
+        <div className="p-5 overflow-y-auto flex-1 min-w-[16rem] flex flex-col">
+          <div className="flex justify-between items-center mb-5">
+            <h3 className="text-xs font-extrabold uppercase text-neutral-400 tracking-widest">Question Map</h3>
+            <button onClick={() => setIsSidebarOpen(false)} className="p-2 hover:bg-neutral-100 rounded-lg text-neutral-400 transition-colors">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
               </svg>
@@ -172,70 +172,75 @@ export function ExamSessionUI({
               <button
                 key={q.id}
                 onClick={() => { setCurrentIndex(idx); if (window.innerWidth < 768) setIsSidebarOpen(false); }}
-                className={`h-10 rounded-lg font-bold text-sm border-2 transition-all ${currentIndex === idx ? 'border-blue-600 bg-blue-600 text-white shadow-lg' : !!userAnswers[q.id] ? 'border-emerald-100 bg-emerald-50 text-emerald-600' : 'border-gray-50 bg-gray-50 text-gray-400'}`}
+                className={`h-10 rounded-xl font-extrabold text-sm border-2 transition-all ${
+                  currentIndex === idx
+                    ? 'border-brand-green bg-brand-green text-white shadow-sm'
+                    : !!userAnswers[q.id]
+                    ? 'border-green-200 bg-green-50 text-green-700'
+                    : 'border-neutral-100 bg-neutral-50 text-neutral-400'
+                }`}
               >
                 {idx + 1}
               </button>
             ))}
           </div>
 
-          <div className="mt-6 space-y-2 border-t border-gray-50 pt-6">
-            <div className="flex items-center gap-2 text-[10px] font-bold uppercase text-gray-400">
-              <div className="w-3 h-3 rounded bg-blue-600" /> Current
+          <div className="mt-5 space-y-2 border-t border-neutral-100 pt-5">
+            <div className="flex items-center gap-2 text-[10px] font-bold uppercase text-neutral-400">
+              <div className="w-3 h-3 rounded-md bg-brand-green" /> Current
             </div>
-            <div className="flex items-center justify-between text-[10px] font-bold uppercase text-gray-400">
+            <div className="flex items-center justify-between text-[10px] font-bold uppercase text-neutral-400">
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded bg-emerald-50 border border-emerald-100" /> Answered
+                <div className="w-3 h-3 rounded-md bg-green-50 border border-green-200" /> Answered
               </div>
-              <span className="bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded-full">{answeredCount}</span>
+              <span className="bg-green-50 text-green-700 px-2 py-0.5 rounded-full">{answeredCount}</span>
             </div>
-            <div className="flex items-center justify-between text-[10px] font-bold uppercase text-gray-400">
+            <div className="flex items-center justify-between text-[10px] font-bold uppercase text-neutral-400">
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded bg-gray-50" /> Unattempted
+                <div className="w-3 h-3 rounded-md bg-neutral-100" /> Unanswered
               </div>
-              <span className="bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">{unattemptedCount}</span>
+              <span className="bg-neutral-100 text-neutral-500 px-2 py-0.5 rounded-full">{unattemptedCount}</span>
             </div>
           </div>
 
-          {/* Always-visible Finish Exam button in sidebar */}
-          <div className="mt-auto pt-6 border-t border-gray-100">
+          <div className="mt-auto pt-5 border-t border-neutral-100">
             <button
               onClick={() => modals.setShowSummary(true)}
               disabled={isSubmitting}
-              className="w-full py-3 bg-gray-900 text-white rounded-xl font-bold text-sm hover:bg-black transition-all active:scale-95 disabled:opacity-50"
+              className="btn-primary w-full py-3 justify-center disabled:opacity-50"
             >
-              {isSubmitting ? 'Submitting...' : 'Finish Exam'}
+              {isSubmitting ? 'Submitting…' : 'Finish Exam'}
             </button>
           </div>
         </div>
       </aside>
 
       {/* Main content */}
-      <main className="flex-1 min-w-0 overflow-y-auto bg-gray-50">
+      <main className="flex-1 min-w-0 overflow-y-auto bg-neutral-100">
         <div className="w-full max-w-3xl mx-auto px-4 md:px-8 py-4 md:py-8">
 
           {/* Header bar */}
-          <div className="flex justify-between items-center mb-6 bg-white p-4 rounded-2xl shadow-sm border border-gray-100 w-full">
+          <div className="flex justify-between items-center mb-6 bg-white p-4 rounded-2xl shadow-card border border-neutral-200 w-full">
             <div className={!isSidebarOpen ? 'pl-14' : ''}>
-              <span className="text-gray-400 text-[10px] font-bold uppercase block tracking-tighter">Exam Session</span>
-              <span className="text-base md:text-lg font-black text-gray-900">Q{currentIndex + 1} / {questions.length}</span>
+              <span className="section-label block mb-0.5">Exam Session</span>
+              <span className="text-base md:text-lg font-extrabold text-neutral-900">Q{currentIndex + 1} / {questions.length}</span>
             </div>
             <div className={`text-right p-2 px-4 md:px-6 rounded-xl border-2 transition-colors ${
               timerCritical ? 'bg-red-50 text-red-600 border-red-200 animate-pulse' :
               timerWarning  ? 'bg-amber-50 text-amber-600 border-amber-200' :
-                              'bg-gray-50 text-blue-600 border-gray-100'
+                              'bg-neutral-50 text-neutral-700 border-neutral-200'
             }`}>
               <span className="text-[10px] font-bold uppercase block leading-none mb-1">
                 {timerCritical ? 'Hurry!' : timerWarning ? '5 min left' : 'Timer'}
               </span>
-              <span className="text-xl md:text-2xl font-black tabular-nums">{formatTime(timeLeft)}</span>
+              <span className="text-xl md:text-2xl font-extrabold tabular-nums">{formatTime(timeLeft)}</span>
             </div>
           </div>
 
           {/* Question card */}
           {currentQuestion && (
-            <div className="bg-white rounded-[2rem] md:rounded-[2.5rem] shadow-xl border border-gray-100 p-6 md:p-10 mb-6 w-full">
-              <p className="text-lg md:text-xl font-bold text-gray-800 mb-8 leading-relaxed">{currentQuestion.question_text}</p>
+            <div className="bg-white rounded-2xl shadow-card border border-neutral-200 p-6 md:p-8 mb-6 w-full">
+              <p className="text-lg md:text-xl font-semibold text-neutral-900 mb-7 leading-relaxed">{currentQuestion.question_text}</p>
               <div className="space-y-3">
                 {(currentQuestion.options?.length
                   ? currentQuestion.options
@@ -247,12 +252,14 @@ export function ExamSessionUI({
                     <button
                       key={optKey}
                       onClick={() => setUserAnswers({ ...userAnswers, [currentQuestion.id]: optKey })}
-                      className={`w-full text-left p-4 md:p-5 rounded-2xl border-2 transition-all font-bold flex items-center gap-4 ${isSelected ? 'border-blue-600 bg-blue-50 text-blue-700 ring-4 ring-blue-50' : 'border-gray-50 bg-gray-50 hover:border-gray-200 text-gray-600'}`}
+                      className={`answer-option ${isSelected ? 'answer-option-selected' : ''}`}
                     >
-                      <span className={`w-8 h-8 md:w-10 md:h-10 shrink-0 rounded-xl flex items-center justify-center border-2 font-black ${isSelected ? 'border-blue-600 bg-blue-600 text-white' : 'border-gray-200 bg-white'}`}>
+                      <span className={`w-8 h-8 md:w-9 md:h-9 shrink-0 rounded-lg flex items-center justify-center font-extrabold text-sm transition-colors ${
+                        isSelected ? 'bg-brand-green text-white' : 'bg-neutral-100 text-neutral-500'
+                      }`}>
                         {optKey}
                       </span>
-                      <span className="text-sm md:text-base">{optText}</span>
+                      <span className="text-sm md:text-base font-semibold">{optText}</span>
                     </button>
                   );
                 })}
@@ -269,27 +276,27 @@ export function ExamSessionUI({
           )}
 
           {/* Navigation */}
-          <div className="flex justify-between items-center px-2 pb-8">
+          <div className="flex justify-between items-center px-2 pb-8 gap-3">
             <button
               disabled={currentIndex === 0}
               onClick={() => setCurrentIndex(currentIndex - 1)}
-              className="px-6 md:px-8 py-3 bg-slate-200 text-slate-700 rounded-xl font-bold hover:bg-slate-300 transition-all active:scale-95 disabled:opacity-0 text-xs md:text-sm"
+              className="px-6 md:px-8 py-3 bg-white border border-neutral-200 text-neutral-600 rounded-xl font-bold hover:bg-neutral-50 transition-all active:scale-95 disabled:opacity-0 text-xs md:text-sm"
             >
-              Previous
+              ← Previous
             </button>
             {currentIndex === questions.length - 1 ? (
               <button
                 onClick={() => modals.setShowSummary(true)}
-                className="px-8 md:px-10 py-3 bg-gray-900 text-white rounded-xl font-bold hover:bg-black transition-all active:scale-95 text-xs md:text-sm"
+                className="btn-primary px-8 md:px-10 py-3 text-xs md:text-sm"
               >
                 Finish Exam
               </button>
             ) : (
               <button
                 onClick={() => setCurrentIndex(currentIndex + 1)}
-                className="px-8 md:px-10 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-all active:scale-95 text-xs md:text-sm"
+                className="btn-primary px-8 md:px-10 py-3 text-xs md:text-sm"
               >
-                Next Question
+                Next →
               </button>
             )}
           </div>

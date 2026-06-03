@@ -1,7 +1,6 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import { Header } from '@/components/layout/Header';
-import { Footer } from '@/components/layout/Footer';
+import { AppShell } from '@/components/layout/AppShell';
 import { CoursesClient } from '@/components/subscription/CoursesClient';
 import type { CourseName, UserStats } from '@/lib/types';
 
@@ -99,31 +98,27 @@ export default async function CoursesPage({
   const hasAnyCourse = purchasedCourses.length > 0;
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      <Header user={user} />
-      <main className="flex-1 max-w-6xl mx-auto px-4 py-8 pt-24 w-full">
-        <div className="mb-10">
-          <h1 className="text-3xl font-bold text-gray-900 mb-1">
-            Welcome back, {displayName}
-          </h1>
-          <p className="text-gray-500">
-            {hasAnyCourse
-              ? `You have Pro access to ${purchasedCourses.join(', ')}. Browse your courses or unlock more below.`
-              : 'Get unlimited access — CMA $59, CFA $49, FE $49. 15 free questions per course to start.'}
-          </p>
-        </div>
+    <AppShell user={user}>
+      <div className="mb-8">
+        <h1 className="text-3xl font-extrabold text-neutral-900 tracking-tight mb-1">
+          Courses
+        </h1>
+        <p className="text-neutral-500 text-sm">
+          {hasAnyCourse
+            ? `You have Pro access to ${purchasedCourses.join(', ')}.`
+            : 'Get unlimited access — CMA $59, CFA $49, FE $49. 15 free questions to start.'}
+        </p>
+      </div>
 
-        <CoursesClient
-          courses={COURSES.map((c, i) => ({ ...c, questionCount: questionCounts[i] ?? 0 }))}
-          purchasedCourses={purchasedCourses}
-          displayName={displayName}
-          stats={stats}
-          successPending={successPending}
-          sessionId={sessionId}
-          successCourse={successCourse}
-        />
-      </main>
-      <Footer />
-    </div>
+      <CoursesClient
+        courses={COURSES.map((c, i) => ({ ...c, questionCount: questionCounts[i] ?? 0 }))}
+        purchasedCourses={purchasedCourses}
+        displayName={displayName}
+        stats={stats}
+        successPending={successPending}
+        sessionId={sessionId}
+        successCourse={successCourse}
+      />
+    </AppShell>
   );
 }

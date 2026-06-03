@@ -6,8 +6,7 @@ import { createClient } from '@/lib/supabase/client';
 import { fetchUserProfile } from '@/lib/supabase/queries/lobbyQueries';
 import type { User } from '@supabase/supabase-js';
 import type { LobbyUserProfile, SettingsTab } from '@/lib/types';
-import { Header, SubscriptionBadge } from '@/components/layout/Header';
-import { Footer } from '@/components/layout/Footer';
+import { AppShell } from '@/components/layout/AppShell';
 import { SettingsTabs } from '@/components/settings/SettingsTabs';
 import { ProfileTab } from '@/components/settings/ProfileTab';
 import { LobbyPreferencesTab } from '@/components/settings/LobbyPreferencesTab';
@@ -60,41 +59,35 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header user={user} />
-
-      <main className="max-w-6xl mx-auto px-4 py-8 pt-24">
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-2">
-            <h1 className="text-3xl font-bold text-gray-900">Account Settings</h1>
-            <SubscriptionBadge isPremium={isPro} />
-          </div>
-          <p className="text-gray-600">
-            Manage your profile, subscription, and preferences
-          </p>
+    <AppShell user={user}>
+      <div className="mb-8">
+        <div className="flex items-center gap-3 mb-2">
+          <h1 className="text-3xl font-extrabold text-neutral-900 tracking-tight">Account Settings</h1>
+          {isPro && (
+            <span className="text-xs font-black uppercase tracking-wider bg-brand-amber text-white px-2.5 py-1 rounded-full">Pro</span>
+          )}
         </div>
+        <p className="text-neutral-500 text-sm">Manage your profile and preferences</p>
+      </div>
 
-        <SettingsTabs activeTab={activeTab} onTabChange={setActiveTab} />
+      <SettingsTabs activeTab={activeTab} onTabChange={setActiveTab} />
 
-        {activeTab === 'profile' && (
-          <ProfileTab
-            userId={user.id}
-            userProfile={userProfile}
-            onUpdate={handleRefreshProfile}
-            authProvider={user.app_metadata?.provider}
-          />
-        )}
+      {activeTab === 'profile' && (
+        <ProfileTab
+          userId={user.id}
+          userProfile={userProfile}
+          onUpdate={handleRefreshProfile}
+          authProvider={user.app_metadata?.provider}
+        />
+      )}
 
-          {activeTab === 'preferences' && (
-          <LobbyPreferencesTab
-            userId={user.id}
-            userProfile={userProfile}
-            onUpdate={handleRefreshProfile}
-          />
-        )}
-      </main>
-
-      <Footer />
-    </div>
+      {activeTab === 'preferences' && (
+        <LobbyPreferencesTab
+          userId={user.id}
+          userProfile={userProfile}
+          onUpdate={handleRefreshProfile}
+        />
+      )}
+    </AppShell>
   );
 }

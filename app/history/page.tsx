@@ -3,8 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
-import { Header } from '@/components/layout/Header';
-import { Footer } from '@/components/layout/Footer';
+import { AppShell } from '@/components/layout/AppShell';
 import type { User } from '@supabase/supabase-js';
 import {
   ExamSession,
@@ -60,44 +59,45 @@ export default function HistoryPage() {
     fetchSessions();
   }, [fetchSessions]);
 
-  if (!user) return <div className="min-h-screen flex items-center justify-center bg-gray-50"><div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" /></div>;
+  if (!user) return (
+    <div className="min-h-screen flex items-center justify-center bg-neutral-100">
+      <div className="w-8 h-8 border-4 border-brand-green border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      <Header user={user} />
+    <AppShell user={user}>
+      <div className="mb-8">
+        <h1 className="text-3xl font-extrabold text-neutral-900 tracking-tight">Exam History</h1>
+        <p className="text-neutral-500 mt-1 text-sm">A record of every session you&apos;ve completed.</p>
+      </div>
 
-      <main className="flex-1 max-w-5xl mx-auto w-full px-4 py-8 pt-24">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Exam History</h1>
-          <p className="text-gray-500 mt-1">A record of every session you've completed.</p>
+      {!loading && !error && <SummaryBar sessions={sessions} />}
+
+      <HistoryFilters
+        mode={modeFilter} setMode={setModeFilter}
+        exam={examFilter} setExam={setExamFilter}
+        count={sessions.length}
+      />
+
+      {error && <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm">{error}</div>}
+
+      {loading ? (
+        <div className="card p-16 text-center">
+          <div className="w-10 h-10 border-4 border-brand-green border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-neutral-500 font-medium text-sm">Loading your history…</p>
         </div>
-
-        {!loading && !error && <SummaryBar sessions={sessions} />}
-
-        <HistoryFilters 
-          mode={modeFilter} setMode={setModeFilter} 
-          exam={examFilter} setExam={setExamFilter} 
-          count={sessions.length} 
-        />
-
-        {error && <div className="mb-6 p-4 bg-red-50 border-red-200 text-red-700 rounded-xl text-sm">{error}</div>}
-
-        {loading ? (
-          <div className="text-center py-20 bg-white rounded-2xl border border-gray-100 shadow-sm">
-            <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-            <p className="text-gray-500 font-medium">Loading your history...</p>
-          </div>
-        ) : sessions.length > 0 ? (
-          <div className="space-y-3">
-            {sessions.map((s, i) => <SessionRow key={s.id} session={s} index={i} />)}
-          </div>
-        ) : (
-          <div className="text-center py-20 bg-white rounded-2xl border-2 border-dashed border-gray-200">
-            <p className="text-gray-500 font-medium">No sessions found.</p>
-          </div>
-        )}
-      </main>
-      <Footer />
-    </div>
+      ) : sessions.length > 0 ? (
+        <div className="card overflow-hidden divide-y divide-neutral-100">
+          {sessions.map((s, i) => <SessionRow key={s.id} session={s} index={i} />)}
+        </div>
+      ) : (
+        <div className="card p-16 text-center border-2 border-dashed border-neutral-200 bg-transparent shadow-none">
+          <p className="text-3xl mb-3">📋</p>
+          <p className="text-neutral-500 font-bold text-sm mb-1">No sessions found</p>
+          <p className="text-neutral-400 text-xs">Complete a practice or timed exam to see your history here.</p>
+        </div>
+      )}
+    </AppShell>
   );
 }
