@@ -109,7 +109,7 @@ export default function PracticeSetup() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6 relative">
+    <div className="min-h-screen bg-neutral-100 flex items-center justify-center p-6 relative">
       <div className="absolute top-8 left-8">
         <Link
           href="/questions"
@@ -122,10 +122,11 @@ export default function PracticeSetup() {
         </Link>
       </div>
 
-      <div className="max-w-md w-full bg-white rounded-3xl shadow-xl border border-gray-200 p-8">
+      <div className="max-w-md w-full card p-8">
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-gray-900">Practice Mode</h1>
-          <p className="text-gray-500 mt-2">Select your focus area to begin.</p>
+          <div className="w-14 h-14 bg-green-100 rounded-2xl flex items-center justify-center text-2xl mx-auto mb-4">⚡</div>
+          <h1 className="text-2xl font-extrabold text-neutral-900 tracking-tight">Practice Mode</h1>
+          <p className="text-neutral-500 mt-2 text-sm">Select your focus area to begin.</p>
         </div>
 
         {/* Starred Questions mode toggle */}
