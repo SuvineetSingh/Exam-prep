@@ -2,7 +2,7 @@ import { createClient } from '@/lib/supabase/server';
 import { QuestionDisplay } from '@/components/question/QuestionDisplay';
 import { QuestionNavigation } from '@/components/question/QuestionNavigation';
 import { notFound, redirect } from 'next/navigation';
-import { Header } from '@/components/layout/Header';
+import { AppShell } from '@/components/layout/AppShell';
 
 // 1. Update the type definition for params to be a Promise
 export default async function FullQuestionPage({ 
@@ -46,12 +46,9 @@ export default async function FullQuestionPage({
     }
 
     return (
-      <div className="min-h-screen bg-gray-50 flex flex-col">
-        <Header user={user} />
-        <main className="flex-1 max-w-4xl mx-auto w-full p-6 pt-32">
-          <QuestionDisplay question={question} mode="practice" />
-          <QuestionNavigation prevId={prevId} nextId={nextId} />
-        </main>
-      </div>
+      <AppShell user={user}>
+        <QuestionDisplay question={question} mode="practice" />
+        <QuestionNavigation prevId={prevId} nextId={nextId} />
+      </AppShell>
     );
   }

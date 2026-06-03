@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { fetchRooms, fetchUserProfile } from '@/lib/supabase/queries/lobbyQueries';
-import { Header } from '@/components/layout/Header';
+import { Sidebar, MobileTabBar } from '@/components/layout/Sidebar';
 import { LobbyView } from '@/components/lobby/LobbyView';
 import type { User } from '@supabase/supabase-js';
 import type { LobbyRoom, LobbyUserProfile } from '@/lib/types/lobby';
@@ -57,9 +57,10 @@ export default function LobbyPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header user={user} />
-      <div className="pt-16">
+    <div className="min-h-screen bg-neutral-100">
+      <Sidebar user={user} />
+      <MobileTabBar />
+      <div style={{ marginLeft: 'var(--sidebar-width)' }} className="min-h-screen">
         <LobbyView
           rooms={rooms}
           currentUser={currentUser}

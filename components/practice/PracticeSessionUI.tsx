@@ -452,8 +452,14 @@ export function PracticeSessionUI({
     ? 'text-amber-500'
     : 'text-slate-700';
 
+  /* ── Progress bar pct ── */
+  const answeredCount = sessionLog.length;
+  const progressPct   = totalQuestions && totalQuestions > 0
+    ? Math.round(((questionNumber ?? 1) - 1) / totalQuestions * 100)
+    : 0;
+
   return (
-    <div className="min-h-screen bg-slate-50 p-4 md:p-8 relative">
+    <div className="min-h-screen bg-neutral-100 flex flex-col relative">
 
       <SidePanel
         open={panelOpen}
@@ -484,176 +490,202 @@ export function PracticeSessionUI({
         />
       )}
 
-      <div className="max-w-3xl mx-auto">
-
-        <div className="flex justify-between items-center mb-8">
+      {/* ── Top bar ── */}
+      <div className="bg-white border-b border-neutral-200 sticky top-0 z-30">
+        {/* Progress bar */}
+        {totalQuestions && (
+          <div className="h-1.5 bg-neutral-100">
+            <div
+              className="h-full bg-brand-green transition-all duration-500"
+              style={{ width: `${progressPct}%` }}
+            />
+          </div>
+        )}
+        <div className="max-w-2xl mx-auto px-4 h-14 flex items-center justify-between gap-4">
+          {/* Exit */}
           <button
             onClick={() => setShowExitPopup(true)}
-            className="text-sm font-bold text-slate-400 hover:text-red-500 transition-colors uppercase tracking-wider"
+            className="w-9 h-9 rounded-full bg-neutral-100 hover:bg-neutral-200 flex items-center justify-center transition-colors flex-shrink-0"
+            title="Exit practice"
           >
-            ← EXIT PRACTICE
+            <svg className="w-5 h-5 text-neutral-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
           </button>
 
-          <div className="flex items-center gap-3">
-            <div className="hidden sm:flex gap-2">
-              <span className="px-3 py-1 bg-white border border-slate-200 rounded-full text-xs font-bold text-slate-600 shadow-sm">
-                {question.exam_type}
-              </span>
-              <span className="px-3 py-1 bg-blue-50 border border-blue-100 rounded-full text-xs font-bold text-blue-600 uppercase">
-                {question.category || 'General'}
-              </span>
-              <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase shadow-sm ${
-                question.difficulty === 'hard'   ? 'bg-red-100 text-red-600'     :
-                question.difficulty === 'medium' ? 'bg-amber-100 text-amber-600' :
-                                                    'bg-emerald-100 text-emerald-600'
-              }`}>
-                {question.difficulty || 'Easy'}
-              </span>
-            </div>
+          {/* Question counter */}
+          <div className="flex-1 text-center">
+            {questionNumber != null && (
+              <p className="text-sm font-extrabold text-neutral-700">
+                {totalQuestions
+                  ? `${questionNumber} / ${totalQuestions}`
+                  : `Question ${questionNumber}`}
+              </p>
+            )}
+          </div>
 
+          {/* Right: timer + session */}
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <div className={`flex items-center gap-1.5 font-mono font-bold text-sm transition-colors ${timerColour}`}>
+              <span className={`w-1.5 h-1.5 rounded-full ${timerActive && !isSubmitted ? 'bg-brand-green animate-pulse' : 'bg-neutral-300'}`} />
+              {formatTime(elapsed)}
+            </div>
             <button
               onClick={() => setPanelOpen(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-full text-xs font-black text-slate-600 hover:border-blue-300 hover:text-blue-600 transition-all shadow-sm"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-neutral-100 hover:bg-neutral-200 rounded-full text-xs font-bold text-neutral-600 transition-colors"
             >
-              <span>📋</span>
-              <span>Session</span>
-              {sessionLog.length > 0 && (
-                <span className="w-5 h-5 bg-blue-600 text-white rounded-full text-[10px] flex items-center justify-center font-black">
-                  {sessionLog.length}
+              📋
+              {answeredCount > 0 && (
+                <span className="w-4 h-4 bg-brand-green text-white rounded-full text-[10px] flex items-center justify-center font-black">
+                  {answeredCount}
                 </span>
               )}
             </button>
           </div>
         </div>
+      </div>
 
-        <div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-8">
-          <div className="flex items-center justify-between mb-6">
-            <p className="text-xs font-bold uppercase text-slate-400 tracking-wider">
-              Question{questionNumber != null
-                ? totalQuestions != null
-                  ? ` ${questionNumber} / ${totalQuestions}`
-                  : ` ${questionNumber}`
-                : ''}
-            </p>
-            <div className="flex items-center gap-3">
-              {/* Per-question elapsed timer */}
-              <div className={`flex items-center gap-1.5 font-mono font-black text-sm transition-colors ${timerColour}`} title="Time spent on this question">
-                <span className={`w-2 h-2 rounded-full ${timerActive && !isSubmitted ? 'bg-green-400 animate-pulse' : 'bg-slate-300'}`} />
-                {formatTime(elapsed)}
-              </div>
-              {/* Star button */}
-              <button
-                onClick={handleToggleStar}
-                disabled={starLoading || !currentUserId}
-                title={starred ? 'Unstar this question' : 'Star this question for later review'}
-                className={`w-7 h-7 flex items-center justify-center rounded-full transition-all disabled:opacity-40 ${
-                  starred ? 'text-amber-400 hover:text-amber-500' : 'text-slate-300 hover:text-amber-400'
-                }`}
-              >
-                <svg className="w-5 h-5" viewBox="0 0 24 24" fill={starred ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-                </svg>
-              </button>
-            </div>
-          </div>
+      {/* ── Question card ── */}
+      <div className="flex-1 flex flex-col max-w-2xl mx-auto w-full px-4 py-8">
 
-          <h2 className="text-xl md:text-2xl font-semibold text-slate-900 mb-8 leading-relaxed">
-            {question.question_text}
-          </h2>
-
-          <div className="space-y-3">
-            {options.map((opt) => {
-              let containerStyle = 'border-slate-200 hover:border-blue-300';
-              if (isSubmitted) {
-                if (opt.key === correctAnswerKey)    containerStyle = 'border-emerald-500 bg-emerald-50 ring-1 ring-emerald-500';
-                else if (selectedOption === opt.key) containerStyle = 'border-red-500 bg-red-50 ring-1 ring-red-500';
-                else                                 containerStyle = 'opacity-50 border-slate-100';
-              } else if (selectedOption === opt.key) {
-                containerStyle = 'border-blue-600 bg-blue-50 ring-1 ring-blue-600';
-              }
-
-              return (
-                <button
-                  key={opt.key}
-                  disabled={isSubmitted}
-                  onClick={() => setSelectedOption(opt.key)}
-                  className={`w-full text-left p-4 rounded-2xl border-2 transition-all flex items-center gap-4 ${containerStyle}`}
-                >
-                  <span className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm flex-shrink-0 ${
-                    selectedOption === opt.key ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-500'
-                  }`}>
-                    {opt.key.toUpperCase()}
-                  </span>
-                  <span className="font-medium text-slate-700">{opt.text}</span>
-                </button>
-              );
-            })}
-          </div>
-
-          {alreadyLogged && !isSubmitted && (
-            <div className="mt-6 px-4 py-2 bg-slate-100 rounded-xl text-xs font-bold text-slate-500 text-center">
-              Already answered this question — selecting again won't overwrite your logged answer.
-            </div>
-          )}
-
-          {!isSubmitted ? (
+        {/* Category + difficulty chips */}
+        <div className="flex items-center gap-2 mb-4 flex-wrap">
+          <span className="text-xs font-bold px-3 py-1 bg-brand-amber/10 text-amber-700 rounded-full uppercase tracking-wide">
+            {question.category || 'General'}
+          </span>
+          <span className={`text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide ${
+            question.difficulty === 'hard'   ? 'bg-red-100 text-red-600'     :
+            question.difficulty === 'medium' ? 'bg-amber-100 text-amber-600' :
+                                               'bg-green-100 text-green-700'
+          }`}>
+            {question.difficulty || 'Easy'}
+          </span>
+          <div className="ml-auto flex items-center gap-1">
             <button
-              id="check-answer-btn"
-              onClick={handleCheckAnswer}
-              disabled={!selectedOption}
-              className="w-full mt-6 py-4 bg-slate-900 text-white rounded-2xl font-bold shadow-lg hover:bg-blue-600 disabled:opacity-30 transition-all active:scale-[0.98]"
+              onClick={handleToggleStar}
+              disabled={starLoading || !currentUserId}
+              title={starred ? 'Unstar this question' : 'Star for review'}
+              className={`w-7 h-7 flex items-center justify-center rounded-full transition-all disabled:opacity-40 ${
+                starred ? 'text-brand-amber' : 'text-neutral-300 hover:text-brand-amber'
+              }`}
             >
-              Check Answer
-              {selectedOption && <span className="ml-2 text-xs opacity-60 font-normal">or press Enter</span>}
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill={starred ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+              </svg>
             </button>
-          ) : (
-            <div className={`mt-8 p-6 rounded-2xl border-l-4 ${
-              isCorrect ? 'bg-emerald-50 border-emerald-500' : 'bg-red-50 border-red-500'
-            }`}>
-              <div className="flex items-center justify-between mb-2">
-                <p className="font-black uppercase text-sm">
-                  {isCorrect ? '✓ Correct Answer' : '✕ Incorrect'}
-                </p>
-                <span className="text-xs font-bold text-slate-400 font-mono">
-                  Time: {formatTime(elapsed)}
-                </span>
-              </div>
-              {question.explanation ? (
-                <p className="text-slate-700 text-sm">
-                  <span className="font-bold">Explanation:</span> {question.explanation}
-                </p>
-              ) : (
-                <p className="text-slate-400 text-sm italic">No explanation provided for this question.</p>
-              )}
-            </div>
-          )}
+          </div>
         </div>
 
-        <div className="mt-8 flex justify-between gap-4">
+        {/* Question text */}
+        <div className="bg-white rounded-2xl border border-neutral-200 shadow-card p-6 mb-5">
+          <p className="text-lg md:text-xl font-semibold text-neutral-900 leading-relaxed">
+            {question.question_text}
+          </p>
+        </div>
+
+        {/* Answer options */}
+        <div className="space-y-3 mb-5">
+          {options.map((opt) => {
+            let cls = 'answer-option';
+            if (isSubmitted) {
+              if (opt.key === correctAnswerKey)    cls = 'answer-option answer-option-correct cursor-default';
+              else if (selectedOption === opt.key) cls = `answer-option answer-option-wrong cursor-default ${!isCorrect ? 'animate-shake' : ''}`;
+              else                                 cls = 'answer-option opacity-40 cursor-default pointer-events-none';
+            } else if (selectedOption === opt.key) {
+              cls = 'answer-option answer-option-selected';
+            }
+
+            const keyBg = isSubmitted
+              ? opt.key === correctAnswerKey ? 'bg-brand-green text-white'
+              : selectedOption === opt.key   ? 'bg-brand-coral text-white'
+              : 'bg-neutral-200 text-neutral-400'
+              : selectedOption === opt.key   ? 'bg-brand-green text-white'
+              : 'bg-neutral-100 text-neutral-500';
+
+            return (
+              <button
+                key={opt.key}
+                disabled={isSubmitted}
+                onClick={() => setSelectedOption(opt.key)}
+                className={cls}
+              >
+                <span className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm flex-shrink-0 transition-colors ${keyBg}`}>
+                  {opt.key.toUpperCase()}
+                </span>
+                <span className="font-semibold">{opt.text}</span>
+                {isSubmitted && opt.key === correctAnswerKey && (
+                  <span className="ml-auto text-brand-green text-lg">✓</span>
+                )}
+                {isSubmitted && selectedOption === opt.key && opt.key !== correctAnswerKey && (
+                  <span className="ml-auto text-brand-coral text-lg">✕</span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+
+        {alreadyLogged && !isSubmitted && (
+          <div className="mb-3 px-4 py-2 bg-neutral-100 rounded-xl text-xs font-bold text-neutral-500 text-center">
+            Already answered — re-selecting won&apos;t overwrite your logged answer.
+          </div>
+        )}
+
+        {/* Submit / feedback */}
+        {!isSubmitted ? (
+          <button
+            id="check-answer-btn"
+            onClick={handleCheckAnswer}
+            disabled={!selectedOption}
+            className="btn-primary w-full py-4 text-base rounded-xl disabled:opacity-30 disabled:cursor-not-allowed"
+          >
+            Check Answer
+            {selectedOption && <span className="ml-2 text-sm opacity-70 font-normal">· Enter</span>}
+          </button>
+        ) : (
+          <div className={`p-5 rounded-2xl border animate-slide-up ${
+            isCorrect
+              ? 'bg-green-50 border-brand-green/30'
+              : 'bg-red-50 border-brand-coral/30'
+          }`}>
+            <p className={`font-extrabold text-base mb-2 ${isCorrect ? 'text-green-700' : 'text-red-600'}`}>
+              {isCorrect ? '🎉 Correct!' : '😬 Not quite — keep going!'}
+            </p>
+            {question.explanation ? (
+              <p className="text-neutral-700 text-sm leading-relaxed">
+                <span className="font-bold">Explanation: </span>{question.explanation}
+              </p>
+            ) : (
+              <p className="text-neutral-400 text-sm italic">No explanation provided.</p>
+            )}
+          </div>
+        )}
+
+        {/* Navigation */}
+        <div className="mt-5 flex gap-3">
           <button
             onClick={handlePrev}
             disabled={isFirst}
-            className="flex-1 py-3 px-6 bg-white border border-slate-200 rounded-xl font-bold text-slate-600 hover:bg-slate-50 transition-all active:scale-95 disabled:opacity-25"
+            className="flex-1 py-3 px-4 bg-white border border-neutral-200 rounded-xl font-bold text-neutral-600 hover:bg-neutral-50 transition-all active:scale-95 disabled:opacity-25"
           >
             ← Previous
           </button>
           <button
             onClick={handleNext}
             disabled={isLast}
-            className="flex-1 py-3 px-6 bg-white border border-slate-200 rounded-xl font-bold text-slate-600 hover:bg-slate-50 transition-all active:scale-95 disabled:opacity-25"
+            className="flex-1 py-3 px-4 bg-white border border-neutral-200 rounded-xl font-bold text-neutral-600 hover:bg-neutral-50 transition-all active:scale-95 disabled:opacity-25"
           >
-            Next Question →
+            Next →
           </button>
         </div>
 
-        <div className="mt-4">
+        <div className="mt-3">
           <button
             onClick={() =>
               sessionLog.length > 0
                 ? setShowSaveExitPopup(true)
                 : setShowExitPopup(true)
             }
-            className="w-full py-3 rounded-2xl border-2 border-dashed border-slate-300 text-slate-400 font-bold text-sm hover:border-emerald-400 hover:text-emerald-600 hover:bg-emerald-50 transition-all"
+            className="w-full py-3 rounded-xl border-2 border-dashed border-neutral-300 text-neutral-400 font-bold text-sm hover:border-brand-green hover:text-brand-green hover:bg-green-50 transition-all"
           >
             {sessionLog.length > 0 ? '💾 Save & End Session' : '✕ End Session'}
           </button>
