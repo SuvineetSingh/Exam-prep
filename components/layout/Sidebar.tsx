@@ -6,6 +6,8 @@ import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import type { User } from '@supabase/supabase-js';
 import { useUserActivity } from '@/hooks/useUserActivity';
+import { useGamification } from '@/hooks/useGamification';
+import { XPProgressBar } from '@/components/gamification/XPProgressBar';
 
 /* ── Nav items ─────────────────────────────────────── */
 const NAV_ITEMS = [
@@ -112,6 +114,7 @@ export function Sidebar({ user, dailyAnswered = 0, dailyGoal = 20 }: SidebarProp
   const pathname = usePathname();
   const router = useRouter();
   const [isPremium, setIsPremium] = useState<boolean | null>(null);
+  const gamification = useGamification(user.id);
 
   useUserActivity(user.id);
 
@@ -201,6 +204,11 @@ export function Sidebar({ user, dailyAnswered = 0, dailyGoal = 20 }: SidebarProp
           </Link>
         </div>
       </nav>
+
+      {/* ── XP mini-bar ── */}
+      <div className="border-t border-neutral-100 px-4 py-3">
+        <XPProgressBar totalXp={gamification.totalXp} compact />
+      </div>
 
       {/* ── Daily goal progress ── */}
       <div className="border-t border-neutral-100">

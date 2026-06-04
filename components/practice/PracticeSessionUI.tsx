@@ -6,6 +6,13 @@ import { createClient } from '@/lib/supabase/client';
 import { formatTime } from '@/lib/utils/helpers';
 import { toggleStar, isQuestionStarred } from '@/lib/supabase/queries/starredQueries';
 import type { Question } from '@/lib/types';
+import { useGamification } from '@/hooks/useGamification';
+import { batchAwardXP, type XPSource } from '@/lib/gamification/xpEngine';
+import { checkAndAwardBadges, getEarnedBadgeKeys, buildBadgeContext } from '@/lib/gamification/badgeEngine';
+import { useUserStats } from '@/hooks/useUserStats';
+import { XPToast } from '@/components/gamification/XPToast';
+import { BadgeModal } from '@/components/gamification/BadgeModal';
+import { XP_CORRECT, XP_WRONG } from '@/lib/gamification/constants';
 
 export interface QuestionLog {
   questionId: string;
@@ -279,6 +286,12 @@ export function PracticeSessionUI({
   const [starLoading, setStarLoading] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
+  const gamification = useGamification(currentUserId ?? undefined);
+  const { stats } = useUserStats();
+
+  // Track optimistic XP per answer for batch write on session end
+  const pendingXpRef = useRef<{ source: XPSource; referenceId: string }[]>([]);
+
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (user) setCurrentUserId(user.id);
@@ -354,11 +367,12 @@ export function PracticeSessionUI({
     const timeSpent = elapsed;
     setIsSubmitted(true);
 
+    const correct = selectedOption.toLowerCase() === correctAnswerKey;
     const entry: QuestionLog = {
       questionId:     String(question.id),
       questionText:   question.question_text,
       selectedAnswer: selectedOption,
-      isCorrect:      selectedOption.toLowerCase() === correctAnswerKey,
+      isCorrect:      correct,
       timeSpent,
     };
 
@@ -366,7 +380,16 @@ export function PracticeSessionUI({
       if (prev.find(e => e.questionId === String(question.id))) return prev;
       return [...prev, entry];
     });
-  }, [selectedOption, elapsed, question, correctAnswerKey, setIsSubmitted, onLogUpdate]);
+
+    // Optimistic XP — show toast immediately
+    if (!sessionLog.some(e => e.questionId === String(question.id))) {
+      const source: XPSource = correct ? 'answer_correct' : 'answer_wrong';
+      const xpAmount = correct ? XP_CORRECT : XP_WRONG;
+      gamification.applyXP(xpAmount);
+      gamification.addXPToast(xpAmount, correct ? `+${xpAmount} XP` : `+${xpAmount} XP`);
+      pendingXpRef.current.push({ source, referenceId: String(question.id) });
+    }
+  }, [selectedOption, elapsed, question, correctAnswerKey, setIsSubmitted, onLogUpdate, sessionLog, gamification]);
 
   const handleNext = () => { setElapsed(0); setTimerActive(true); navigate('next'); };
   const handlePrev = () => { setElapsed(0); setTimerActive(true); navigate('prev'); };
@@ -431,18 +454,33 @@ export function PracticeSessionUI({
 
       if (answersError) throw answersError;
 
+      // Batch-write XP transactions
+      if (pendingXpRef.current.length > 0) {
+        await batchAwardXP(user.id, pendingXpRef.current);
+        pendingXpRef.current = [];
+      }
+
+      // Check for new badges
+      const isPerfect = correctCount === sessionLog.length && sessionLog.length >= 5;
+      const earnedKeys = await getEarnedBadgeKeys(user.id);
+      const badgeCtx = await buildBadgeContext(user.id, stats?.study_streak ?? 0, {
+        practiceSessionPerfect: isPerfect,
+      });
+      const newBadges = await checkAndAwardBadges({ userId: user.id, ...badgeCtx, earnedKeys });
+      if (newBadges.length > 0) gamification.revealBadges(newBadges);
+
       if (sessionId) {
         try { sessionStorage.removeItem(`practice_log_${sessionId}`); } catch {}
       }
 
-      router.push('/practice');
+      if (newBadges.length === 0) router.push('/practice');
     } catch (err) {
       console.error('Failed to save session:', err);
       alert('Something went wrong while saving. Please try again.');
     } finally {
       setSaving(false);
     }
-  }, [sessionLog, sessionId, examFilter, supabase, router]);
+  }, [sessionLog, sessionId, examFilter, supabase, router, stats, gamification]);
 
   const timerColour = isSubmitted
     ? 'text-slate-400'
@@ -460,6 +498,14 @@ export function PracticeSessionUI({
 
   return (
     <div className="min-h-screen bg-neutral-100 flex flex-col relative">
+      <XPToast toasts={gamification.toasts} />
+      <BadgeModal
+        badge={gamification.newBadges[0] ?? null}
+        onDismiss={() => {
+          gamification.dismissBadge();
+          if (gamification.newBadges.length <= 1) router.push('/practice');
+        }}
+      />
 
       <SidePanel
         open={panelOpen}

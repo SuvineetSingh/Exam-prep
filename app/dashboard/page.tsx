@@ -2,8 +2,12 @@
 
 import { useUserStats } from '@/hooks/useUserStats';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
+import { useGamification } from '@/hooks/useGamification';
 import { AppShell } from '@/components/layout/AppShell';
 import { SessionRow, type ExamSession } from '@/components/history/HistoryComponents';
+import { XPProgressBar } from '@/components/gamification/XPProgressBar';
+import { BadgeShelf } from '@/components/gamification/BadgeShelf';
+import { BadgeModal } from '@/components/gamification/BadgeModal';
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import Link from 'next/link';
@@ -123,11 +127,11 @@ function PremiumBanner() {
 export default function DashboardPage() {
   const { stats, loading, error } = useUserStats();
   const { user, loading: authLoading } = useRequireAuth();
+  const gamification = useGamification(user?.id);
   const [isPremium, setIsPremium] = useState<boolean | null>(null);
   const [recentSessions, setRecentSessions] = useState<ExamSession[]>([]);
   const [sessionsLoading, setSessionsLoading] = useState(true);
 
-  // Mock daily goal for now (Phase 11 will wire this to DB)
   const dailyGoal = 20;
   const dailyAnswered = stats?.today_count ?? 0;
 
@@ -182,6 +186,8 @@ export default function DashboardPage() {
 
   return (
     <AppShell user={user} dailyAnswered={dailyAnswered} dailyGoal={dailyGoal}>
+      <BadgeModal badge={gamification.newBadges[0] ?? null} onDismiss={gamification.dismissBadge} />
+
       {/* ── Welcome bar ── */}
       <div className="flex items-start justify-between mb-8 flex-wrap gap-3">
         <div>
@@ -243,6 +249,22 @@ export default function DashboardPage() {
           sub="Questions answered"
         />
       </div>
+
+      {/* ── XP Progress ── */}
+      <div className="mb-6">
+        <XPProgressBar totalXp={gamification.totalXp} />
+      </div>
+
+      {/* ── Badges ── */}
+      {gamification.earnedBadges.length > 0 && (
+        <div className="card p-5 mb-6">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-base font-extrabold text-neutral-800">Your Badges</h2>
+            <span className="text-xs font-bold text-neutral-400">{gamification.earnedBadges.length} / 20 earned</span>
+          </div>
+          <BadgeShelf earnedKeys={gamification.earnedKeys} compact />
+        </div>
+      )}
 
       {/* ── Quick actions ── */}
       <div className="mb-8">

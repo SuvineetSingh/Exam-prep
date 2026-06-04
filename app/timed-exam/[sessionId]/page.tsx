@@ -5,6 +5,8 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { ExamSessionUI } from '@/components/timed-exam/ExamSessionUI';
 import { MINS_PER_QUESTION } from '@/lib/utils/constants';
+import { batchAwardXP } from '@/lib/gamification/xpEngine';
+import { checkAndAwardBadges, getEarnedBadgeKeys, buildBadgeContext } from '@/lib/gamification/badgeEngine';
 
 export default function ExamPage({ params }: { params: Promise<{ sessionId: string }> }) {
   const { sessionId } = use(params);
@@ -179,6 +181,24 @@ export default function ExamPage({ params }: { params: Promise<{ sessionId: stri
 
       const { error: aErr } = await supabase.from('user_answers').insert(answerRows);
       if (aErr) throw aErr;
+
+      // Award XP for timed exam
+      const isPerfect = correctCount === actualCount;
+      const xpTxns: { source: 'answer_correct' | 'answer_wrong' | 'exam_complete' | 'perfect_bonus'; referenceId: string }[] = [
+        ...questions.map(q => ({
+          source: (userAnswers[q.id] === String(q.correct_option || q.correct_answer).toUpperCase()
+            ? 'answer_correct' : 'answer_wrong') as 'answer_correct' | 'answer_wrong',
+          referenceId: String(q.id),
+        })),
+        { source: 'exam_complete' as const, referenceId: sessionId },
+        ...(isPerfect ? [{ source: 'perfect_bonus' as const, referenceId: sessionId }] : []),
+      ];
+      await batchAwardXP(user.id, xpTxns);
+
+      // Check badges
+      const earnedKeys = await getEarnedBadgeKeys(user.id);
+      const badgeCtx = await buildBadgeContext(user.id, 0, { timedExamPerfect: isPerfect });
+      await checkAndAwardBadges({ userId: user.id, ...badgeCtx, earnedKeys });
 
       router.push(`/timed-exam/results?session=${sessionId}`);
     } catch (err: any) {
