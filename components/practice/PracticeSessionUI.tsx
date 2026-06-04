@@ -381,15 +381,16 @@ export function PracticeSessionUI({
       return [...prev, entry];
     });
 
-    // Optimistic XP — show toast immediately
-    if (!sessionLog.some(e => e.questionId === String(question.id))) {
+    // Optimistic XP — show toast immediately; use ref to avoid stale-closure duplicate
+    const alreadyPending = pendingXpRef.current.some(t => t.referenceId === String(question.id));
+    if (!alreadyPending) {
       const source: XPSource = correct ? 'answer_correct' : 'answer_wrong';
       const xpAmount = correct ? XP_CORRECT : XP_WRONG;
       gamification.applyXP(xpAmount);
-      gamification.addXPToast(xpAmount, correct ? `+${xpAmount} XP` : `+${xpAmount} XP`);
+      gamification.addXPToast(xpAmount, `+${xpAmount} XP`);
       pendingXpRef.current.push({ source, referenceId: String(question.id) });
     }
-  }, [selectedOption, elapsed, question, correctAnswerKey, setIsSubmitted, onLogUpdate, sessionLog, gamification]);
+  }, [selectedOption, elapsed, question, correctAnswerKey, setIsSubmitted, onLogUpdate, gamification]);
 
   const handleNext = () => { setElapsed(0); setTimerActive(true); navigate('next'); };
   const handlePrev = () => { setElapsed(0); setTimerActive(true); navigate('prev'); };
@@ -467,13 +468,17 @@ export function PracticeSessionUI({
         practiceSessionPerfect: isPerfect,
       });
       const newBadges = await checkAndAwardBadges({ userId: user.id, ...badgeCtx, earnedKeys });
-      if (newBadges.length > 0) gamification.revealBadges(newBadges);
 
       if (sessionId) {
         try { sessionStorage.removeItem(`practice_log_${sessionId}`); } catch {}
       }
 
-      if (newBadges.length === 0) router.push('/practice');
+      if (newBadges.length > 0) {
+        gamification.revealBadges(newBadges);
+        // navigation happens in the BadgeModal onDismiss handler below
+      } else {
+        router.push('/practice');
+      }
     } catch (err) {
       console.error('Failed to save session:', err);
       alert('Something went wrong while saving. Please try again.');
@@ -502,8 +507,9 @@ export function PracticeSessionUI({
       <BadgeModal
         badge={gamification.newBadges[0] ?? null}
         onDismiss={() => {
+          const remaining = gamification.newBadges.length;
           gamification.dismissBadge();
-          if (gamification.newBadges.length <= 1) router.push('/practice');
+          if (remaining <= 1) router.push('/practice');
         }}
       />
 
