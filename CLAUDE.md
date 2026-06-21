@@ -63,7 +63,7 @@ Query/mutation logic against Supabase is pulled out of components into `lib/supa
 
 ### Naming gotcha: CMA vs CPA
 
-The exam track was renamed from CPA to CMA (migration `009_rename_cpa_to_cma.sql`). `package.json` description and some docs/comments still say "CPA" — when touching exam-type logic, treat `CMA` as current and don't reintroduce `CPA`.
+The exam track was renamed from CPA to CMA. Migration `009_rename_cpa_to_cma.sql` only updated `questions`/`user_answers`/`exam_sessions`/`course_subscriptions`/`starred_questions` — it missed `user_profiles.exam_type` and, per the migrations-folder caveat above, was never actually applied to the live dev DB until this was caught and fixed directly. All legacy `CPA` rows (including `user_profiles`) and the lingering `CPA` text in code/docs have since been cleaned up — treat `CMA` as current and don't reintroduce `CPA`.
 
 ## Conventions
 

@@ -54,7 +54,7 @@ export type QuestionType =
 // App configuration
 export const APP_CONFIG = {
   NAME: 'Exam Prep Platform',
-  DESCRIPTION: 'Web-based question bank platform for CPA, CFA, and FE exam preparation',
+  DESCRIPTION: 'Web-based question bank platform for CMA, CFA, and FE exam preparation',
   URL: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
   API_URL: process.env.NEXT_PUBLIC_API_URL || '/api',
 } as const;

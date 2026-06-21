@@ -21,10 +21,10 @@ SELECT
   now()
 FROM auth.users au
 JOIN (VALUES
-  ('alice.test@examprep.dev',  'alice_cpa',   'Alice Chen',     'CPA', 'Finance',            'CPA candidate, 3rd attempt. Let''s go.',       true),
+  ('alice.test@examprep.dev',  'alice_cma',   'Alice Chen',     'CMA', 'Finance',            'CMA candidate, 3rd attempt. Let''s go.',       true),
   ('bob.test@examprep.dev',    'bob_cfa',     'Bob Patel',      'CFA', 'Investment Banking', 'Level II CFA. Grinding every day.',             false),
   ('carol.test@examprep.dev',  'carol_fe',    'Carol Nguyen',   'FE',  'Engineering',        'Civil engineer prepping for FE exam.',          true),
-  ('david.test@examprep.dev',  'david_cpa2',  'David Kim',      'CPA', 'Accounting',         'Big 4 staff accountant, CPA or bust.',          false),
+  ('david.test@examprep.dev',  'david_cma2',  'David Kim',      'CMA', 'Accounting',         'Big 4 staff accountant, CMA or bust.',          false),
   ('eva.test@examprep.dev',    'eva_cfa2',    'Eva Martinez',   'CFA', 'Asset Management',   'Level I CFA. Study group welcome!',             true)
 ) AS p(email, username, full_name, exam_type, industry, bio, is_premium)
   ON au.email = p.email

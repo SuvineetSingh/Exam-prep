@@ -28,7 +28,7 @@ Based on the project structure and documentation, here are comprehensive onboard
 ## 🎯 Project Overview
 
 **What are we building?**
-- A web-based question bank platform for CPA, CFA, and FE exam preparation
+- A web-based question bank platform for CMA, CFA, and FE exam preparation
 - Users pay $10 once to get lifetime access to practice questions
 - Features: Practice mode, timed exams, answer tracking, performance analytics
 
@@ -205,7 +205,7 @@ import { EXAM_TYPES } from '@/lib/utils/constants';
 
 // Use the types
 const user: User = {...};
-const examType: ExamType = EXAM_TYPES.CPA;
+const examType: ExamType = EXAM_TYPES.CMA;
 ```
 
 ---
@@ -514,10 +514,10 @@ export function QuestionCard({ question }: { question: Question }) {
    ```typescript
    // ✅ Good
    import { EXAM_TYPES } from '@/lib/utils/constants';
-   if (examType === EXAM_TYPES.CPA) {...}
+   if (examType === EXAM_TYPES.CMA) {...}
    
    // ❌ Bad
-   if (examType === 'CPA') {...}
+   if (examType === 'CMA') {...}
    ```
 
 3. **Handle errors gracefully**
@@ -621,7 +621,7 @@ export function QuestionCard({ question }: { question: Question }) {
 const { data, error } = await supabase
   .from('questions')
   .select('*')
-  .eq('exam_type', 'CPA')
+  .eq('exam_type', 'CMA')
   .limit(20);
 
 // Insert data

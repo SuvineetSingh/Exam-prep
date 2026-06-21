@@ -455,9 +455,17 @@ export function PracticeSessionUI({
 
       if (answersError) throw answersError;
 
-      // Batch-write XP transactions
-      if (pendingXpRef.current.length > 0) {
-        await batchAwardXP(user.id, pendingXpRef.current);
+      // Batch-write XP transactions. Derived from sessionLog (persisted in
+      // sessionStorage by the parent page) rather than pendingXpRef, since
+      // pendingXpRef resets to [] every time /practice/[id] remounts on
+      // question navigation and would otherwise only contain the XP for
+      // whichever question was active when the session was saved.
+      const xpTxns: { source: XPSource; referenceId: string }[] = sessionLog.map(entry => ({
+        source: entry.isCorrect ? 'answer_correct' : 'answer_wrong',
+        referenceId: entry.questionId,
+      }));
+      if (xpTxns.length > 0) {
+        await batchAwardXP(user.id, xpTxns);
         pendingXpRef.current = [];
       }
 

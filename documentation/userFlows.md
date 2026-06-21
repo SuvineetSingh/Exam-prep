@@ -94,7 +94,7 @@ View Results & Explanations
 ┌─────────────────┐
 │ Questions Page  │  ← User can now access questions
 │                 │
-│ Filter: [CPA ▼] │
+│ Filter: [CMA ▼] │
 │                 │
 │ [Practice Mode] │
 │ [Timed Exam]    │
@@ -231,7 +231,7 @@ Sets status = 'completed'
 **URL:** `/questions`
 
 **What user sees:**
-- Filter dropdown: "Exam Type: [CPA ▼]"
+- Filter dropdown: "Exam Type: [CMA ▼]"
 - Category filter: "Category: [All ▼]"
 - Two big buttons:
   - "Practice Mode" (browse freely)
@@ -242,7 +242,7 @@ Sets status = 'completed'
 
 **Backend (on page load):**
 ```
-GET /api/questions?exam_type=CPA
+GET /api/questions?exam_type=CMA
   ↓
 Check user authentication (session cookie)
   ↓
@@ -374,7 +374,7 @@ Return: { isCorrect: true/false, correctAnswer, explanation }
 │ Exam Setup      │  ← User configures exam
 │                 │
 │ Exam Type:      │
-│ [CPA ▼]         │
+│ [CMA ▼]         │
 │                 │
 │ # Questions:    │
 │ [50 ▼]          │
@@ -443,25 +443,25 @@ Return: { isCorrect: true/false, correctAnswer, explanation }
 
 **What user sees:**
 - Exam configuration form:
-  - Exam Type dropdown (CPA, CFA, FE)
+  - Exam Type dropdown (CMA, CFA, FE)
   - Number of questions (20, 30, 50)
   - Time limit (auto-calculated based on # questions)
 - "Start Exam" button
 - Warning: "You cannot pause once started"
 
 **User action:**
-- Select exam type: "CPA"
+- Select exam type: "CMA"
 - Select questions: "50"
 - Click "Start Exam"
 
 **Backend (API call):**
 ```
 POST /api/exam/start
-Body: { examType: 'CPA', questionCount: 50, timeLimit: 3600 }
+Body: { examType: 'CMA', questionCount: 50, timeLimit: 3600 }
   ↓
 Validate user is authenticated and paid
   ↓
-Generate random 50 questions from CPA pool
+Generate random 50 questions from CMA pool
   ↓
 Create exam session (UUID)
   ↓

@@ -2,7 +2,7 @@
     "name": "exam-prep-platform",
     "version": "0.1.0",
     "private": true,
-    "description": "Web-based question bank platform for CPA, CFA, and FE exam preparation",
+    "description": "Web-based question bank platform for CMA, CFA, and FE exam preparation",
     "author": "Suvineet Singh",
     "license": "PROPRIETARY",
     "scripts": {

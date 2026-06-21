@@ -221,7 +221,7 @@ Stripe-Signature: t=1234567890,v1=abcdef...
 Fetch questions with optional filtering.
 
 ```http
-GET /api/questions?exam_type=CPA&category=Financial%20Accounting&limit=20&offset=0
+GET /api/questions?exam_type=CMA&category=Financial%20Accounting&limit=20&offset=0
 ```
 
 **Headers:**
@@ -230,7 +230,7 @@ Cookie: sb-access-token=<jwt_token>
 ```
 
 **Query Parameters:**
-- `exam_type` (optional): `CPA` | `CFA` | `FE`
+- `exam_type` (optional): `CMA` | `CFA` | `FE`
 - `category` (optional): String (e.g., "Financial Accounting")
 - `limit` (optional): Number (default: 20, max: 100)
 - `offset` (optional): Number (default: 0)
@@ -241,7 +241,7 @@ Cookie: sb-access-token=<jwt_token>
   "questions": [
     {
       "id": 1,
-      "exam_type": "CPA",
+      "exam_type": "CMA",
       "category": "Financial Accounting",
       "question_text": "What is the primary purpose of GAAP?",
       "option_a": "To maximize profits",
@@ -283,7 +283,7 @@ Cookie: sb-access-token=<jwt_token>
 ```json
 {
   "id": 1,
-  "exam_type": "CPA",
+  "exam_type": "CMA",
   "category": "Financial Accounting",
   "question_text": "What is the primary purpose of GAAP?",
   "option_a": "To maximize profits",
@@ -366,7 +366,7 @@ Content-Type: application/json
 **Request Body:**
 ```json
 {
-  "examType": "CPA",
+  "examType": "CMA",
   "questionCount": 50,
   "timeLimit": 3600
 }
@@ -376,7 +376,7 @@ Content-Type: application/json
 ```json
 {
   "sessionId": "550e8400-e29b-41d4-a716-446655440000",
-  "examType": "CPA",
+  "examType": "CMA",
   "questionCount": 50,
   "timeLimit": 3600,
   "questions": [
@@ -610,7 +610,7 @@ curl -X POST http://localhost:3000/api/auth/login \
   -d '{"email":"test@example.com","password":"Test123!"}'
 
 # Get questions (using saved cookie)
-curl http://localhost:3000/api/questions?exam_type=CPA \
+curl http://localhost:3000/api/questions?exam_type=CMA \
   -b cookies.txt
 ```
 

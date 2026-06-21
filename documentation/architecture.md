@@ -316,7 +316,7 @@ Critical indexes for performance:
 -- Fast lookup: Get user's payment status
 CREATE INDEX idx_user_payments_user_id ON user_payments(user_id);
 
--- Fast filtering: Get CPA questions
+-- Fast filtering: Get CMA questions
 CREATE INDEX idx_questions_exam_type ON questions(exam_type);
 
 -- Fast filtering: Get Financial Accounting questions

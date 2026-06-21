@@ -31,7 +31,7 @@ describe('QuestionsDashboard', () => {
   const mockQuestions = [
     {
       id: 1,
-      exam_type: 'CPA',
+      exam_type: 'CMA',
       category: 'Accounting',
       difficulty: 'easy',
       question_text: 'Test Question 1',
@@ -123,10 +123,10 @@ describe('QuestionsDashboard', () => {
     render(<QuestionsDashboard />);
 
     const examSelect = await screen.findByLabelText(/Exam Type/i);
-    fireEvent.change(examSelect, { target: { value: 'CPA' } });
+    fireEvent.change(examSelect, { target: { value: 'CMA' } });
 
     await waitFor(() => {
-      expect(mockSupabase.eq).toHaveBeenCalledWith('exam_type', 'CPA');
+      expect(mockSupabase.eq).toHaveBeenCalledWith('exam_type', 'CMA');
     });
   });
 

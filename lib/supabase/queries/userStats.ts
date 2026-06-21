@@ -2,7 +2,7 @@ import { createClient } from '@/lib/supabase/client';
 import type { UserStats, CourseName } from '@/lib/types';
 
 /**
- * Returns the list of course names (CPA, CFA, FE) the user has purchased Pro access for.
+ * Returns the list of course names (CMA, CFA, FE) the user has purchased Pro access for.
  */
 export async function getUserCourseSubscriptions(): Promise<CourseName[]> {
   const supabase = createClient();
