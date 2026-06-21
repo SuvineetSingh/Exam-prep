@@ -9,7 +9,7 @@ export function middleware(request: NextRequest) {
   // Detect a Supabase session purely from cookies — no network call, no timeout.
   // Pages individually call supabase.auth.getUser() to fully verify the JWT.
   const hasSession = request.cookies.getAll().some(
-    (c) => c.name.includes('-auth-token') && c.value.length > 0
+    (c) => c.name.includes('-auth-token') && !c.name.endsWith('-code-verifier') && c.value.length > 0
   );
 
   if (PROTECTED.some((r) => pathname.startsWith(r)) && !hasSession) {

@@ -2,7 +2,10 @@
 
 login creds:
 
+Paid:
 admin@gmail.com
 Admin@123
 
-test1@gmail.com
+Free-
+test2@gmail.com
+Admin@123

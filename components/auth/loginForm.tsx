@@ -1,13 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { updateUserOnlineStatus } from '@/lib/supabase/queries/lobbyQueries';
 
 export function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -48,8 +49,9 @@ export function LoginForm() {
       }
 
       // Keep isSubmitting true during the redirect phase
+      const redirectedFrom = searchParams.get('redirectedFrom');
       setTimeout(() => {
-        router.push('/courses');
+        router.push(redirectedFrom || '/dashboard');
         router.refresh();
       }, 1200);
     }

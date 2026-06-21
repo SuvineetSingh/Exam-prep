@@ -2,7 +2,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { LoginForm } from '../loginForm';
 import { createClient } from '@/lib/supabase/client';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 // Mock modules
 jest.mock('@/lib/supabase/client');
@@ -22,6 +22,7 @@ describe('LoginForm', () => {
       push: mockPush,
       refresh: mockRefresh,
     });
+    (useSearchParams as jest.Mock).mockReturnValue(new URLSearchParams());
     (createClient as jest.Mock).mockReturnValue({
       auth: {
         signInWithPassword: mockSignInWithPassword,
@@ -96,7 +97,7 @@ describe('LoginForm', () => {
     expect(submitButton).toBeDisabled();
   });
 
-  it('successfully logs in and redirects to questions page', async () => {
+  it('successfully logs in and redirects to dashboard', async () => {
     mockSignInWithPassword.mockResolvedValue({ data: { user: { id: '123' } }, error: null });
 
     const user = userEvent.setup();
@@ -104,7 +105,7 @@ describe('LoginForm', () => {
 
     await user.type(screen.getByLabelText(/email/i), 'test@example.com');
     await user.type(screen.getByLabelText(/password/i), 'password123');
-    
+
     const submitButton = screen.getByRole('button', { name: /log in/i });
     fireEvent.click(submitButton);
 
@@ -113,8 +114,25 @@ describe('LoginForm', () => {
         email: 'test@example.com',
         password: 'password123',
       });
-      expect(mockPush).toHaveBeenCalledWith('/questions');
+      expect(mockPush).toHaveBeenCalledWith('/dashboard');
       expect(mockRefresh).toHaveBeenCalled();
+    }, { timeout: 2000 });
+  });
+
+  it('redirects to redirectedFrom target when present', async () => {
+    (useSearchParams as jest.Mock).mockReturnValue(new URLSearchParams('redirectedFrom=%2Fpractice'));
+    mockSignInWithPassword.mockResolvedValue({ data: { user: { id: '123' } }, error: null });
+
+    const user = userEvent.setup();
+    render(<LoginForm />);
+
+    await user.type(screen.getByLabelText(/email/i), 'test@example.com');
+    await user.type(screen.getByLabelText(/password/i), 'password123');
+
+    fireEvent.click(screen.getByRole('button', { name: /log in/i }));
+
+    await waitFor(() => {
+      expect(mockPush).toHaveBeenCalledWith('/practice');
     }, { timeout: 2000 });
   });
 
