@@ -2,16 +2,22 @@
  * Seed 5 test users for lobby smoke testing.
  * Run: node scripts/seed-test-users.mjs
  *
- * Uses the service role key — bypasses RLS so it can create auth users
+ * Uses the secret key — bypasses RLS so it can create auth users
  * and their profiles in one go.
  */
 
 import { createClient } from '@supabase/supabase-js';
 
-const SUPABASE_URL = 'https://dfqrdxreerytobsqvzbi.supabase.co';
-const SERVICE_ROLE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRmcXJkeHJlZXJ5dG9ic3F2emJpIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODk1NDAwMCwiZXhwIjoyMDg0NTMwMDAwfQ.ath-lJK0QeRSWZXo-gWUfERXngqy9F3XoEXpTZ7CMXY';
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const SECRET_KEY = process.env.SUPABASE_SECRET_KEY;
 
-const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
+if (!SUPABASE_URL || !SECRET_KEY) {
+  console.error('Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SECRET_KEY in env. Run with:');
+  console.error('  set -a; source .env.local; set +a; node scripts/seed-test-users.mjs');
+  process.exit(1);
+}
+
+const supabase = createClient(SUPABASE_URL, SECRET_KEY, {
   auth: { autoRefreshToken: false, persistSession: false },
 });
 
@@ -19,11 +25,11 @@ const TEST_USERS = [
   {
     email: 'alice.test@examprep.dev',
     password: 'TestPass123!',
-    username: 'alice_cpa',
+    username: 'alice_cma',
     full_name: 'Alice Chen',
-    exam_type: 'CPA',
+    exam_type: 'CMA',
     industry: 'Finance',
-    bio: 'CPA candidate, 3rd attempt. Let\'s go.',
+    bio: 'CMA candidate, 3rd attempt. Let\'s go.',
     is_premium: true,   // Pro
   },
   {
@@ -49,11 +55,11 @@ const TEST_USERS = [
   {
     email: 'david.test@examprep.dev',
     password: 'TestPass123!',
-    username: 'david_cpa2',
+    username: 'david_cma2',
     full_name: 'David Kim',
-    exam_type: 'CPA',
+    exam_type: 'CMA',
     industry: 'Accounting',
-    bio: 'Big 4 staff accountant, CPA or bust.',
+    bio: 'Big 4 staff accountant, CMA or bust.',
     is_premium: false,  // Basic
   },
   {
@@ -87,13 +93,21 @@ async function seedUsers() {
 
     if (authError) {
       if (authError.message.includes('already been registered')) {
-        // Look up existing user via Auth REST API
-        const res = await fetch(
-          `${SUPABASE_URL}/auth/v1/admin/users?page=1&per_page=100`,
-          { headers: { apikey: SERVICE_ROLE_KEY, Authorization: `Bearer ${SERVICE_ROLE_KEY}` } }
-        );
-        const body = await res.json();
-        const existing = body?.users?.find(u => u.email === user.email);
+        // Look up existing user via Auth REST API. This project's GoTrue
+        // instance 500s above per_page=10 for an unrelated reason, so
+        // paginate in small batches instead of one large request.
+        let existing;
+        for (let page = 1; page <= 20 && !existing; page++) {
+          const res = await fetch(
+            `${SUPABASE_URL}/auth/v1/admin/users?page=${page}&per_page=10`,
+            { headers: { apikey: SECRET_KEY, Authorization: `Bearer ${SECRET_KEY}` } }
+          );
+          if (!res.ok) break;
+          const body = await res.json();
+          if (!body?.users?.length) break;
+          existing = body.users.find(u => u.email === user.email);
+          if (body.users.length < 10) break;
+        }
         if (!existing) { console.error('user not found after conflict'); continue; }
         userId = existing.id;
         process.stdout.write('(auth exists) ');

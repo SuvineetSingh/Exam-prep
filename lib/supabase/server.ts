@@ -15,11 +15,11 @@ import { getSupabaseConfig } from './config';
  */
 export async function createClient() {
   const cookieStore = await cookies();
-  const { url, anonKey } = getSupabaseConfig();
+  const { url, publishableKey } = getSupabaseConfig();
 
   return createServerClient(
-    url!, 
-    anonKey!, 
+    url!,
+    publishableKey!,
     {
     cookies: {
       getAll() {

@@ -33,9 +33,9 @@ There are three distinct ways to talk to Supabase — always use the right one, 
 
 - `lib/supabase/client.ts` — browser-side client, for Client Components and `lib/supabase/queries/*` helpers.
 - `lib/supabase/server.ts` — server-side client for Server Components/Route Handlers; reads/writes auth cookies via `next/headers`.
-- `lib/supabase/service.ts` — service-role client that **bypasses RLS**. Only used in trusted server-only code (API routes, the bots cron route) — never expose this key client-side.
+- `lib/supabase/service.ts` — secret-key client that **bypasses RLS**. Only used in trusted server-only code (API routes, the bots cron route) — never expose this key client-side.
 
-`lib/supabase/config.ts` centralizes env var reads (`NEXT_PUBLIC_SUPABASE_URL`/`NEXT_PUBLIC_SUPABASE_ANON_KEY`) and throws if missing.
+`lib/supabase/config.ts` centralizes env var reads (`NEXT_PUBLIC_SUPABASE_URL`/`NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`) and throws if missing. The project uses Supabase's newer publishable/secret key format (`sb_publishable_…`/`sb_secret_…`), not the legacy JWT-based `anon`/`service_role` keys.
 
 ### Auth gating
 

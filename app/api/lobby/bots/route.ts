@@ -1,17 +1,17 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-// This route uses the service-role key to bypass RLS for bot message insertion.
+// This route uses the secret key to bypass RLS for bot message insertion.
 // Triggered by Vercel Cron or manual POST request.
 export async function POST() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const secretKey = process.env.SUPABASE_SECRET_KEY;
 
-  if (!supabaseUrl || !serviceRoleKey) {
+  if (!supabaseUrl || !secretKey) {
     return NextResponse.json({ error: 'Missing Supabase service config' }, { status: 500 });
   }
 
-  const supabase = createClient(supabaseUrl, serviceRoleKey);
+  const supabase = createClient(supabaseUrl, secretKey);
 
   // 1. Fetch all bot profiles with scripts
   const { data: bots, error: botsError } = await supabase

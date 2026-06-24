@@ -24,7 +24,9 @@ Create a `.env.local` file in the root directory (a template is provided):
 ```env
 # Supabase Configuration
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your_supabase_publishable_key
+# Server-only — bypasses RLS. Needed for the lobby bots cron route and admin scripts.
+SUPABASE_SECRET_KEY=your_supabase_secret_key
 
 # App Configuration
 NEXT_PUBLIC_APP_URL=http://localhost:3000
@@ -33,6 +35,8 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=your_stripe_publishable_key
 STRIPE_SECRET_KEY=your_stripe_secret_key
 ```
+
+Use the **publishable** and **secret** keys from Supabase's newer API key system (Project Settings → API Keys), not the legacy JWT-based `anon`/`service_role` keys.
 
 **To get your Supabase credentials:**
 1. Go to https://app.supabase.com
