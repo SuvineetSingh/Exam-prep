@@ -27,12 +27,9 @@ export function AppShell({
     <div className="min-h-screen bg-neutral-100">
       <Sidebar user={user} dailyAnswered={dailyAnswered} dailyGoal={dailyGoal} />
       <MobileTabBar />
-      {/* Desktop: offset by sidebar width */}
-      <main
-        className="min-h-screen"
-        style={{ marginLeft: 'var(--sidebar-width)' }}
-      >
-        <div className="max-w-5xl mx-auto px-6 py-8">
+      {/* Desktop: offset by sidebar width. Mobile: no offset, MobileTabBar is fixed at the bottom instead. */}
+      <main className="min-h-screen md:ml-sidebar pb-20 md:pb-0">
+        <div className="max-w-5xl mx-auto px-4 py-6 sm:px-6 sm:py-8">
           {children}
         </div>
       </main>

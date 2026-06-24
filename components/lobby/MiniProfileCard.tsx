@@ -60,13 +60,13 @@ export function MiniProfileCard({ userId, currentUserId, onClose, onSendDM, posi
   const friendButtonProps = (() => {
     switch (friendStatus) {
       case 'accepted':
-        return { label: 'Friends', disabled: true, iconClass: 'bg-emerald-100 text-emerald-600 cursor-default' };
+        return { label: 'Friends', disabled: true, iconClass: 'bg-green-100 text-brand-green cursor-default' };
       case 'pending_sent':
-        return { label: 'Request Sent', disabled: true, iconClass: 'bg-gray-100 text-gray-400 cursor-default' };
+        return { label: 'Request Sent', disabled: true, iconClass: 'bg-neutral-200 text-neutral-400 cursor-default' };
       case 'pending_received':
-        return { label: 'Accept Request', disabled: false, iconClass: 'bg-blue-100 text-blue-600 hover:bg-blue-200' };
+        return { label: 'Accept Request', disabled: false, iconClass: 'bg-green-100 text-brand-green hover:bg-green-200' };
       default:
-        return { label: 'Add Friend', disabled: false, iconClass: 'bg-gray-100 text-gray-500 hover:bg-gray-200' };
+        return { label: 'Add Friend', disabled: false, iconClass: 'bg-neutral-200 text-neutral-500 hover:bg-neutral-200' };
     }
   })();
 
@@ -75,26 +75,26 @@ export function MiniProfileCard({ userId, currentUserId, onClose, onSendDM, posi
       <div className="fixed inset-0 z-40" onClick={onClose} />
 
       <div
-        className="fixed z-50 w-64 bg-white rounded-xl shadow-xl border border-gray-200 p-4 animate-fade-in"
+        className="fixed z-50 w-64 bg-white rounded-xl shadow-xl border border-neutral-200 p-4 animate-fade-in"
         style={cardStyle}
       >
         {loading ? (
-          <div className="text-center text-sm text-gray-500 py-4">Loading...</div>
+          <div className="text-center text-sm text-neutral-500 py-4">Loading...</div>
         ) : profile ? (
           <div>
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-12 h-12 rounded-full bg-primary-600 flex items-center justify-center text-white text-lg font-semibold flex-shrink-0">
+              <div className="w-12 h-12 rounded-full bg-brand-green flex items-center justify-center text-white text-lg font-semibold flex-shrink-0">
                 {initial}
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1.5">
-                  <span className="font-semibold text-gray-900 truncate">{profile.username || 'Unknown'}</span>
+                  <span className="font-semibold text-neutral-900 truncate">{profile.username || 'Unknown'}</span>
                   {profile.is_bot && (
-                    <span className="text-[10px] text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded-full">bot</span>
+                    <span className="text-[10px] text-neutral-400 bg-neutral-200 px-1.5 py-0.5 rounded-full">bot</span>
                   )}
                 </div>
                 {profile.full_name && (
-                  <p className="text-xs text-gray-500 truncate">{profile.full_name}</p>
+                  <p className="text-xs text-neutral-500 truncate">{profile.full_name}</p>
                 )}
               </div>
               {!profile.is_bot && (
@@ -125,19 +125,19 @@ export function MiniProfileCard({ userId, currentUserId, onClose, onSendDM, posi
 
             <div className="space-y-1.5 mb-4">
               {profile.exam_type && (
-                <div className="flex items-center gap-2 text-xs text-gray-600">
+                <div className="flex items-center gap-2 text-xs text-neutral-600">
                   <span className="font-medium">Exam:</span>
-                  <span className="bg-blue-50 text-blue-700 px-2 py-0.5 rounded">{profile.exam_type}</span>
+                  <span className="bg-green-50 text-brand-green px-2 py-0.5 rounded">{profile.exam_type}</span>
                 </div>
               )}
               {profile.industry && (
-                <div className="flex items-center gap-2 text-xs text-gray-600">
+                <div className="flex items-center gap-2 text-xs text-neutral-600">
                   <span className="font-medium">Industry:</span>
                   <span className="bg-purple-50 text-purple-700 px-2 py-0.5 rounded">{profile.industry}</span>
                 </div>
               )}
               {profile.bio && (
-                <p className="text-xs text-gray-500 mt-2 leading-relaxed">{profile.bio}</p>
+                <p className="text-xs text-neutral-500 mt-2 leading-relaxed">{profile.bio}</p>
               )}
             </div>
 
@@ -145,12 +145,12 @@ export function MiniProfileCard({ userId, currentUserId, onClose, onSendDM, posi
               friendStatus === 'accepted' ? (
                 <button
                   onClick={() => { onSendDM(userId); onClose(); }}
-                  className="w-full py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700 transition-colors"
+                  className="w-full py-2 bg-brand-green text-white text-sm font-medium rounded-lg hover:bg-brand-green-dark transition-colors"
                 >
                   Send Message
                 </button>
               ) : (
-                <p className="text-center text-xs text-gray-400 py-1">
+                <p className="text-center text-xs text-neutral-400 py-1">
                   {friendStatus === 'pending_sent'
                     ? 'Waiting for them to accept your request'
                     : friendStatus === 'pending_received'
@@ -161,7 +161,7 @@ export function MiniProfileCard({ userId, currentUserId, onClose, onSendDM, posi
             )}
           </div>
         ) : (
-          <div className="text-center text-sm text-gray-500 py-4">Profile not found</div>
+          <div className="text-center text-sm text-neutral-500 py-4">Profile not found</div>
         )}
       </div>
     </>

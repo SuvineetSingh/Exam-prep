@@ -160,7 +160,7 @@ describe('Pagination', () => {
     );
 
     const currentPageButton = screen.getByRole('button', { name: '3' });
-    expect(currentPageButton).toHaveClass('bg-primary-600', 'text-white');
+    expect(currentPageButton).toHaveClass('bg-brand-green', 'text-white');
   });
 
   it('calls onPageChange when a page number is clicked', () => {
@@ -223,6 +223,6 @@ describe('Pagination', () => {
     );
 
     const pagination = container.firstChild;
-    expect(pagination).toHaveClass('bg-white', 'border-t', 'border-gray-200');
+    expect(pagination).toHaveClass('bg-white', 'border-t', 'border-neutral-200');
   });
 });

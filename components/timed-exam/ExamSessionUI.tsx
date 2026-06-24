@@ -68,10 +68,10 @@ export function ExamSessionUI({
       {modals.showExit && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <div className="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl border-2 border-red-50">
-            <h3 className="text-xl font-black text-gray-900 mb-2 text-center">Exit Exam?</h3>
-            <p className="text-gray-500 text-center mb-8 font-medium">Your progress will not be saved.</p>
+            <h3 className="text-xl font-black text-neutral-900 mb-2 text-center">Exit Exam?</h3>
+            <p className="text-neutral-500 text-center mb-8 font-medium">Your progress will not be saved.</p>
             <div className="flex gap-3">
-              <button onClick={() => modals.setShowExit(false)} className="flex-1 py-3 bg-gray-100 text-gray-600 rounded-xl font-bold hover:bg-gray-200 transition-colors">Cancel</button>
+              <button onClick={() => modals.setShowExit(false)} className="flex-1 py-3 bg-neutral-100 text-neutral-600 rounded-xl font-bold hover:bg-neutral-200 transition-colors">Cancel</button>
               <button onClick={onExit} className="flex-1 py-3 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 transition-colors">Yes, Exit</button>
             </div>
           </div>
@@ -82,15 +82,15 @@ export function ExamSessionUI({
       {modals.showSummary && (
         <div className="fixed inset-0 z-[210] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           <div className="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl">
-            <h3 className="text-xl font-black text-gray-900 mb-4">Exam Summary</h3>
+            <h3 className="text-xl font-black text-neutral-900 mb-4">Exam Summary</h3>
             <div className="space-y-3 mb-8">
-              <div className="flex justify-between items-center p-3 bg-gray-50 rounded-xl">
-                <span className="text-gray-600 font-bold">Total Questions</span>
-                <span className="font-black text-gray-800">{questions.length}</span>
+              <div className="flex justify-between items-center p-3 bg-neutral-100 rounded-xl">
+                <span className="text-neutral-600 font-bold">Total Questions</span>
+                <span className="font-black text-neutral-800">{questions.length}</span>
               </div>
-              <div className="flex justify-between items-center p-3 bg-emerald-50 rounded-xl">
-                <span className="text-emerald-700 font-bold">Answered</span>
-                <span className="font-black text-emerald-800">{answeredCount}</span>
+              <div className="flex justify-between items-center p-3 bg-green-50 rounded-xl">
+                <span className="text-green-700 font-bold">Answered</span>
+                <span className="font-black text-green-800">{answeredCount}</span>
               </div>
               <div className="flex justify-between items-center p-3 bg-amber-50 rounded-xl">
                 <span className="text-amber-700 font-bold">Unanswered</span>
@@ -103,8 +103,8 @@ export function ExamSessionUI({
               </p>
             )}
             <div className="flex gap-3">
-              <button onClick={() => modals.setShowSummary(false)} className="flex-1 py-3 bg-gray-100 text-gray-600 rounded-xl font-bold hover:bg-gray-200 transition-colors">Keep Going</button>
-              <button onClick={() => { modals.setShowSummary(false); modals.setShowConfirm(true); }} className="flex-1 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-colors">Submit</button>
+              <button onClick={() => modals.setShowSummary(false)} className="flex-1 py-3 bg-neutral-100 text-neutral-600 rounded-xl font-bold hover:bg-neutral-200 transition-colors">Keep Going</button>
+              <button onClick={() => { modals.setShowSummary(false); modals.setShowConfirm(true); }} className="flex-1 py-3 bg-brand-green text-white rounded-xl font-bold hover:bg-brand-green-dark transition-colors">Submit</button>
             </div>
           </div>
         </div>
@@ -113,17 +113,17 @@ export function ExamSessionUI({
       {/* Confirm Modal */}
       {modals.showConfirm && (
         <div className="fixed inset-0 z-[220] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl border-2 border-blue-100">
-            <h3 className="text-xl font-black text-gray-900 mb-2 text-center">Ready to Submit?</h3>
-            <p className="text-gray-500 text-center mb-8 font-medium">This action cannot be undone.</p>
+          <div className="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl border-2 border-green-100">
+            <h3 className="text-xl font-black text-neutral-900 mb-2 text-center">Ready to Submit?</h3>
+            <p className="text-neutral-500 text-center mb-8 font-medium">This action cannot be undone.</p>
             {submitError && (
               <div className="mb-6 p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm text-center font-medium">
                 {submitError}
               </div>
             )}
             <div className="flex gap-3">
-              <button onClick={() => modals.setShowConfirm(false)} className="flex-1 py-3 bg-gray-100 text-gray-600 rounded-xl font-bold hover:bg-gray-200 transition-colors" disabled={isSubmitting}>Cancel</button>
-              <button onClick={onSubmit} disabled={isSubmitting} className="flex-1 py-3 bg-gray-900 text-white rounded-xl font-bold hover:bg-black transition-colors disabled:opacity-50">
+              <button onClick={() => modals.setShowConfirm(false)} className="flex-1 py-3 bg-neutral-100 text-neutral-600 rounded-xl font-bold hover:bg-neutral-200 transition-colors" disabled={isSubmitting}>Cancel</button>
+              <button onClick={onSubmit} disabled={isSubmitting} className="flex-1 py-3 bg-neutral-900 text-white rounded-xl font-bold hover:bg-black transition-colors disabled:opacity-50">
                 {isSubmitting ? 'Submitting...' : submitError ? 'Retry' : 'Yes, Submit'}
               </button>
             </div>
@@ -143,7 +143,7 @@ export function ExamSessionUI({
       </button>
 
       {!isSidebarOpen && (
-        <button onClick={() => setIsSidebarOpen(true)} className="fixed top-6 left-6 z-50 p-3 bg-white shadow-xl rounded-xl text-gray-600">
+        <button onClick={() => setIsSidebarOpen(true)} className="fixed top-6 left-6 z-50 p-3 bg-white shadow-xl rounded-xl text-neutral-600">
           <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
           </svg>
@@ -152,7 +152,7 @@ export function ExamSessionUI({
 
       {/* Mobile overlay */}
       {isSidebarOpen && (
-        <div className="fixed inset-0 bg-slate-900/40 z-[140] md:hidden backdrop-blur-sm" onClick={() => setIsSidebarOpen(false)} />
+        <div className="fixed inset-0 bg-neutral-900/40 z-[140] md:hidden backdrop-blur-sm" onClick={() => setIsSidebarOpen(false)} />
       )}
 
       {/* Sidebar */}

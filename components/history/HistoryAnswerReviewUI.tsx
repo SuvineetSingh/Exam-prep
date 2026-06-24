@@ -2,8 +2,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { Footer } from '@/components/layout/Footer';
-import { Header } from '@/components/layout/Header';
 import { createClient } from '@/lib/supabase/client';
 import { toggleStar, isQuestionStarred } from '@/lib/supabase/queries/starredQueries';
 import type { User } from '@supabase/supabase-js';
@@ -31,26 +29,26 @@ interface HistoryAnswerReviewUIProps {
 
 // --- Helpers ---
 const EXAM_COLORS: Record<string, string> = {
-  CMA: 'bg-blue-600',
+  CMA: 'bg-amber-600',
   CFA: 'bg-violet-600',
   FE:  'bg-teal-600',
 };
 
 const MODE_STYLE: Record<string, string> = {
-  practice: 'bg-purple-50 text-purple-700 border-purple-200',
-  timed:    'bg-yellow-50 text-yellow-700 border-yellow-200',
+  practice: 'mode-badge-practice',
+  timed:    'mode-badge-timed',
 };
 
 function getScoreColor(pct: number | null): string {
-  if (pct == null) return 'text-gray-400';
-  if (pct >= 75) return 'text-emerald-600';
-  if (pct >= 50) return 'text-amber-600';
-  return 'text-red-500';
+  if (pct == null) return 'text-neutral-400';
+  if (pct >= 75) return 'score-high';
+  if (pct >= 50) return 'score-mid';
+  return 'score-low';
 }
 
 function getScoreBg(pct: number | null): string {
-  if (pct == null) return 'bg-gray-50 border-gray-200';
-  if (pct >= 75) return 'bg-emerald-50 border-emerald-200';
+  if (pct == null) return 'bg-neutral-100 border-neutral-200';
+  if (pct >= 75) return 'bg-green-50 border-green-200';
   if (pct >= 50) return 'bg-amber-50 border-amber-200';
   return 'bg-red-50 border-red-200';
 }
@@ -60,27 +58,27 @@ function ReviewSummary({ summary }: { summary: HistoryAnswerReviewUIProps['summa
   const pct = summary?.percentage ?? null;
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-6">
+    <div className="card p-5 sm:p-6 mb-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div className="flex items-center gap-4">
-          <div className={`w-14 h-14 rounded-xl ${EXAM_COLORS[summary?.exam_type] ?? 'bg-gray-500'} text-white flex items-center justify-center font-black text-base shadow`}>
+          <div className={`w-14 h-14 rounded-xl ${EXAM_COLORS[summary?.exam_type] ?? 'bg-neutral-500'} text-white flex items-center justify-center font-black text-base shadow flex-shrink-0`}>
             {summary?.exam_type}
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">{summary?.exam_type} Exam Review</h1>
-            <p className="text-sm text-gray-400">{summary?.dateFormatted}</p>
+            <h1 className="text-xl sm:text-2xl font-bold text-neutral-900">{summary?.exam_type} Exam Review</h1>
+            <p className="text-sm text-neutral-400">{summary?.dateFormatted}</p>
           </div>
         </div>
-        <div className="flex items-center gap-3 print:hidden">
+        <div className="flex items-center gap-3 print:hidden flex-wrap">
           {summary?.mode && (
-            <span className={`text-[10px] font-black uppercase px-2.5 py-1 rounded-lg border ${MODE_STYLE[summary.mode] ?? ''}`}>
+            <span className={MODE_STYLE[summary.mode] ?? ''}>
               {summary.mode === 'timed' ? '⏱ Timed' : '📝 Practice'}
             </span>
           )}
           <button
             onClick={() => window.print()}
             title="Print this session"
-            className="flex items-center gap-1.5 text-sm font-bold text-gray-500 hover:text-blue-600 transition-colors"
+            className="flex items-center gap-1.5 text-sm font-bold text-neutral-500 hover:text-brand-green transition-colors"
           >
             <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
@@ -89,7 +87,7 @@ function ReviewSummary({ summary }: { summary: HistoryAnswerReviewUIProps['summa
           </button>
           <Link
             href="/history"
-            className="flex items-center gap-1.5 text-sm font-bold text-gray-500 hover:text-blue-600 transition-colors"
+            className="flex items-center gap-1.5 text-sm font-bold text-neutral-500 hover:text-brand-green transition-colors"
           >
             <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
@@ -99,24 +97,24 @@ function ReviewSummary({ summary }: { summary: HistoryAnswerReviewUIProps['summa
         </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
         <div className={`rounded-xl border p-4 text-center ${getScoreBg(pct)}`}>
-          <p className="text-[10px] font-bold uppercase text-gray-400 tracking-wide mb-1">Score</p>
+          <p className="text-[10px] font-bold uppercase text-neutral-400 tracking-wide mb-1">Score</p>
           <p className={`text-3xl font-black ${getScoreColor(pct)}`}>{pct != null ? `${pct}%` : '—'}</p>
           {summary?.score != null && (
-            <p className="text-xs text-gray-400 mt-0.5">{summary.score} / {summary.total_questions}</p>
+            <p className="text-xs text-neutral-400 mt-0.5">{summary.score} / {summary.total_questions}</p>
           )}
         </div>
-        <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-center">
-          <p className="text-[10px] font-bold uppercase text-emerald-600 tracking-wide mb-1">Correct</p>
-          <p className="text-3xl font-black text-emerald-700">{summary?.score ?? 0}</p>
+        <div className="rounded-xl border border-green-200 bg-green-50 p-4 text-center">
+          <p className="text-[10px] font-bold uppercase text-brand-green tracking-wide mb-1">Correct</p>
+          <p className="text-3xl font-black text-green-700">{summary?.score ?? 0}</p>
         </div>
         <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-center">
           <p className="text-[10px] font-bold uppercase text-amber-600 tracking-wide mb-1">Unanswered</p>
           <p className="text-3xl font-black text-amber-700">{summary?.unanswered_count ?? 0}</p>
         </div>
         <div className="rounded-xl border border-blue-200 bg-blue-50 p-4 text-center">
-          <p className="text-[10px] font-bold uppercase text-blue-600 tracking-wide mb-1">Time Taken</p>
+          <p className="text-[10px] font-bold uppercase text-brand-blue tracking-wide mb-1">Time Taken</p>
           <p className="text-2xl font-black text-blue-800 leading-tight">{summary?.timeFormatted ?? '—'}</p>
         </div>
       </div>
@@ -133,25 +131,25 @@ function ReviewFilters({ active, setActive, counts }: {
   counts: Record<ReviewFilter, number>;
 }) {
   const tabs: { key: ReviewFilter; label: string; color: string }[] = [
-    { key: 'all',        label: 'All',        color: 'bg-blue-600' },
-    { key: 'correct',    label: 'Correct',    color: 'bg-emerald-600' },
-    { key: 'incorrect',  label: 'Incorrect',  color: 'bg-red-500' },
-    { key: 'unanswered', label: 'Unanswered', color: 'bg-amber-500' },
+    { key: 'all',        label: 'All',        color: 'bg-brand-green' },
+    { key: 'correct',    label: 'Correct',    color: 'bg-brand-green' },
+    { key: 'incorrect',  label: 'Incorrect',  color: 'bg-brand-coral' },
+    { key: 'unanswered', label: 'Unanswered', color: 'bg-brand-amber' },
   ];
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 flex flex-wrap gap-2 mb-6">
+    <div className="card p-4 flex flex-wrap gap-2 mb-6">
       {tabs.map(({ key, label, color }) => (
         <button
           key={key}
           onClick={() => setActive(key)}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-            active === key ? `${color} text-white shadow` : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+          className={`flex items-center gap-2 px-4 py-2 rounded-btn text-xs font-bold transition-all ${
+            active === key ? `${color} text-white shadow` : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'
           }`}
         >
           {label}
           <span className={`px-1.5 py-0.5 rounded-md text-[10px] font-black ${
-            active === key ? 'bg-white/20 text-white' : 'bg-gray-200 text-gray-600'
+            active === key ? 'bg-white/20 text-white' : 'bg-neutral-200 text-neutral-600'
           }`}>
             {counts[key]}
           </span>
@@ -197,38 +195,38 @@ function QuestionCard({ question, index, userId }: { question: ReviewQuestion; i
   const isUnanswered = selectedKey === 'unattempted' || selectedKey === '';
 
   const statusColor = isCorrect
-    ? 'border-emerald-200 bg-emerald-50/40'
+    ? 'border-green-200 bg-green-50/40'
     : isUnanswered
-    ? 'border-gray-200 bg-gray-50/40'
+    ? 'border-neutral-200 bg-neutral-100/40'
     : 'border-red-200 bg-red-50/40';
 
   const iconStyle = isCorrect
-    ? 'bg-emerald-100 text-emerald-600'
+    ? 'bg-green-100 text-brand-green'
     : isUnanswered
-    ? 'bg-gray-100 text-gray-400'
-    : 'bg-red-100 text-red-500';
+    ? 'bg-neutral-100 text-neutral-400'
+    : 'bg-red-100 text-brand-coral';
 
   const statusLabel = isCorrect ? 'Correct' : isUnanswered ? 'Unanswered' : 'Incorrect';
-  const statusTextColor = isCorrect ? 'text-emerald-600' : isUnanswered ? 'text-gray-400' : 'text-red-500';
+  const statusTextColor = isCorrect ? 'text-brand-green' : isUnanswered ? 'text-neutral-400' : 'text-brand-coral';
 
   return (
-    <div className={`rounded-2xl border ${statusColor} overflow-hidden transition-all`}>
+    <div className={`rounded-card border ${statusColor} overflow-hidden transition-all`}>
       <button
         onClick={() => setExpanded(v => !v)}
-        className="w-full p-5 flex items-center justify-between text-left hover:bg-white/60 transition-colors"
+        className="w-full p-4 sm:p-5 flex items-center justify-between text-left hover:bg-white/60 transition-colors"
       >
         <div className="flex items-center gap-4">
           <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-base flex-shrink-0 ${iconStyle}`}>
             {isCorrect ? '✓' : isUnanswered ? '?' : '✕'}
           </div>
           <div>
-            <p className="font-bold text-gray-900 text-sm">Question {index + 1}</p>
+            <p className="font-bold text-neutral-900 text-sm">Question {index + 1}</p>
             <p className={`text-[10px] font-black uppercase tracking-wide ${statusTextColor}`}>{statusLabel}</p>
           </div>
         </div>
 
         {!expanded && (
-          <p className="hidden md:block flex-1 mx-6 text-sm text-gray-500 truncate text-left">
+          <p className="hidden md:block flex-1 mx-6 text-sm text-neutral-500 truncate text-left">
             {question.question_text}
           </p>
         )}
@@ -240,7 +238,7 @@ function QuestionCard({ question, index, userId }: { question: ReviewQuestion; i
               disabled={starLoading}
               title={starred ? 'Unstar question' : 'Star for later review'}
               className={`w-7 h-7 flex items-center justify-center rounded-full transition-all ${
-                starred ? 'text-amber-400 hover:text-amber-500' : 'text-gray-200 hover:text-amber-400'
+                starred ? 'text-amber-400 hover:text-amber-500' : 'text-neutral-200 hover:text-amber-400'
               }`}
             >
               <svg className="w-4.5 h-4.5" viewBox="0 0 24 24" fill={starred ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={2}>
@@ -250,7 +248,7 @@ function QuestionCard({ question, index, userId }: { question: ReviewQuestion; i
           )}
           <svg
             width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}
-            className={`text-gray-300 transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`}
+            className={`text-neutral-300 transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`}
           >
             <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
           </svg>
@@ -258,8 +256,8 @@ function QuestionCard({ question, index, userId }: { question: ReviewQuestion; i
       </button>
 
       {expanded && (
-        <div className="px-6 pb-6 bg-white border-t border-gray-100">
-          <p className="text-gray-800 font-semibold text-base leading-relaxed py-5">
+        <div className="px-4 sm:px-6 pb-6 bg-white border-t border-neutral-100">
+          <p className="text-neutral-800 font-semibold text-base leading-relaxed py-5">
             {question.question_text}
           </p>
 
@@ -270,15 +268,15 @@ function QuestionCard({ question, index, userId }: { question: ReviewQuestion; i
               const isThisCorrect  = l === correctKey;
               const isThisSelected = l === selectedKey && !isUnanswered;
 
-              let style = 'border-gray-200 bg-gray-50 text-gray-500';
-              let badgeStyle = 'bg-white border border-gray-200 text-gray-400';
+              let style = 'border-neutral-200 bg-neutral-100 text-neutral-500';
+              let badgeStyle = 'bg-white border border-neutral-200 text-neutral-400';
 
               if (isThisCorrect) {
-                style = 'border-emerald-400 bg-emerald-50 text-emerald-800 ring-1 ring-emerald-400';
-                badgeStyle = 'bg-emerald-500 text-white';
+                style = 'border-brand-green bg-green-50 text-green-800 ring-1 ring-brand-green';
+                badgeStyle = 'bg-brand-green text-white';
               } else if (isThisSelected) {
-                style = 'border-red-400 bg-red-50 text-red-800 ring-1 ring-red-400';
-                badgeStyle = 'bg-red-500 text-white';
+                style = 'border-brand-coral bg-red-50 text-red-800 ring-1 ring-brand-coral';
+                badgeStyle = 'bg-brand-coral text-white';
               }
 
               return (
@@ -288,10 +286,10 @@ function QuestionCard({ question, index, userId }: { question: ReviewQuestion; i
                   </span>
                   <span className="font-medium text-sm">{optText}</span>
                   {isThisCorrect && (
-                    <span className="ml-auto text-[10px] font-black uppercase text-emerald-600 tracking-wide">Correct Answer</span>
+                    <span className="ml-auto text-[10px] font-black uppercase text-brand-green tracking-wide">Correct Answer</span>
                   )}
                   {isThisSelected && !isCorrect && (
-                    <span className="ml-auto text-[10px] font-black uppercase text-red-500 tracking-wide">Your Answer</span>
+                    <span className="ml-auto text-[10px] font-black uppercase text-brand-coral tracking-wide">Your Answer</span>
                   )}
                 </div>
               );
@@ -299,9 +297,9 @@ function QuestionCard({ question, index, userId }: { question: ReviewQuestion; i
           </div>
 
           {question.explanation && (
-            <div className={`p-4 rounded-xl border-l-4 ${isCorrect ? 'bg-emerald-50 border-emerald-400' : 'bg-blue-50 border-blue-400'}`}>
-              <p className="text-[10px] font-black uppercase tracking-wide text-gray-500 mb-1.5">Explanation</p>
-              <p className="text-sm text-gray-700 leading-relaxed">{question.explanation}</p>
+            <div className={`p-4 rounded-xl border-l-4 ${isCorrect ? 'bg-green-50 border-brand-green' : 'bg-blue-50 border-brand-blue'}`}>
+              <p className="text-[10px] font-black uppercase tracking-wide text-neutral-500 mb-1.5">Explanation</p>
+              <p className="text-sm text-neutral-700 leading-relaxed">{question.explanation}</p>
             </div>
           )}
         </div>
@@ -347,21 +345,18 @@ export function HistoryAnswerReviewUI({ questions, summary, user }: HistoryAnswe
   });
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen bg-neutral-100 py-8 sm:py-12 px-4">
       {/* Print styles: hide chrome, expand all cards */}
       <style>{`
         @media print {
           .print\\:hidden { display: none !important; }
-          header, footer, nav { display: none !important; }
           body { background: white; }
-          .rounded-2xl { border-radius: 8px; }
-          .shadow-sm { box-shadow: none; }
+          .rounded-card { border-radius: 8px; }
+          .shadow-card { box-shadow: none; }
         }
       `}</style>
 
-      {user && <Header user={user} />}
-
-      <main className="flex-1 max-w-4xl mx-auto w-full px-4 py-8 pt-24">
+      <main className="max-w-4xl mx-auto w-full">
         <ReviewSummary summary={summary} />
         <ReviewFilters active={filter} setActive={setFilter} counts={counts} />
 
@@ -372,14 +367,12 @@ export function HistoryAnswerReviewUI({ questions, summary, user }: HistoryAnswe
             ))}
           </div>
         ) : (
-          <div className="text-center py-16 bg-white rounded-2xl border-2 border-dashed border-gray-200">
+          <div className="text-center py-16 card border-2 border-dashed border-neutral-200">
             <p className="text-4xl mb-3">🔍</p>
-            <p className="text-gray-500 font-medium">No questions in this category.</p>
+            <p className="text-neutral-500 font-medium">No questions in this category.</p>
           </div>
         )}
       </main>
-
-      <Footer />
     </div>
   );
 }

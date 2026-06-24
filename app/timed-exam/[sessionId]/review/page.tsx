@@ -72,7 +72,7 @@ export default function ReviewPage({ params }: { params: Promise<{ sessionId: st
   }, [sessionId]);
 
   if (loading) return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 font-black text-blue-600 uppercase tracking-widest">
+    <div className="min-h-screen flex items-center justify-center bg-neutral-100 font-black text-brand-green uppercase tracking-widest">
       Loading Review Data...
     </div>
   );

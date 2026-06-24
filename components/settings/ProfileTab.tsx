@@ -164,40 +164,40 @@ export function ProfileTab({ userId, userProfile, onUpdate, authProvider }: Prof
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-8">
-      <h2 className="text-2xl font-bold text-gray-900 mb-6">Profile Settings</h2>
+    <div className="card p-5 sm:p-8">
+      <h2 className="text-2xl font-bold text-neutral-900 mb-6">Profile Settings</h2>
 
       <div className="space-y-5">
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-1 ml-1">
+          <label className="block text-sm font-semibold text-neutral-700 mb-1 ml-1">
             Username *
           </label>
           <input
             type="text"
             value={formData.username}
             onChange={(e) => handleChange('username', e.target.value)}
-            className="w-full border border-gray-200 rounded-xl p-4 bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+            className="input py-4"
             placeholder="johndoe123"
             disabled={saving}
           />
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-1 ml-1">
+          <label className="block text-sm font-semibold text-neutral-700 mb-1 ml-1">
             Full Name
           </label>
           <input
             type="text"
             value={formData.full_name || ''}
             onChange={(e) => handleChange('full_name', e.target.value || null)}
-            className="w-full border border-gray-200 rounded-xl p-4 bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+            className="input py-4"
             placeholder="John Doe"
             disabled={saving}
           />
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-1 ml-1">
+          <label className="block text-sm font-semibold text-neutral-700 mb-1 ml-1">
             Profile Picture
           </label>
 
@@ -207,25 +207,25 @@ export function ProfileTab({ userId, userProfile, onUpdate, authProvider }: Prof
                 <img
                   src={previewUrl}
                   alt="Avatar preview"
-                  className="w-24 h-24 rounded-full object-cover border-2 border-gray-200"
+                  className="w-24 h-24 rounded-full object-cover border-2 border-neutral-200"
                 />
               </div>
             )}
 
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               <input
                 type="file"
                 accept="image/*"
                 onChange={handleFileUpload}
                 disabled={saving || uploading}
-                className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 disabled:opacity-50"
+                className="block w-full text-sm text-neutral-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-brand-green hover:file:bg-green-100 disabled:opacity-50"
               />
-              <p className="text-xs text-gray-500 mt-2">
+              <p className="text-xs text-neutral-500 mt-2">
                 JPG, PNG or GIF. Max size 5MB.
               </p>
               {uploading && (
-                <p className="text-xs text-blue-600 mt-2 flex items-center gap-2">
-                  <div className="w-3 h-3 border-2 border-blue-600/30 border-t-blue-600 rounded-full animate-spin" />
+                <p className="text-xs text-brand-green mt-2 flex items-center gap-2">
+                  <div className="w-3 h-3 border-2 border-brand-green/30 border-t-brand-green rounded-full animate-spin" />
                   Uploading...
                 </p>
               )}
@@ -234,13 +234,13 @@ export function ProfileTab({ userId, userProfile, onUpdate, authProvider }: Prof
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-1 ml-1">
+          <label className="block text-sm font-semibold text-neutral-700 mb-1 ml-1">
             Exam Type
           </label>
           <select
             value={formData.exam_type || ''}
             onChange={(e) => handleChange('exam_type', e.target.value || null)}
-            className="w-full border border-gray-200 rounded-xl p-4 bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all cursor-pointer"
+            className="input py-4 cursor-pointer"
             disabled={saving}
           >
             <option value="">Select exam type</option>
@@ -251,7 +251,7 @@ export function ProfileTab({ userId, userProfile, onUpdate, authProvider }: Prof
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-1 ml-1">
+          <label className="block text-sm font-semibold text-neutral-700 mb-1 ml-1">
             Bio
           </label>
           <textarea
@@ -259,11 +259,11 @@ export function ProfileTab({ userId, userProfile, onUpdate, authProvider }: Prof
             onChange={(e) => handleChange('bio', e.target.value || null)}
             rows={4}
             maxLength={500}
-            className="w-full border border-gray-200 rounded-xl p-4 bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all resize-none"
+            className="input py-4 resize-none"
             placeholder="Tell us about yourself..."
             disabled={saving}
           />
-          <p className="text-xs text-gray-500 mt-1 ml-1">
+          <p className="text-xs text-neutral-500 mt-1 ml-1">
             {formData.bio?.length || 0}/500 characters
           </p>
         </div>
@@ -274,12 +274,12 @@ export function ProfileTab({ userId, userProfile, onUpdate, authProvider }: Prof
           </div>
         )}
 
-        <div className="flex justify-end gap-3 pt-4">
+        <div className="flex justify-end gap-3 pt-4 flex-wrap">
           <button
             type="button"
             onClick={handleCancel}
             disabled={saving}
-            className="bg-gray-200 text-gray-700 py-3 px-6 rounded-xl font-bold hover:bg-gray-300 transition-all disabled:opacity-50"
+            className="btn-secondary py-3 px-6"
           >
             Cancel
           </button>
@@ -287,7 +287,7 @@ export function ProfileTab({ userId, userProfile, onUpdate, authProvider }: Prof
             type="button"
             onClick={handleSave}
             disabled={saving}
-            className="bg-blue-600 text-white py-3 px-6 rounded-xl font-bold hover:bg-blue-700 transition-all shadow-md active:scale-95 disabled:opacity-50 flex items-center gap-2"
+            className="btn-primary py-3 px-6 disabled:opacity-50"
           >
             {saving ? (
               <>
@@ -308,11 +308,11 @@ export function ProfileTab({ userId, userProfile, onUpdate, authProvider }: Prof
       />
 
       {authProvider !== 'google' && (
-        <div className="mt-8 pt-8 border-t border-gray-100">
-          <h3 className="text-lg font-bold text-gray-900 mb-4">Change Password</h3>
+        <div className="mt-8 pt-8 border-t border-neutral-100">
+          <h3 className="text-lg font-bold text-neutral-900 mb-4">Change Password</h3>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1 ml-1">
+              <label className="block text-sm font-semibold text-neutral-700 mb-1 ml-1">
                 New password
               </label>
               <input
@@ -321,11 +321,11 @@ export function ProfileTab({ userId, userProfile, onUpdate, authProvider }: Prof
                 onChange={(e) => setPwNew(e.target.value)}
                 placeholder="At least 8 characters"
                 disabled={pwSaving}
-                className="w-full border border-gray-200 rounded-xl p-4 bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                className="input py-4"
               />
             </div>
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1 ml-1">
+              <label className="block text-sm font-semibold text-neutral-700 mb-1 ml-1">
                 Confirm new password
               </label>
               <input
@@ -334,7 +334,7 @@ export function ProfileTab({ userId, userProfile, onUpdate, authProvider }: Prof
                 onChange={(e) => setPwConfirm(e.target.value)}
                 placeholder="••••••••"
                 disabled={pwSaving}
-                className="w-full border border-gray-200 rounded-xl p-4 bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                className="input py-4"
               />
             </div>
 
@@ -349,7 +349,7 @@ export function ProfileTab({ userId, userProfile, onUpdate, authProvider }: Prof
                 type="button"
                 onClick={handlePasswordChange}
                 disabled={pwSaving || !pwNew}
-                className="bg-blue-600 text-white py-3 px-6 rounded-xl font-bold hover:bg-blue-700 transition-all shadow-md active:scale-95 disabled:opacity-50 flex items-center gap-2"
+                className="btn-primary py-3 px-6 disabled:opacity-50"
               >
                 {pwSaving ? (
                   <>

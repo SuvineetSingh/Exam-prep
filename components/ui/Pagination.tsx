@@ -58,10 +58,10 @@ export function Pagination({
   const pageNumbers = getPageNumbers();
 
   return (
-    <div className="bg-white border-t border-gray-200 px-4 py-4 sm:px-6">
+    <div className="bg-white border-t border-neutral-200 px-4 py-4 sm:px-6">
       <div className="flex flex-col sm:flex-row items-center justify-between space-y-3 sm:space-y-0">
         {/* Info Text */}
-        <div className="text-sm text-gray-700">
+        <div className="text-sm text-neutral-700">
           Showing {startItem}-{endItem} of {totalItems} questions
         </div>
 
@@ -71,7 +71,7 @@ export function Pagination({
           <button
             onClick={() => onPageChange(currentPage - 1)}
             disabled={currentPage === 1}
-            className="relative inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white transition-colors"
+            className="relative inline-flex items-center px-3 py-2 text-sm font-medium text-neutral-700 bg-white border border-neutral-300 rounded-md hover:bg-neutral-100 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white transition-colors"
           >
             <svg
               className="w-4 h-4"
@@ -96,7 +96,7 @@ export function Pagination({
                 return (
                   <span
                     key={`ellipsis-${index}`}
-                    className="px-3 py-2 text-gray-500"
+                    className="px-3 py-2 text-neutral-500"
                   >
                     ...
                   </span>
@@ -112,8 +112,8 @@ export function Pagination({
                   onClick={() => onPageChange(pageNum)}
                   className={`relative inline-flex items-center px-4 py-2 text-sm font-medium rounded-md transition-colors ${
                     isActive
-                      ? 'bg-primary-600 text-white hover:bg-primary-700'
-                      : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
+                      ? 'bg-brand-green text-white hover:bg-brand-green-dark'
+                      : 'text-neutral-700 bg-white border border-neutral-300 hover:bg-neutral-100'
                   }`}
                 >
                   {pageNum}
@@ -123,7 +123,7 @@ export function Pagination({
           </div>
 
           {/* Mobile: Just show current page */}
-          <div className="sm:hidden px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md">
+          <div className="sm:hidden px-4 py-2 text-sm font-medium text-neutral-700 bg-white border border-neutral-300 rounded-md">
             Page {currentPage} of {totalPages}
           </div>
 
@@ -131,7 +131,7 @@ export function Pagination({
           <button
             onClick={() => onPageChange(currentPage + 1)}
             disabled={currentPage === totalPages}
-            className="relative inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white transition-colors"
+            className="relative inline-flex items-center px-3 py-2 text-sm font-medium text-neutral-700 bg-white border border-neutral-300 rounded-md hover:bg-neutral-100 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white transition-colors"
           >
             <span className="mr-1 hidden sm:inline">Next</span>
             <svg

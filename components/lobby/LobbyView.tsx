@@ -219,17 +219,17 @@ export function LobbyView({ rooms, currentUser, userProfile }: LobbyViewProps) {
   const showActiveChat = mobileTab === 'chat' && chatView === 'active';
 
   return (
-    <div className="h-[calc(100vh-4rem)] flex flex-col">
+    <div className="h-[calc(100vh-5rem)] md:h-screen flex flex-col">
       {/* Mobile tab bar */}
-      <div className="md:hidden flex border-b border-gray-200 bg-white">
+      <div className="md:hidden flex border-b border-neutral-200 bg-white">
         {(['rooms', 'chat', 'people'] as const).map((tab) => (
           <button
             key={tab}
             onClick={() => setMobileTab(tab)}
             className={`flex-1 py-3 text-sm font-medium text-center capitalize transition-colors ${
               mobileTab === tab
-                ? 'text-primary-600 border-b-2 border-primary-600'
-                : 'text-gray-500 hover:text-gray-700'
+                ? 'text-brand-green border-b-2 border-brand-green'
+                : 'text-neutral-500 hover:text-neutral-700'
             }`}
           >
             {tab === 'chat' ? 'Chats' : tab}
@@ -241,7 +241,7 @@ export function LobbyView({ rooms, currentUser, userProfile }: LobbyViewProps) {
 
         {/* Left: Rooms sidebar */}
         <aside
-          className={`border-r border-gray-200 overflow-y-auto bg-white ${
+          className={`border-r border-neutral-200 overflow-y-auto bg-white ${
             mobileTab === 'rooms' ? 'block' : 'hidden md:block'
           }`}
         >
@@ -287,7 +287,7 @@ export function LobbyView({ rooms, currentUser, userProfile }: LobbyViewProps) {
 
         {/* Right: People sidebar */}
         <aside
-          className={`border-l border-gray-200 overflow-y-auto bg-white ${
+          className={`border-l border-neutral-200 overflow-y-auto bg-white ${
             mobileTab === 'people' ? 'block' : 'hidden md:block'
           }`}
         >

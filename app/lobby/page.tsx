@@ -43,8 +43,8 @@ export default function LobbyPage() {
 
   if (loading || !user) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <p className="text-gray-600">Loading chat rooms...</p>
+      <div className="min-h-screen bg-neutral-100 flex items-center justify-center">
+        <p className="text-neutral-600">Loading chat rooms...</p>
       </div>
     );
   }
@@ -60,7 +60,7 @@ export default function LobbyPage() {
     <div className="min-h-screen bg-neutral-100">
       <Sidebar user={user} />
       <MobileTabBar />
-      <div style={{ marginLeft: 'var(--sidebar-width)' }} className="min-h-screen">
+      <div className="h-screen md:ml-sidebar overflow-hidden">
         <LobbyView
           rooms={rooms}
           currentUser={currentUser}

@@ -23,27 +23,25 @@ export function ExamSetupForm({
 }: ExamSetupFormProps) {
   return (
     <div className="max-w-md w-full">
-      <div className="bg-white rounded-3xl shadow-xl border border-gray-100 p-8 shadow-gray-200/50">
+      <div className="card p-6 sm:p-8">
         <div>
-          <h2 className="text-2xl font-black text-gray-900 mb-2">Exam Setup</h2>
-          <p className="text-gray-500 mb-8">Configure your simulated exam environment.</p>
+          <h2 className="text-2xl font-black text-neutral-900 mb-2">Exam Setup</h2>
+          <p className="text-neutral-500 mb-8">Configure your simulated exam environment.</p>
         </div>
 
         <div className="space-y-8">
           {/* Exam Type Selection */}
           <div>
-            <label className="block text-xs font-bold uppercase text-gray-400 mb-2 font-black">
+            <label className="block text-xs font-bold uppercase text-neutral-400 mb-2">
               Exam Type
             </label>
             {fetchingFilters ? (
-              <div className="w-full p-3 rounded-xl border border-gray-100 bg-gray-50 animate-pulse text-gray-400 text-sm">
+              <div className="w-full p-3 rounded-xl border border-neutral-200 bg-neutral-100 animate-pulse text-neutral-400 text-sm">
                 Loading exams...
               </div>
             ) : (
               <select
-                className={`w-full p-4 rounded-xl border-2 ${
-                  error ? 'border-red-500 bg-red-50' : 'border-gray-50 bg-gray-50'
-                } font-bold text-gray-700 focus:border-blue-500 focus:bg-white outline-none transition-all cursor-pointer`}
+                className={`input py-4 font-bold ${error ? 'border-red-500 bg-red-50' : ''}`}
                 value={config.examType}
                 onChange={(e) => setConfig({ ...config, examType: e.target.value })}
               >
@@ -56,7 +54,7 @@ export function ExamSetupForm({
               </select>
             )}
             {error && (
-              <p className="text-red-500 text-xs mt-2 font-bold ml-1 animate-bounce">
+              <p className="text-brand-coral text-xs mt-2 font-bold ml-1 animate-bounce">
                 {error}
               </p>
             )}
@@ -65,10 +63,10 @@ export function ExamSetupForm({
           {/* Question Count Slider */}
           <div>
             <div className="flex justify-between items-end mb-4">
-              <label className="block text-xs font-bold uppercase text-gray-400 font-black">
+              <label className="block text-xs font-bold uppercase text-neutral-400">
                 Number of Questions
               </label>
-              <span className="text-3xl font-black text-blue-600 leading-none">
+              <span className="text-3xl font-black text-brand-green leading-none">
                 {config.questionCount}
               </span>
             </div>
@@ -82,12 +80,12 @@ export function ExamSetupForm({
               onChange={(e) =>
                 setConfig({ ...config, questionCount: parseInt(e.target.value) })
               }
-              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600 hover:accent-blue-700 transition-all"
+              className="w-full h-2 bg-neutral-200 rounded-lg appearance-none cursor-pointer accent-brand-green transition-all"
             />
           </div>
 
           {/* Time Summary Box */}
-          <div className="bg-amber-50 border-2 border-amber-100 rounded-2xl p-5">
+          <div className="bg-amber-50 border-2 border-amber-100 rounded-card p-5">
             <div className="flex justify-between items-center">
               <span className="text-amber-800 font-bold text-sm uppercase tracking-tight">
                 Total Time:
@@ -103,7 +101,7 @@ export function ExamSetupForm({
           <button
             onClick={onStart}
             disabled={loading || fetchingFilters}
-            className="w-full bg-blue-600 text-white py-4 rounded-2xl font-black text-lg shadow-lg shadow-blue-200 hover:bg-blue-700 active:scale-[0.97] transition-all disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-wider"
+            className="btn-primary w-full py-4 text-lg disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-wider"
           >
             {loading ? 'Initializing...' : 'Start Exam'}
           </button>

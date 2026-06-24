@@ -113,9 +113,9 @@ export default function PracticeSetup() {
       <div className="absolute top-8 left-8">
         <Link
           href="/questions"
-          className="group flex items-center gap-2 text-gray-400 hover:text-blue-600 transition-all font-bold text-sm"
+          className="group flex items-center gap-2 text-neutral-400 hover:text-brand-green transition-all font-bold text-sm"
         >
-          <div className="w-8 h-8 rounded-full bg-white shadow-sm border border-gray-200 flex items-center justify-center group-hover:border-blue-200 group-hover:bg-blue-50 transition-all">
+          <div className="w-8 h-8 rounded-full bg-white shadow-sm border border-neutral-200 flex items-center justify-center group-hover:border-green-200 group-hover:bg-green-50 transition-all">
             ←
           </div>
           BACK
@@ -133,14 +133,14 @@ export default function PracticeSetup() {
         <div className="mb-6">
           <button
             onClick={() => { setStarredMode(v => !v); setExamError(false); }}
-            className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl border-2 transition-all ${
+            className={`w-full flex items-center justify-between px-4 py-3 rounded-card border-2 transition-all ${
               starredMode
                 ? 'border-amber-400 bg-amber-50 text-amber-700'
-                : 'border-gray-200 bg-gray-50 text-gray-500 hover:border-amber-200 hover:bg-amber-50/50'
+                : 'border-neutral-200 bg-neutral-100 text-neutral-500 hover:border-amber-200 hover:bg-amber-50/50'
             }`}
           >
             <div className="flex items-center gap-2.5">
-              <svg className={`w-5 h-5 ${starredMode ? 'text-amber-400' : 'text-gray-300'}`} viewBox="0 0 24 24" fill={starredMode ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={2}>
+              <svg className={`w-5 h-5 ${starredMode ? 'text-amber-400' : 'text-neutral-300'}`} viewBox="0 0 24 24" fill={starredMode ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
               </svg>
               <div className="text-left">
@@ -148,7 +148,7 @@ export default function PracticeSetup() {
                 <p className="text-xs opacity-60">{starredCount} question{starredCount !== 1 ? 's' : ''} starred</p>
               </div>
             </div>
-            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${starredMode ? 'border-amber-500 bg-amber-500' : 'border-gray-300'}`}>
+            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${starredMode ? 'border-amber-500 bg-amber-500' : 'border-neutral-300'}`}>
               {starredMode && <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
             </div>
           </button>
@@ -161,7 +161,7 @@ export default function PracticeSetup() {
           <button
             onClick={handleStart}
             disabled={loading || starredCount === 0}
-            className="w-full py-4 bg-amber-500 hover:bg-amber-600 disabled:opacity-40 text-white font-bold rounded-2xl transition-all"
+            className="w-full py-4 bg-brand-amber hover:bg-orange-500 disabled:opacity-40 text-white font-bold rounded-card transition-all"
           >
             {loading ? 'Starting…' : `Practice ${starredCount} Starred Question${starredCount !== 1 ? 's' : ''} →`}
           </button>

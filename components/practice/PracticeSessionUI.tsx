@@ -61,7 +61,7 @@ function SidePanel({
     <>
       {open && (
         <div
-          className="fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-sm"
+          className="fixed inset-0 z-40 bg-neutral-900/40 backdrop-blur-sm"
           onClick={onClose}
         />
       )}
@@ -71,36 +71,36 @@ function SidePanel({
           open ? 'translate-x-0' : 'translate-x-full'
         }`}
       >
-        <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100">
-          <h2 className="text-base font-black text-slate-900 tracking-tight uppercase">
+        <div className="flex items-center justify-between px-6 py-5 border-b border-neutral-100">
+          <h2 className="text-base font-black text-neutral-900 tracking-tight uppercase">
             Session Stats
           </h2>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-slate-200 transition-colors"
+            className="w-8 h-8 rounded-full bg-neutral-100 flex items-center justify-center text-neutral-500 hover:bg-neutral-200 transition-colors"
           >
             ✕
           </button>
         </div>
 
-        <div className="grid grid-cols-3 gap-3 px-6 py-5 border-b border-slate-100">
+        <div className="grid grid-cols-3 gap-3 px-6 py-5 border-b border-neutral-100">
           <div className="text-center">
-            <p className="text-2xl font-black text-slate-900">{attempted}</p>
-            <p className="text-[10px] font-bold uppercase text-slate-400 mt-0.5">Attempted</p>
+            <p className="text-2xl font-black text-neutral-900">{attempted}</p>
+            <p className="text-[10px] font-bold uppercase text-neutral-400 mt-0.5">Attempted</p>
           </div>
           <div className="text-center">
-            <p className="text-2xl font-black text-emerald-500">{correct}</p>
-            <p className="text-[10px] font-bold uppercase text-slate-400 mt-0.5">Correct</p>
+            <p className="text-2xl font-black text-green-500">{correct}</p>
+            <p className="text-[10px] font-bold uppercase text-neutral-400 mt-0.5">Correct</p>
           </div>
           <div className="text-center">
             <p className="text-2xl font-black text-red-500">{incorrect}</p>
-            <p className="text-[10px] font-bold uppercase text-slate-400 mt-0.5">Incorrect</p>
+            <p className="text-[10px] font-bold uppercase text-neutral-400 mt-0.5">Incorrect</p>
           </div>
         </div>
 
         <div className="flex-1 overflow-y-auto px-4 py-4 space-y-2">
           {log.length === 0 && (
-            <p className="text-center text-slate-400 text-sm mt-8">
+            <p className="text-center text-neutral-400 text-sm mt-8">
               No questions answered yet.
             </p>
           )}
@@ -109,29 +109,29 @@ function SidePanel({
               key={`${entry.questionId}-${idx}`}
               className={`rounded-2xl border p-3 ${
                 entry.isCorrect
-                  ? 'border-emerald-200 bg-emerald-50'
+                  ? 'border-green-200 bg-green-50'
                   : 'border-red-200 bg-red-50'
               }`}
             >
               <div className="flex items-start justify-between gap-2 mb-1">
-                <p className="text-xs font-bold text-slate-500">Q{idx + 1}</p>
+                <p className="text-xs font-bold text-neutral-500">Q{idx + 1}</p>
                 <span
                   className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
                     entry.isCorrect
-                      ? 'bg-emerald-100 text-emerald-700'
+                      ? 'bg-green-100 text-green-700'
                       : 'bg-red-100 text-red-700'
                   }`}
                 >
                   {entry.isCorrect ? '✓ Correct' : '✕ Wrong'}
                 </span>
               </div>
-              <p className="text-xs text-slate-600 line-clamp-2 mb-2 leading-relaxed">
+              <p className="text-xs text-neutral-600 line-clamp-2 mb-2 leading-relaxed">
                 {entry.questionText}
               </p>
-              <div className="flex items-center justify-between text-[10px] font-bold text-slate-400">
+              <div className="flex items-center justify-between text-[10px] font-bold text-neutral-400">
                 <span>
                   Answered:{' '}
-                  <span className="text-slate-600">{entry.selectedAnswer.toUpperCase()}</span>
+                  <span className="text-neutral-600">{entry.selectedAnswer.toUpperCase()}</span>
                 </span>
                 <span className="flex items-center gap-1">
                   <span>⏱</span>
@@ -142,16 +142,16 @@ function SidePanel({
           ))}
         </div>
 
-        <div className="px-6 py-5 border-t border-slate-100 space-y-2">
+        <div className="px-6 py-5 border-t border-neutral-100 space-y-2">
           <button
             onClick={onSaveAndEnd}
             disabled={saving}
-            className="w-full py-3.5 bg-slate-900 text-white rounded-2xl font-black text-sm uppercase tracking-wider hover:bg-emerald-600 transition-colors shadow-lg disabled:opacity-50"
+            className="w-full py-3.5 bg-neutral-900 text-white rounded-2xl font-black text-sm uppercase tracking-wider hover:bg-brand-green transition-colors shadow-lg disabled:opacity-50"
           >
             {saving ? 'Saving…' : log.length > 0 ? 'Save & End Session' : 'End Session'}
           </button>
           {log.length === 0 && (
-            <p className="text-center text-[11px] text-slate-400">
+            <p className="text-center text-[11px] text-neutral-400">
               No answers to save — session will be discarded.
             </p>
           )}
@@ -171,19 +171,19 @@ function ExitConfirmModal({
   onExit: () => void;
 }) {
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-neutral-900/60 backdrop-blur-sm">
       <div className="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl">
-        <h3 className="text-xl font-bold text-slate-900 mb-2">Exit Practice?</h3>
-        <p className="text-slate-500 mb-8 leading-relaxed">
+        <h3 className="text-xl font-bold text-neutral-900 mb-2">Exit Practice?</h3>
+        <p className="text-neutral-500 mb-8 leading-relaxed">
           Your progress will <span className="font-bold text-red-500">not</span> be saved.
           {answeredCount > 0 && (
-            <> You have answered <span className="font-bold text-slate-700">{answeredCount}</span> question{answeredCount !== 1 ? 's' : ''} that will be discarded.</>
+            <> You have answered <span className="font-bold text-neutral-700">{answeredCount}</span> question{answeredCount !== 1 ? 's' : ''} that will be discarded.</>
           )}
         </p>
         <div className="flex gap-3">
           <button
             onClick={onStay}
-            className="flex-1 py-3 bg-slate-100 text-slate-600 rounded-xl font-bold hover:bg-slate-200 transition-colors"
+            className="flex-1 py-3 bg-neutral-100 text-neutral-600 rounded-xl font-bold hover:bg-neutral-200 transition-colors"
           >
             Stay
           </button>
@@ -214,37 +214,37 @@ function SaveExitModal({
   const incorrectCount = sessionLog.filter(e => !e.isCorrect).length;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-neutral-900/60 backdrop-blur-sm">
       <div className="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl">
-        <h3 className="text-xl font-bold text-slate-900 mb-2">Save & End Session?</h3>
-        <p className="text-slate-500 mb-2 leading-relaxed">
-          This will save all <span className="font-bold text-slate-700">{sessionLog.length}</span> answered question{sessionLog.length !== 1 ? 's' : ''} to your history.
+        <h3 className="text-xl font-bold text-neutral-900 mb-2">Save & End Session?</h3>
+        <p className="text-neutral-500 mb-2 leading-relaxed">
+          This will save all <span className="font-bold text-neutral-700">{sessionLog.length}</span> answered question{sessionLog.length !== 1 ? 's' : ''} to your history.
         </p>
         <div className="flex gap-3 mb-8">
-          <div className="flex-1 text-center bg-slate-50 rounded-2xl py-3">
-            <p className="text-xl font-black text-slate-700">{sessionLog.length}</p>
-            <p className="text-[10px] font-bold uppercase text-slate-400">Attempted</p>
+          <div className="flex-1 text-center bg-neutral-100 rounded-2xl py-3">
+            <p className="text-xl font-black text-neutral-700">{sessionLog.length}</p>
+            <p className="text-[10px] font-bold uppercase text-neutral-400">Attempted</p>
           </div>
-          <div className="flex-1 text-center bg-emerald-50 rounded-2xl py-3">
-            <p className="text-xl font-black text-emerald-600">{correctCount}</p>
-            <p className="text-[10px] font-bold uppercase text-slate-400">Correct</p>
+          <div className="flex-1 text-center bg-green-50 rounded-2xl py-3">
+            <p className="text-xl font-black text-brand-green">{correctCount}</p>
+            <p className="text-[10px] font-bold uppercase text-neutral-400">Correct</p>
           </div>
           <div className="flex-1 text-center bg-red-50 rounded-2xl py-3">
             <p className="text-xl font-black text-red-500">{incorrectCount}</p>
-            <p className="text-[10px] font-bold uppercase text-slate-400">Incorrect</p>
+            <p className="text-[10px] font-bold uppercase text-neutral-400">Incorrect</p>
           </div>
         </div>
         <div className="flex gap-3">
           <button
             onClick={onKeepPracticing}
-            className="flex-1 py-3 bg-slate-100 text-slate-600 rounded-xl font-bold hover:bg-slate-200 transition-colors"
+            className="flex-1 py-3 bg-neutral-100 text-neutral-600 rounded-xl font-bold hover:bg-neutral-200 transition-colors"
           >
             Keep Practicing
           </button>
           <button
             onClick={onSaveAndExit}
             disabled={saving}
-            className="flex-1 py-3 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 shadow-lg shadow-emerald-200 transition-colors disabled:opacity-60"
+            className="flex-1 py-3 bg-brand-green text-white rounded-xl font-bold hover:bg-brand-green-dark shadow-lg shadow-green-200 transition-colors disabled:opacity-60"
           >
             {saving ? 'Saving…' : 'Save & Exit'}
           </button>
@@ -496,12 +496,12 @@ export function PracticeSessionUI({
   }, [sessionLog, sessionId, examFilter, supabase, router, stats, gamification]);
 
   const timerColour = isSubmitted
-    ? 'text-slate-400'
+    ? 'text-neutral-400'
     : elapsed >= 60
     ? 'text-red-500'
     : elapsed >= 30
     ? 'text-amber-500'
-    : 'text-slate-700';
+    : 'text-neutral-700';
 
   /* ── Progress bar pct ── */
   const answeredCount = sessionLog.length;

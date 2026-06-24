@@ -54,26 +54,26 @@ export default function ResetPasswordPage() {
 
   if (success) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
-        <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-xl border border-slate-100 text-center space-y-4">
-          <div className="w-14 h-14 bg-emerald-100 rounded-full flex items-center justify-center mx-auto">
-            <svg className="w-7 h-7 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div className="min-h-screen flex items-center justify-center bg-neutral-100 p-4">
+        <div className="w-full max-w-md card p-6 sm:p-8 text-center space-y-4">
+          <div className="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center mx-auto">
+            <svg className="w-7 h-7 text-brand-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
           </div>
-          <h2 className="text-xl font-bold text-slate-900">Password updated!</h2>
-          <p className="text-sm text-slate-500">Redirecting you to login...</p>
+          <h2 className="text-xl font-bold text-neutral-900">Password updated!</h2>
+          <p className="text-sm text-neutral-500">Redirecting you to login...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
-      <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-xl border border-slate-100">
+    <div className="min-h-screen flex items-center justify-center bg-neutral-100 p-4">
+      <div className="w-full max-w-md card p-6 sm:p-8">
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-extrabold text-slate-900">Set new password</h1>
-          <p className="text-slate-500 mt-2 text-sm">Choose a strong password for your account.</p>
+          <h1 className="text-2xl font-extrabold text-neutral-900">Set new password</h1>
+          <p className="text-neutral-500 mt-2 text-sm">Choose a strong password for your account.</p>
         </div>
 
         {!sessionReady && (
@@ -85,13 +85,13 @@ export default function ResetPasswordPage() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
-            <div role="alert" className="p-4 bg-red-50 border-l-4 border-red-400 text-red-700 text-sm rounded-r-md">
+            <div role="alert" className="p-4 bg-red-50 border-l-4 border-brand-coral text-red-700 text-sm rounded-r-md">
               {error}
             </div>
           )}
 
           <div>
-            <label htmlFor="password" className="block text-sm font-semibold text-slate-700 mb-1 ml-1">
+            <label htmlFor="password" className="block text-sm font-semibold text-neutral-700 mb-1 ml-1">
               New password
             </label>
             <input
@@ -103,12 +103,12 @@ export default function ResetPasswordPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               disabled={isSubmitting || !sessionReady}
-              className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all disabled:opacity-60"
+              className="input"
             />
           </div>
 
           <div>
-            <label htmlFor="confirm" className="block text-sm font-semibold text-slate-700 mb-1 ml-1">
+            <label htmlFor="confirm" className="block text-sm font-semibold text-neutral-700 mb-1 ml-1">
               Confirm password
             </label>
             <input
@@ -119,14 +119,14 @@ export default function ResetPasswordPage() {
               value={confirm}
               onChange={(e) => setConfirm(e.target.value)}
               disabled={isSubmitting || !sessionReady}
-              className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all disabled:opacity-60"
+              className="input"
             />
           </div>
 
           <button
             type="submit"
             disabled={isSubmitting || !sessionReady}
-            className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold shadow-lg shadow-blue-200 transition-all disabled:opacity-50 flex justify-center items-center"
+            className="btn-primary w-full py-3 text-base disabled:opacity-50"
           >
             {isSubmitting ? (
               <span className="flex items-center gap-2">

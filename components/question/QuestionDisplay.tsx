@@ -61,25 +61,25 @@ export function QuestionDisplay({ question: q, mode, onAnswer }: QuestionDisplay
   const isCorrect = selectedOption === q.correct_answer;
 
   return (
-    <div className="bg-white p-8 rounded-2xl border border-gray-200 shadow-sm transition-all max-w-3xl mx-auto">
+    <div className="card p-5 sm:p-8 max-w-3xl mx-auto">
       {/* Header Info */}
-      <div className="flex items-center gap-2 mb-6">
-        <span className="px-2.5 py-1 bg-blue-600 text-white text-[10px] font-black uppercase rounded-md shadow-sm">
+      <div className="flex items-center gap-2 mb-6 flex-wrap">
+        <span className="px-2.5 py-1 bg-brand-green text-white text-[10px] font-black uppercase rounded-md shadow-sm">
           {q.exam_type}
         </span>
-        <span className="px-2.5 py-1 bg-gray-100 text-gray-500 text-[10px] font-bold uppercase rounded-md">
+        <span className="px-2.5 py-1 bg-neutral-100 text-neutral-500 text-[10px] font-bold uppercase rounded-md">
           {q.category}
         </span>
         <span className={`ml-auto text-[10px] font-black uppercase px-2 py-1 rounded ${
-          q.difficulty === 'hard' ? 'text-red-600 bg-red-50' : 
-          q.difficulty === 'medium' ? 'text-amber-600 bg-amber-50' : 'text-emerald-600 bg-emerald-50'
+          q.difficulty === 'hard' ? 'text-brand-coral bg-red-50' :
+          q.difficulty === 'medium' ? 'text-amber-600 bg-amber-50' : 'text-green-600 bg-green-50'
         }`}>
           {q.difficulty}
         </span>
       </div>
 
       {/* Question Text */}
-      <h2 className="text-gray-900 text-xl font-bold leading-tight mb-8">
+      <h2 className="text-neutral-900 text-lg sm:text-xl font-bold leading-tight mb-8">
         {q.question_text}
       </h2>
 
@@ -99,22 +99,21 @@ export function QuestionDisplay({ question: q, mode, onAnswer }: QuestionDisplay
               key={opt.label}
               onClick={() => handleSelect(opt.label)}
               disabled={isSubmitted && mode === "practice"}
-              className={`w-full text-left p-4 rounded-xl border-2 transition-all flex items-start gap-4 ${
-                variant === "correct" ? "bg-emerald-50 border-emerald-500 text-emerald-900" :
-                variant === "wrong" ? "bg-red-50 border-red-500 text-red-900" :
-                variant === "selected" ? "bg-blue-50 border-blue-500 text-blue-900" :
-                "bg-white border-gray-100 hover:border-blue-200 text-gray-700"
+              className={`answer-option items-start gap-4 ${
+                variant === "correct" ? "answer-option-correct" :
+                variant === "wrong" ? "answer-option-wrong" :
+                variant === "selected" ? "answer-option-selected" : ""
               }`}
             >
               <span className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center font-bold border-2 ${
-                variant === "correct" ? "bg-emerald-500 border-emerald-500 text-white" :
-                variant === "wrong" ? "bg-red-500 border-red-500 text-white" :
-                variant === "selected" ? "bg-blue-500 border-blue-500 text-white" :
-                "bg-gray-50 border-gray-200 text-gray-500"
+                variant === "correct" ? "bg-brand-green border-brand-green text-white" :
+                variant === "wrong" ? "bg-brand-coral border-brand-coral text-white" :
+                variant === "selected" ? "bg-brand-green border-brand-green text-white" :
+                "bg-neutral-100 border-neutral-200 text-neutral-500"
               }`}>
                 {opt.label}
               </span>
-              <span className="text-lg font-medium pt-0.5">{opt.text}</span>
+              <span className="text-base sm:text-lg font-medium pt-0.5">{opt.text}</span>
             </button>
           );
         })}
@@ -127,27 +126,27 @@ export function QuestionDisplay({ question: q, mode, onAnswer }: QuestionDisplay
             <button
               onClick={handleSubmit}
               disabled={!selectedOption}
-              className="w-full py-4 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white rounded-xl font-bold text-lg shadow-lg shadow-blue-200 transition-all"
+              className="btn-primary w-full py-4 text-lg disabled:bg-neutral-300"
             >
               Check Answer
             </button>
           ) : (
-            <div className={`p-6 rounded-2xl border ${isCorrect ? "bg-emerald-50 border-emerald-200" : "bg-red-50 border-red-200"}`}>
+            <div className={`p-5 sm:p-6 rounded-2xl border ${isCorrect ? "bg-green-50 border-green-200" : "bg-red-50 border-red-200"}`}>
               <div className="flex items-center gap-3 mb-3">
                 {isCorrect ? (
                   <>
-                    <CheckCircle2 className="text-emerald-600" size={24} />
-                    <span className="text-emerald-800 font-black uppercase text-sm">Correct! Excellent Work</span>
+                    <CheckCircle2 className="text-brand-green" size={24} />
+                    <span className="text-green-800 font-black uppercase text-sm">Correct! Excellent Work</span>
                   </>
                 ) : (
                   <>
-                    <XCircle className="text-red-600" size={24} />
+                    <XCircle className="text-brand-coral" size={24} />
                     <span className="text-red-800 font-black uppercase text-sm">Incorrect Answer</span>
                   </>
                 )}
               </div>
-              <div className="text-gray-700 leading-relaxed">
-                <p className="font-bold text-gray-900 mb-1">Explanation:</p>
+              <div className="text-neutral-700 leading-relaxed">
+                <p className="font-bold text-neutral-900 mb-1">Explanation:</p>
                 {q.explanation}
               </div>
             </div>
@@ -157,7 +156,7 @@ export function QuestionDisplay({ question: q, mode, onAnswer }: QuestionDisplay
 
       {/* Timed Mode Note */}
       {mode === "timed" && (
-        <div className="flex items-center justify-center gap-2 text-gray-400 italic text-sm py-4 border-t border-gray-50">
+        <div className="flex items-center justify-center gap-2 text-neutral-400 italic text-sm py-4 border-t border-neutral-100">
           <AlertCircle size={16} />
           Your progress is being saved. You can review all explanations at the end.
         </div>

@@ -61,17 +61,17 @@ export function LoginForm() {
   const showError = status.type === 'error';
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4 w-full">
-      <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-xl border border-slate-100">
+    <div className="min-h-screen flex items-center justify-center bg-neutral-100 p-4 w-full">
+      <div className="w-full max-w-md card p-6 sm:p-8">
         <div className="text-center mb-10">
-          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Welcome back!</h1>
-          <p className="text-slate-500 mt-2">Log in to your account to continue</p>
+          <h1 className="text-3xl font-extrabold text-neutral-900 tracking-tight">Welcome back!</h1>
+          <p className="text-neutral-500 mt-2">Log in to your account to continue</p>
         </div>
 
         <button
           type="button"
           onClick={handleGoogleLogin}
-          className="w-full flex items-center justify-center gap-3 px-4 py-2.5 border border-slate-300 rounded-xl font-medium text-slate-700 hover:bg-slate-50 active:scale-[0.98] transition-all mb-8 shadow-sm"
+          className="btn-secondary w-full py-2.5 mb-8"
         >
           <img src="https://www.svgrepo.com/show/355037/google.svg" className="h-5 w-5" alt="" />
           Continue with Google
@@ -79,28 +79,28 @@ export function LoginForm() {
 
         <div className="relative mb-8">
           <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-slate-200"></div>
+            <div className="w-full border-t border-neutral-200"></div>
           </div>
           <div className="relative flex justify-center text-xs uppercase tracking-widest">
-            <span className="bg-white px-4 text-slate-400 font-medium">or email</span>
+            <span className="bg-white px-4 text-neutral-400 font-medium">or email</span>
           </div>
         </div>
 
         {showError && (
-          <div role="alert" className="mb-6 p-4 bg-red-50 border-l-4 border-red-400 text-red-700 text-sm rounded-r-md">
+          <div role="alert" className="mb-6 p-4 bg-red-50 border-l-4 border-brand-coral text-red-700 text-sm rounded-r-md">
             {status.message}
           </div>
         )}
 
         {showSuccess && (
-          <div role="alert" className="mb-6 p-4 bg-emerald-50 border-l-4 border-emerald-400 text-emerald-700 text-sm rounded-r-md font-medium">
+          <div role="alert" className="mb-6 p-4 bg-green-50 border-l-4 border-brand-green text-green-700 text-sm rounded-r-md font-medium">
             {status.message}
           </div>
         )}
 
         <form onSubmit={handleEmailLogin} className="space-y-5">
           <div suppressHydrationWarning>
-            <label htmlFor="email" className="block text-sm font-semibold text-slate-700 mb-1 ml-1">
+            <label htmlFor="email" className="block text-sm font-semibold text-neutral-700 mb-1 ml-1">
               Email
             </label>
             <input
@@ -108,7 +108,7 @@ export function LoginForm() {
               type="email"
               required
               placeholder="name@example.com"
-              className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all disabled:opacity-60"
+              className="input"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               disabled={isSubmitting || showSuccess}
@@ -117,7 +117,7 @@ export function LoginForm() {
           </div>
 
           <div suppressHydrationWarning>
-            <label htmlFor="password" className="block text-sm font-semibold text-slate-700 mb-1 ml-1">
+            <label htmlFor="password" className="block text-sm font-semibold text-neutral-700 mb-1 ml-1">
               Password
             </label>
             <input
@@ -125,7 +125,7 @@ export function LoginForm() {
               type="password"
               required
               placeholder="••••••••"
-              className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all disabled:opacity-60"
+              className="input"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               disabled={isSubmitting || showSuccess}
@@ -134,7 +134,7 @@ export function LoginForm() {
           </div>
 
           <div className="flex justify-end">
-            <Link href="/forgot-password" className="text-xs text-blue-600 hover:underline font-medium">
+            <Link href="/forgot-password" className="text-xs text-brand-green hover:underline font-medium">
               Forgot your password?
             </Link>
           </div>
@@ -142,7 +142,7 @@ export function LoginForm() {
           <button
             type="submit"
             disabled={isSubmitting || showSuccess}
-            className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold shadow-lg shadow-blue-200 transition-all disabled:opacity-50 active:scale-[0.99] flex justify-center items-center"
+            className="btn-primary w-full py-3 text-base disabled:opacity-50"
           >
             {isSubmitting ? (
               <span className="flex items-center gap-2">
@@ -157,9 +157,9 @@ export function LoginForm() {
           </button>
         </form>
 
-        <p className="mt-8 text-center text-slate-600">
+        <p className="mt-8 text-center text-neutral-600">
           Don't have an account?{' '}
-          <Link href="/register" className="text-blue-600 font-bold hover:underline">
+          <Link href="/register" className="text-brand-green font-bold hover:underline">
             Register
           </Link>
         </p>

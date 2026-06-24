@@ -92,13 +92,13 @@ export default function ExamSetupPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-6 relative">
+    <div className="min-h-screen bg-neutral-100 flex flex-col items-center justify-center p-4 sm:p-6 relative">
       <div className="absolute top-8 left-8">
         <Link
           href="/questions"
-          className="inline-flex items-center gap-3 text-gray-400 hover:text-blue-600 transition-all group"
+          className="inline-flex items-center gap-3 text-neutral-400 hover:text-brand-green transition-all group"
         >
-          <div className="p-2.5 rounded-xl bg-white shadow-sm border border-gray-100 group-hover:border-blue-200 group-hover:shadow-md transition-all">
+          <div className="p-2.5 rounded-xl bg-white shadow-sm border border-neutral-200 group-hover:border-green-200 group-hover:shadow-card transition-all">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               className="h-5 w-5"

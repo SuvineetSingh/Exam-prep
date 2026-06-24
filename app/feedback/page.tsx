@@ -20,7 +20,7 @@ function StarRating({ value, onChange }: { value: number; onChange: (v: number) 
           onMouseLeave={() => setHovered(0)}
           className="text-4xl transition-transform hover:scale-110 focus:outline-none"
         >
-          <span className={(hovered || value) >= star ? 'text-amber-400' : 'text-gray-200'}>★</span>
+          <span className={(hovered || value) >= star ? 'text-brand-amber' : 'text-neutral-200'}>★</span>
         </button>
       ))}
     </div>

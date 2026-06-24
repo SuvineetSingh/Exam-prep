@@ -159,7 +159,7 @@ export default function SingleQuestionPractice() {
 
   if (loading)
     return (
-      <div className="min-h-screen flex items-center justify-center font-bold text-slate-400 animate-pulse">
+      <div className="min-h-screen flex items-center justify-center font-bold text-neutral-400 animate-pulse">
         Loading Question...
       </div>
     );

@@ -163,8 +163,8 @@ export default function QuestionsDashboard() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-screen flex items-center justify-center bg-neutral-100">
+        <div className="w-8 h-8 border-4 border-brand-green border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -204,7 +204,7 @@ export default function QuestionsDashboard() {
             </div>
             <Link
               href="/courses"
-              className="text-xs font-bold px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg transition-colors whitespace-nowrap"
+              className="text-xs font-bold px-4 py-2 bg-brand-amber hover:bg-amber-600 text-white rounded-lg transition-colors whitespace-nowrap"
             >
               Get Pro Access →
             </Link>
@@ -213,16 +213,16 @@ export default function QuestionsDashboard() {
 
         <div className="space-y-4 mb-8">
           {loading ? (
-            <div className="text-center py-20 bg-white rounded-2xl border border-gray-100 shadow-sm">
-               <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-               <p className="text-gray-500 font-medium">Fetching from database...</p>
+            <div className="text-center py-20 bg-white rounded-2xl border border-neutral-200 shadow-card">
+               <div className="w-12 h-12 border-4 border-brand-green border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+               <p className="text-neutral-500 font-medium">Fetching from database...</p>
             </div>
           ) : questions.length > 0 ? (
             questions.map((q) => <QuestionCard key={q.id} question={q} />)
           ) : (
-            <div className="text-center py-20 bg-white rounded-2xl border-2 border-dashed border-gray-200">
-              <p className="text-gray-400 font-medium">No results found for the current filters.</p>
-              <button onClick={() => {setExamType('all'); setCategory('all'); setDifficulty('all'); setCurrentPage(1);}} className="mt-4 text-blue-600 font-bold hover:underline">Clear all filters</button>
+            <div className="text-center py-20 bg-white rounded-2xl border-2 border-dashed border-neutral-200">
+              <p className="text-neutral-400 font-medium">No results found for the current filters.</p>
+              <button onClick={() => {setExamType('all'); setCategory('all'); setDifficulty('all'); setCurrentPage(1);}} className="mt-4 text-brand-green font-bold hover:underline">Clear all filters</button>
             </div>
           )}
         </div>

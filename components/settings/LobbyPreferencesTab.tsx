@@ -46,16 +46,16 @@ export function LobbyPreferencesTab({ userId, userProfile, onUpdate }: LobbyPref
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-8">
-      <h2 className="text-2xl font-bold text-gray-900 mb-2">Lobby Preferences</h2>
-      <p className="text-gray-600 mb-6">
+    <div className="card p-5 sm:p-8">
+      <h2 className="text-2xl font-bold text-neutral-900 mb-2">Lobby Preferences</h2>
+      <p className="text-neutral-600 mb-6">
         Your industry preference helps match you with relevant study groups in the Lobby.
       </p>
 
       {selected && (
         <div className="mb-4">
-          <span className="text-sm font-semibold text-gray-700">Current Selection: </span>
-          <span className="text-sm text-primary-600 font-medium">{selected}</span>
+          <span className="text-sm font-semibold text-neutral-700">Current Selection: </span>
+          <span className="text-sm text-brand-green font-medium">{selected}</span>
         </div>
       )}
 
@@ -68,8 +68,8 @@ export function LobbyPreferencesTab({ userId, userProfile, onUpdate }: LobbyPref
             disabled={saving}
             className={`p-4 rounded-xl border-2 transition-all font-medium disabled:opacity-50 ${
               selected === industry
-                ? 'border-primary-600 bg-primary-50 text-primary-700'
-                : 'border-gray-200 hover:border-gray-300 text-gray-700'
+                ? 'border-brand-green bg-green-50 text-green-700'
+                : 'border-neutral-200 hover:border-neutral-300 text-neutral-700'
             }`}
           >
             {industry}
@@ -88,7 +88,7 @@ export function LobbyPreferencesTab({ userId, userProfile, onUpdate }: LobbyPref
           type="button"
           onClick={handleSave}
           disabled={saving || !selected}
-          className="bg-blue-600 text-white py-3 px-6 rounded-xl font-bold hover:bg-blue-700 transition-all shadow-md active:scale-95 disabled:opacity-50 flex items-center gap-2"
+          className="btn-primary py-3 px-6 disabled:opacity-50"
         >
           {saving ? (
             <>

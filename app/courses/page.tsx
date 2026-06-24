@@ -10,21 +10,21 @@ const COURSES = [
     name: 'CMA — Certified Management Accountant',
     description: 'Financial planning, analysis, control, decision support, and professional ethics.',
     icon: '📊',
-    color: 'blue',
+    color: 'amber',
   },
   {
     exam_type: 'CFA',
     name: 'CFA — Chartered Financial Analyst',
     description: 'Portfolio management, equity analysis, fixed income, derivatives, and ethics.',
     icon: '📈',
-    color: 'indigo',
+    color: 'violet',
   },
   {
     exam_type: 'FE',
     name: 'FE — Fundamentals of Engineering',
     description: 'Mathematics, engineering sciences, and discipline-specific technical topics.',
     icon: '⚙️',
-    color: 'emerald',
+    color: 'teal',
   },
 ];
 

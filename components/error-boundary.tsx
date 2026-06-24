@@ -34,15 +34,15 @@ export class ErrorBoundary extends Component<Props, State> {
         this.props.fallback || (
           <div className="flex min-h-screen flex-col items-center justify-center p-4">
             <div className="text-center">
-              <h1 className="mb-4 text-2xl font-bold text-gray-900">
+              <h1 className="mb-4 text-2xl font-bold text-neutral-900">
                 Oops! Something went wrong
               </h1>
-              <p className="mb-6 text-gray-600">
+              <p className="mb-6 text-neutral-600">
                 We're sorry for the inconvenience. Please try refreshing the page.
               </p>
               <button
                 onClick={() => window.location.reload()}
-                className="rounded-md bg-primary-600 px-4 py-2 text-white hover:bg-primary-500 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600"
+                className="btn-primary px-4 py-2"
               >
                 Refresh Page
               </button>

@@ -101,18 +101,18 @@ export default function HistoryReviewPage({ params }: { params: Promise<{ sessio
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-screen flex items-center justify-center bg-neutral-100">
+        <div className="w-10 h-10 border-4 border-brand-green border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-neutral-100">
         <div className="text-center">
           <p className="text-red-600 font-semibold mb-4">{error}</p>
-          <button onClick={() => router.back()} className="text-blue-600 font-bold hover:underline">
+          <button onClick={() => router.back()} className="text-brand-green font-bold hover:underline">
             ← Go Back
           </button>
         </div>

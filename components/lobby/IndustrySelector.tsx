@@ -29,8 +29,8 @@ export function IndustrySelector({ userId, onSelected }: IndustrySelectorProps) 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
       <div className="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 p-6 animate-fade-in">
-        <h2 className="text-xl font-bold text-gray-900 mb-2">Welcome to the Lobby!</h2>
-        <p className="text-sm text-gray-600 mb-6">
+        <h2 className="text-xl font-bold text-neutral-900 mb-2">Welcome to the Lobby!</h2>
+        <p className="text-sm text-neutral-600 mb-6">
           Select your industry or interest area to get matched with relevant study groups.
         </p>
 
@@ -41,8 +41,8 @@ export function IndustrySelector({ userId, onSelected }: IndustrySelectorProps) 
               onClick={() => setSelected(industry)}
               className={`px-4 py-3 rounded-lg border-2 text-sm font-medium transition-all ${
                 selected === industry
-                  ? 'border-primary-600 bg-primary-50 text-primary-700'
-                  : 'border-gray-200 hover:border-gray-300 text-gray-700'
+                  ? 'border-brand-green bg-green-50 text-brand-green-dark'
+                  : 'border-neutral-200 hover:border-neutral-300 text-neutral-700'
               }`}
             >
               {industry}
@@ -53,7 +53,7 @@ export function IndustrySelector({ userId, onSelected }: IndustrySelectorProps) 
         <button
           onClick={handleSave}
           disabled={!selected || saving}
-          className="w-full py-3 bg-primary-600 text-white font-semibold rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full py-3 bg-brand-green text-white font-semibold rounded-lg hover:bg-brand-green-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {saving ? 'Saving...' : 'Continue'}
         </button>

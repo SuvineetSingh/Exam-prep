@@ -45,23 +45,6 @@
 }
 
 @layer components {
-  /* ── Layout ── */
-  .app-shell {
-    @apply flex min-h-screen;
-  }
-
-  .page-content {
-    @apply flex-1 min-w-0 overflow-y-auto;
-    margin-left: var(--sidebar-width);
-  }
-
-  @media (max-width: 768px) {
-    .page-content {
-      margin-left: 0;
-      padding-bottom: 4rem; /* space for mobile tab bar */
-    }
-  }
-
   /* ── Cards ── */
   .card {
     @apply bg-white rounded-card border border-neutral-200 shadow-card transition-shadow;

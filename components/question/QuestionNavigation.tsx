@@ -14,7 +14,7 @@ export function QuestionNavigation({ prevId, nextId }: QuestionNavigationProps) 
       {prevId ? (
         <Link
           href={`/questions/${prevId}`}
-          className="flex items-center gap-2 px-6 py-3 bg-white border-2 border-gray-200 text-gray-700 rounded-xl font-semibold hover:border-blue-500 hover:text-blue-600 transition-all shadow-sm"
+          className="btn-secondary px-6 py-3"
         >
           <ChevronLeft size={20} />
           <span>Previous Question</span>
@@ -26,7 +26,7 @@ export function QuestionNavigation({ prevId, nextId }: QuestionNavigationProps) 
       {nextId && (
         <Link
           href={`/questions/${nextId}`}
-          className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-all shadow-md ml-auto"
+          className="btn-primary px-6 py-3 ml-auto"
         >
           <span>Next Question</span>
           <ChevronRight size={20} />

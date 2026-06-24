@@ -35,26 +35,26 @@ export function formatDate(iso: string): { date: string; time: string } {
 }
 
 const EXAM_COLORS: Record<string, string> = {
-  CMA: 'bg-blue-600',
+  CMA: 'bg-amber-600',
   CFA: 'bg-violet-600',
   FE:  'bg-teal-600',
 };
 
 const MODE_STYLE: Record<string, string> = {
-  practice: 'bg-purple-50 text-purple-700 border-purple-200',
-  timed:    'bg-yellow-50 text-yellow-700 border-yellow-200',
+  practice: 'mode-badge-practice',
+  timed:    'mode-badge-timed',
 };
 
 function getScoreColor(pct: number | null): string {
-  if (pct == null) return 'text-gray-400';
-  if (pct >= 75) return 'text-emerald-600';
-  if (pct >= 50) return 'text-amber-600';
-  return 'text-red-500';
+  if (pct == null) return 'text-neutral-400';
+  if (pct >= 75) return 'score-high';
+  if (pct >= 50) return 'score-mid';
+  return 'score-low';
 }
 
 function getScoreBg(pct: number | null): string {
-  if (pct == null) return 'bg-gray-50 border-gray-200';
-  if (pct >= 75) return 'bg-emerald-50 border-emerald-200';
+  if (pct == null) return 'bg-neutral-100 border-neutral-200';
+  if (pct >= 75) return 'bg-green-50 border-green-200';
   if (pct >= 50) return 'bg-amber-50 border-amber-200';
   return 'bg-red-50 border-red-200';
 }
@@ -76,13 +76,13 @@ export function SummaryBar({ sessions }: { sessions: ExamSession[] }) {
   ];
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-8">
       {stats.map(({ label, value, icon }) => (
-        <div key={label} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex items-center gap-4">
-          <div className="w-11 h-11 rounded-xl bg-gray-50 flex items-center justify-center text-2xl flex-shrink-0">{icon}</div>
+        <div key={label} className="card p-4 sm:p-5 flex items-center gap-3 sm:gap-4">
+          <div className="w-11 h-11 rounded-xl bg-neutral-100 flex items-center justify-center text-2xl flex-shrink-0">{icon}</div>
           <div>
-            <p className="text-xs font-bold text-gray-400 uppercase tracking-wide">{label}</p>
-            <p className="text-2xl font-black text-gray-900">{value}</p>
+            <p className="text-xs font-bold text-neutral-400 uppercase tracking-wide">{label}</p>
+            <p className="text-2xl font-black text-neutral-900">{value}</p>
           </div>
         </div>
       ))}
@@ -98,57 +98,57 @@ export function SessionRow({ session, index }: { session: ExamSession; index: nu
   return (
     <button
       onClick={() => router.push(`/history/${session.id}/review`)}
-      className="w-full text-left bg-white rounded-2xl border border-gray-100 shadow-sm p-5 hover:shadow-md hover:border-blue-300 hover:bg-blue-50/30 transition-all group"
+      className="card-hover w-full text-left p-4 sm:p-5 group"
       style={{ animationDelay: `${index * 40}ms` }}
     >
       <div className="flex flex-col sm:flex-row sm:items-center gap-4">
         <div className="flex items-center gap-3 min-w-0 flex-1">
-          <div className={`w-12 h-12 rounded-xl ${EXAM_COLORS[session.exam_type] ?? 'bg-gray-500'} text-white flex items-center justify-center font-black text-sm flex-shrink-0 shadow`}>
+          <div className={`w-12 h-12 rounded-xl ${EXAM_COLORS[session.exam_type] ?? 'bg-neutral-500'} text-white flex items-center justify-center font-black text-sm flex-shrink-0 shadow`}>
             {session.exam_type}
           </div>
           <div className="min-w-0">
-            <p className="font-bold text-gray-900 text-sm truncate group-hover:text-blue-700 transition-colors">
+            <p className="font-bold text-neutral-900 text-sm truncate group-hover:text-brand-green transition-colors">
               {session.exam_type} Exam
             </p>
-            <p className="text-xs text-gray-400">{date} · {time}</p>
+            <p className="text-xs text-neutral-400">{date} · {time}</p>
           </div>
         </div>
 
         {session.mode && (
-          <span className={`self-start sm:self-auto text-[10px] font-black uppercase px-2.5 py-1 rounded-lg border ${MODE_STYLE[session.mode]}`}>
+          <span className={`self-start sm:self-auto ${MODE_STYLE[session.mode]}`}>
             {session.mode === 'timed' ? '⏱ Timed' : '📝 Practice'}
           </span>
         )}
 
-        <div className="flex items-center gap-6 flex-wrap">
+        <div className="flex items-center gap-4 sm:gap-6 flex-wrap">
           <div className="text-center">
-            <p className="text-[10px] font-bold uppercase text-gray-400 tracking-wide">Questions</p>
-            <p className="text-sm font-bold text-gray-700">
+            <p className="text-[10px] font-bold uppercase text-neutral-400 tracking-wide">Questions</p>
+            <p className="text-sm font-bold text-neutral-700">
               {session.answered_count ?? '—'} / {session.total_questions}
             </p>
           </div>
 
           <div className="text-center">
-            <p className="text-[10px] font-bold uppercase text-gray-400 tracking-wide">Time</p>
-            <p className="text-sm font-bold text-gray-700">
+            <p className="text-[10px] font-bold uppercase text-neutral-400 tracking-wide">Time</p>
+            <p className="text-sm font-bold text-neutral-700">
               {formatTime(session.time_taken_seconds)}
               {session.total_time_given_seconds && (
-                <span className="font-normal text-gray-400"> / {formatTime(session.total_time_given_seconds)}</span>
+                <span className="font-normal text-neutral-400"> / {formatTime(session.total_time_given_seconds)}</span>
               )}
             </p>
           </div>
 
           <div className={`px-4 py-2 rounded-xl border ${getScoreBg(pct)} min-w-[80px] text-center`}>
-            <p className="text-[10px] font-bold uppercase text-gray-400 tracking-wide">Score</p>
+            <p className="text-[10px] font-bold uppercase text-neutral-400 tracking-wide">Score</p>
             <p className={`text-xl font-black ${getScoreColor(pct)}`}>
               {pct != null ? `${pct}%` : '—'}
             </p>
             {session.score != null && (
-              <p className="text-[10px] text-gray-400">{session.score} / {session.total_questions}</p>
+              <p className="text-[10px] text-neutral-400">{session.score} / {session.total_questions}</p>
             )}
           </div>
 
-          <div className="hidden sm:flex items-center text-gray-300 group-hover:text-blue-500 transition-colors">
+          <div className="hidden sm:flex items-center text-neutral-300 group-hover:text-brand-green transition-colors">
             <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
             </svg>
@@ -167,15 +167,15 @@ export function HistoryFilters({ mode, setMode, exam, setExam, count }: {
   count: number;
 }) {
   return (
-    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 flex flex-wrap items-center gap-4 mb-6">
+    <div className="card p-4 flex flex-wrap items-center gap-4 mb-6">
       <div className="flex items-center gap-2">
-        <span className="text-[10px] font-bold uppercase text-gray-400">Exam</span>
+        <span className="text-[10px] font-bold uppercase text-neutral-400">Exam</span>
         {(['all', 'CMA', 'CFA', 'FE'] as FilterExam[]).map(e => (
           <button
             key={e}
             onClick={() => setExam(e)}
             className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-              exam === e ? 'bg-blue-600 text-white shadow' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+              exam === e ? 'bg-brand-green text-white shadow' : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'
             }`}
           >
             {e === 'all' ? 'All' : e}
@@ -183,16 +183,16 @@ export function HistoryFilters({ mode, setMode, exam, setExam, count }: {
         ))}
       </div>
 
-      <div className="w-px h-6 bg-gray-200 hidden sm:block" />
+      <div className="w-px h-6 bg-neutral-200 hidden sm:block" />
 
       <div className="flex items-center gap-2">
-        <span className="text-[10px] font-bold uppercase text-gray-400">Mode</span>
+        <span className="text-[10px] font-bold uppercase text-neutral-400">Mode</span>
         {(['all', 'practice', 'timed'] as FilterMode[]).map(m => (
           <button
             key={m}
             onClick={() => setMode(m)}
             className={`px-3 py-1.5 rounded-lg text-xs font-bold capitalize transition-all ${
-              mode === m ? 'bg-blue-600 text-white shadow' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+              mode === m ? 'bg-brand-green text-white shadow' : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'
             }`}
           >
             {m === 'all' ? 'All' : m}
@@ -201,7 +201,7 @@ export function HistoryFilters({ mode, setMode, exam, setExam, count }: {
       </div>
 
       <div className="ml-auto">
-        <span className="text-xs font-bold text-blue-600 bg-blue-50 px-3 py-2 rounded-lg">
+        <span className="text-xs font-bold text-brand-green bg-green-50 px-3 py-2 rounded-lg">
           {count} {count === 1 ? 'Session' : 'Sessions'}
         </span>
       </div>

@@ -75,22 +75,22 @@ export function MessageInput({ onSend, placeholder = 'Type a message...', disabl
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-1 p-4 border-t border-gray-200 bg-white relative">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-1 p-4 border-t border-neutral-200 bg-white relative">
       {/* Emoji Picker Popover */}
       {showEmoji && (
         <div
           ref={emojiRef}
-          className="absolute bottom-full left-4 mb-2 w-72 bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden z-50"
+          className="absolute bottom-full left-4 mb-2 w-72 bg-white rounded-2xl shadow-xl border border-neutral-200 overflow-hidden z-50"
         >
           {/* Tab bar */}
-          <div className="flex border-b border-gray-100">
+          <div className="flex border-b border-neutral-200">
             {EMOJI_GROUPS.map((g, i) => (
               <button
                 key={g.label}
                 type="button"
                 onClick={() => setEmojiTab(i)}
                 className={`flex-1 py-2 text-[11px] font-semibold transition-colors ${
-                  emojiTab === i ? 'text-primary-600 border-b-2 border-primary-600' : 'text-gray-400 hover:text-gray-600'
+                  emojiTab === i ? 'text-brand-green border-b-2 border-brand-green' : 'text-neutral-400 hover:text-neutral-600'
                 }`}
               >
                 {g.label}
@@ -104,7 +104,7 @@ export function MessageInput({ onSend, placeholder = 'Type a message...', disabl
                 key={emoji}
                 type="button"
                 onClick={() => { insertEmoji(emoji); setShowEmoji(false); }}
-                className="w-7 h-7 flex items-center justify-center text-lg rounded hover:bg-gray-100 transition-colors"
+                className="w-7 h-7 flex items-center justify-center text-lg rounded hover:bg-neutral-200 transition-colors"
               >
                 {emoji}
               </button>
@@ -121,7 +121,7 @@ export function MessageInput({ onSend, placeholder = 'Type a message...', disabl
           disabled={disabled}
           title="Insert emoji"
           className={`flex-shrink-0 w-9 h-9 flex items-center justify-center rounded-full text-lg transition-colors disabled:opacity-40 ${
-            showEmoji ? 'bg-primary-100 text-primary-600' : 'text-gray-400 hover:bg-gray-100'
+            showEmoji ? 'bg-green-100 text-brand-green' : 'text-neutral-400 hover:bg-neutral-200'
           }`}
         >
           😊
@@ -133,14 +133,14 @@ export function MessageInput({ onSend, placeholder = 'Type a message...', disabl
           onChange={(e) => { setValue(e.target.value.slice(0, LOBBY_CONFIG.MAX_MESSAGE_LENGTH)); setSendError(false); }}
           placeholder={placeholder}
           disabled={disabled || sending}
-          className={`flex-1 px-4 py-2.5 rounded-full border text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${
-            sendError ? 'border-red-400 bg-red-50' : 'border-gray-300'
+          className={`flex-1 px-4 py-2.5 rounded-full border text-sm focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${
+            sendError ? 'border-red-400 bg-red-50' : 'border-neutral-300'
           }`}
         />
         <button
           type="submit"
           disabled={!value.trim() || disabled || sending}
-          className="px-4 py-2.5 bg-primary-600 text-white rounded-full text-sm font-medium hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="px-4 py-2.5 bg-brand-green text-white rounded-full text-sm font-medium hover:bg-brand-green-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {sending ? '…' : 'Send'}
         </button>
