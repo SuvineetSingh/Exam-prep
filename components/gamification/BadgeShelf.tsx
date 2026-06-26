@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { BADGE_DEFINITIONS, type BadgeDefinition } from '@/lib/gamification/constants';
 
 interface BadgeShelfProps {
@@ -46,25 +47,27 @@ export function BadgeShelf({ earnedKeys, compact = false }: BadgeShelfProps) {
 
 function BadgePill({ badge, earned }: { badge: BadgeDefinition; earned: boolean }) {
   return (
-    <div
+    <Link
+      href={`/badges#badge-${badge.key}`}
       title={badge.description}
-      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border ${
+      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border transition-colors ${
         earned
-          ? 'bg-amber-50 border-amber-200 text-amber-800'
+          ? 'bg-amber-50 border-amber-200 text-amber-800 hover:bg-amber-100'
           : 'bg-neutral-100 border-neutral-200 text-neutral-400 opacity-60'
       }`}
     >
       <span>{badge.emoji}</span>
       <span>{badge.name}</span>
-    </div>
+    </Link>
   );
 }
 
 function BadgeCard({ badge, earned }: { badge: BadgeDefinition; earned: boolean }) {
   return (
     <div
+      id={`badge-${badge.key}`}
       title={badge.description}
-      className={`p-3 rounded-2xl border-2 flex flex-col items-center gap-1 text-center transition-all ${
+      className={`p-3 rounded-2xl border-2 flex flex-col items-center gap-1 text-center transition-all scroll-mt-6 ${
         earned
           ? 'border-amber-200 bg-amber-50'
           : 'border-neutral-100 bg-neutral-50 opacity-40 grayscale'

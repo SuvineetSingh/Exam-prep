@@ -4,10 +4,22 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { fetchRooms, fetchDMConversations, fetchUnreadCounts } from '@/lib/supabase/queries/lobbyQueries';
 import type { User } from '@supabase/supabase-js';
+import type { LobbyRoom } from '@/lib/types/lobby';
 import { useUserActivity } from '@/hooks/useUserActivity';
 import { useGamification } from '@/hooks/useGamification';
 import { XPProgressBar } from '@/components/gamification/XPProgressBar';
+import { UnreadBadge } from '@/components/lobby/UnreadBadge';
+import { useCart } from '@/lib/cart/CartContext';
+
+type DMConversation = {
+  partner_id: string;
+  partner_username: string;
+  partner_avatar_url: string | null;
+  last_message: string;
+  last_message_at: string;
+};
 
 /* ── Nav items ─────────────────────────────────────── */
 const NAV_ITEMS = [
@@ -63,14 +75,6 @@ const NAV_ITEMS = [
   },
 ];
 
-/* ── Hardcoded lobby rooms shown in sidebar ─────────── */
-const LOBBY_ROOMS = [
-  { slug: 'general',     label: 'general',     icon: '💬' },
-  { slug: 'cma-study',   label: 'cma-study',   icon: '📊' },
-  { slug: 'cfa-study',   label: 'cfa-study',   icon: '📈' },
-  { slug: 'fe-study',    label: 'fe-study',    icon: '⚙️' },
-];
-
 /* ── DailyGoalBar ───────────────────────────────────── */
 function DailyGoalBar({ answered, goal }: { answered: number; goal: number }) {
   const pct = goal > 0 ? Math.min(100, Math.round((answered / goal) * 100)) : 0;
@@ -114,15 +118,39 @@ export function Sidebar({ user, dailyAnswered = 0, dailyGoal = 20 }: SidebarProp
   const pathname = usePathname();
   const router = useRouter();
   const [isPremium, setIsPremium] = useState<boolean | null>(null);
+  const [rooms, setRooms] = useState<LobbyRoom[]>([]);
+  const [dmConversations, setDmConversations] = useState<DMConversation[]>([]);
+  const [unreadCounts, setUnreadCounts] = useState<{ rooms: Record<string, number>; dms: Record<string, number> }>({ rooms: {}, dms: {} });
+  const [communityOpen, setCommunityOpen] = useState(true);
   const gamification = useGamification(user.id);
+  const cart = useCart();
 
   useUserActivity(user.id);
+
+  useEffect(() => {
+    const stored = localStorage.getItem('examprep_community_open');
+    if (stored !== null) setCommunityOpen(stored === 'true');
+  }, []);
+
+  const toggleCommunity = () => {
+    setCommunityOpen((prev) => {
+      const next = !prev;
+      localStorage.setItem('examprep_community_open', String(next));
+      return next;
+    });
+  };
 
   useEffect(() => {
     fetch('/api/me/pro')
       .then(r => r.json())
       .then(({ isPro }: { isPro: boolean }) => setIsPremium(isPro))
       .catch(() => setIsPremium(false));
+  }, [user.id]);
+
+  useEffect(() => {
+    fetchRooms().then(setRooms).catch(() => setRooms([]));
+    fetchDMConversations(user.id).then(setDmConversations).catch(() => setDmConversations([]));
+    fetchUnreadCounts(user.id).then(setUnreadCounts).catch(() => {});
   }, [user.id]);
 
   const handleLogout = async () => {
@@ -181,27 +209,68 @@ export function Sidebar({ user, dailyAnswered = 0, dailyGoal = 20 }: SidebarProp
           );
         })}
 
-        {/* ── Community section ── */}
+        {/* ── Community section (collapsible) ── */}
         <div className="pt-5">
-          <p className="section-label px-3 mb-2">Community</p>
-          {LOBBY_ROOMS.map(({ slug, label, icon }) => (
-            <Link
-              key={slug}
-              href={`/lobby?room=${slug}`}
-              className={`sidebar-item ${isLobbyActive && pathname.includes(slug) ? 'sidebar-item-active' : ''}`}
+          <div className="flex items-center justify-between px-3 mb-2">
+            <p className="section-label">Community</p>
+            <button
+              onClick={toggleCommunity}
+              aria-expanded={communityOpen}
+              title={communityOpen ? 'Collapse' : 'Expand'}
+              className="text-neutral-400 hover:text-neutral-600 transition-colors"
             >
-              <span className="text-neutral-400 text-base w-5 text-center">{icon}</span>
-              <span className="text-neutral-600">#{label}</span>
-            </Link>
-          ))}
-          <Link href="/lobby" className="sidebar-item mt-1">
-            <span className="text-neutral-300 w-5 text-center">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                {communityOpen ? (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 12h14" />
+                ) : (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 5v14M5 12h14" />
+                )}
               </svg>
-            </span>
-            <span className="text-neutral-400 text-xs font-semibold">Browse all rooms</span>
-          </Link>
+            </button>
+          </div>
+
+          {communityOpen && (
+            <>
+              {rooms.slice(0, 5).map((room) => (
+                <Link
+                  key={room.slug}
+                  href={`/lobby?room=${room.slug}`}
+                  className={`sidebar-item ${isLobbyActive && pathname.includes(room.slug) ? 'sidebar-item-active' : ''}`}
+                >
+                  <span className="text-neutral-400 text-base w-5 text-center">{room.icon ?? '💬'}</span>
+                  <span className="text-neutral-600">#{room.slug}</span>
+                  <UnreadBadge count={unreadCounts.rooms[room.id] ?? 0} />
+                </Link>
+              ))}
+              <Link href="/lobby" className="sidebar-item mt-1">
+                <span className="text-neutral-300 w-5 text-center">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                </span>
+                <span className="text-neutral-400 text-xs font-semibold">Browse all rooms</span>
+              </Link>
+
+              {dmConversations.length > 0 && (
+                <>
+                  <p className="section-label px-3 mb-2 mt-4">Direct Messages</p>
+                  {dmConversations.slice(0, 3).map((dm) => (
+                    <Link
+                      key={dm.partner_id}
+                      href={`/lobby?dm=${dm.partner_id}`}
+                      className="sidebar-item"
+                    >
+                      <span className="w-5 h-5 rounded-full bg-neutral-200 text-neutral-600 text-[10px] font-bold flex items-center justify-center flex-shrink-0">
+                        {dm.partner_username.charAt(0).toUpperCase()}
+                      </span>
+                      <span className="text-neutral-600 truncate flex-1 min-w-0">{dm.partner_username}</span>
+                      <UnreadBadge count={unreadCounts.dms[dm.partner_id] ?? 0} />
+                    </Link>
+                  ))}
+                </>
+              )}
+            </>
+          )}
         </div>
       </nav>
 
@@ -230,6 +299,19 @@ export function Sidebar({ user, dailyAnswered = 0, dailyGoal = 20 }: SidebarProp
           <span>Courses</span>
         </Link>
         <Link
+          href="/checkout"
+          className={`sidebar-item ${pathname === '/checkout' ? 'sidebar-item-active' : ''}`}
+        >
+          <span className="text-neutral-400">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+            </svg>
+          </span>
+          <span>Cart</span>
+          <UnreadBadge count={cart.items.length} />
+        </Link>
+        <Link
           href="/settings"
           className={`sidebar-item ${pathname === '/settings' ? 'sidebar-item-active' : ''}`}
         >
@@ -244,19 +326,21 @@ export function Sidebar({ user, dailyAnswered = 0, dailyGoal = 20 }: SidebarProp
         </Link>
 
         {/* Profile row */}
-        <button
-          onClick={handleLogout}
-          className="sidebar-item w-full group"
-          title="Click to log out"
-        >
+        <div className="flex items-center gap-3 px-3 py-2">
           <Avatar email={user.email || ''} size={7} />
           <div className="flex-1 min-w-0 text-left">
             <p className="text-sm font-semibold text-neutral-800 truncate">{displayName}</p>
             <p className="text-[10px] text-neutral-400 truncate">{user.email}</p>
           </div>
-          <svg className="w-4 h-4 text-neutral-300 opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        </div>
+        <button
+          onClick={handleLogout}
+          className="sidebar-item w-full text-red-500 hover:bg-red-50"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
           </svg>
+          <span>Logout</span>
         </button>
       </div>
     </aside>

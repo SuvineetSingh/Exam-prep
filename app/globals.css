@@ -81,6 +81,29 @@
            bg-brand-coral text-white hover:bg-red-600 active:scale-[0.97] transition-all;
   }
 
+  /* ── Course tile "ticket stub" perforation seam (the Credential Dossier signature element) ──
+     A self-stretching dashed divider with two notches punched out top/bottom, colored to match
+     the page background so they read as cut-outs rather than decoration. */
+  .ticket-seam {
+    @apply relative self-stretch border-l-2 border-dashed border-neutral-200 flex-shrink-0;
+  }
+  .ticket-seam::before,
+  .ticket-seam::after {
+    content: '';
+    position: absolute;
+    left: -7px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: theme('colors.neutral.100');
+  }
+  .ticket-seam::before {
+    top: -7px;
+  }
+  .ticket-seam::after {
+    bottom: -7px;
+  }
+
   /* ── Inputs ── */
   .input {
     @apply block w-full rounded-[10px] border border-neutral-200 bg-white py-2.5 px-3.5

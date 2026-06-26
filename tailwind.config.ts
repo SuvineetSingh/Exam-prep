@@ -18,6 +18,7 @@ const config: Config = {
           blue:   '#1CB0F6',
           purple: '#CE82FF',
         },
+        paper: '#FAF9F6',
         // Neutral palette
         neutral: {
           900: '#1A1A2E',
@@ -64,6 +65,7 @@ const config: Config = {
       fontFamily: {
         sans: ['var(--font-jakarta)', 'var(--font-inter)', 'system-ui', 'sans-serif'],
         jakarta: ['var(--font-jakarta)', 'system-ui', 'sans-serif'],
+        mono: ['var(--font-plex-mono)', 'ui-monospace', 'monospace'],
       },
       spacing: {
         '128': '32rem',

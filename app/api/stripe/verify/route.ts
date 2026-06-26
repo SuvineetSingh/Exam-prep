@@ -33,24 +33,26 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ upgraded: false });
   }
 
-  const course = session.metadata?.course ?? null;
+  const courses = session.metadata?.courses?.split(',').filter(Boolean) ?? [];
   const serviceClient = createServiceClient();
 
-  if (course) {
-    // Check if webhook already inserted the course subscription
-    const { data: existingSub } = await serviceClient
+  if (courses.length > 0) {
+    // Check which courses the webhook already inserted
+    const { data: existingSubs } = await serviceClient
       .from('course_subscriptions')
-      .select('id')
+      .select('course')
       .eq('user_id', user.id)
-      .eq('course', course)
-      .maybeSingle();
+      .in('course', courses);
 
-    if (!existingSub) {
-      // Webhook missed it — insert now
+    const alreadyInserted = new Set((existingSubs ?? []).map((s) => s.course));
+    const missing = courses.filter((c) => !alreadyInserted.has(c));
+
+    if (missing.length > 0) {
+      // Webhook missed these — insert now
       const { error: subError } = await serviceClient
         .from('course_subscriptions')
         .upsert(
-          { user_id: user.id, course, stripe_session_id: session.id },
+          missing.map((course) => ({ user_id: user.id, course, stripe_session_id: session.id })),
           { onConflict: 'user_id,course', ignoreDuplicates: true }
         );
 
@@ -83,5 +85,5 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  return NextResponse.json({ upgraded: true, course });
+  return NextResponse.json({ upgraded: true, courses });
 }

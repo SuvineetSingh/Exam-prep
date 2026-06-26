@@ -1,8 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { COURSE_PRICE_DISPLAY } from '@/lib/utils/constants';
+import { useCart } from '@/lib/cart/CartContext';
+import type { CourseName } from '@/lib/types';
 
 export const FREE_QUESTION_LIMIT = 15;
 export const FREE_QUESTION_WARNING = 10;
@@ -13,21 +15,12 @@ interface PaywallBannerProps {
 }
 
 export function PaywallBanner({ examType, usedCount }: PaywallBannerProps) {
-  const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const router = useRouter();
+  const cart = useCart();
 
-  const handleUpgrade = async () => {
-    setCheckoutLoading(true);
-    const res = await fetch('/api/stripe/checkout', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ course: examType }),
-    });
-    const data = await res.json();
-    if (data.url) {
-      window.location.href = data.url;
-    } else {
-      setCheckoutLoading(false);
-    }
+  const handleUpgrade = () => {
+    cart.addItem(examType as CourseName);
+    router.push('/checkout');
   };
 
   return (
@@ -50,17 +43,9 @@ export function PaywallBanner({ examType, usedCount }: PaywallBannerProps) {
       <div className="flex flex-col sm:flex-row gap-3 justify-center">
         <button
           onClick={handleUpgrade}
-          disabled={checkoutLoading}
-          className="px-6 py-2.5 bg-brand-amber hover:bg-orange-500 text-white rounded-btn font-bold text-sm transition-all shadow-sm active:scale-95 disabled:opacity-60 flex items-center justify-center gap-2"
+          className="px-6 py-2.5 bg-brand-amber hover:bg-orange-500 text-white rounded-btn font-bold text-sm transition-all shadow-sm active:scale-95 flex items-center justify-center gap-2"
         >
-          {checkoutLoading ? (
-            <>
-              <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              Redirecting...
-            </>
-          ) : (
-            `Buy ${examType} Pro — ${COURSE_PRICE_DISPLAY[examType] ?? '$49'} →`
-          )}
+          {`Buy ${examType} Pro — ${COURSE_PRICE_DISPLAY[examType] ?? '$49'} →`}
         </button>
         <Link
           href="/courses"

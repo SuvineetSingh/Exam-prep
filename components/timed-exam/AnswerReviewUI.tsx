@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
 
 interface AnswerReviewUIProps {
@@ -9,8 +8,6 @@ interface AnswerReviewUIProps {
 }
 
 export function AnswerReviewUI({ questions, summary }: AnswerReviewUIProps) {
-  const [expandedId, setExpandedId] = useState<string | null>(null);
-
   return (
     <div className="min-h-screen bg-neutral-100 py-8 sm:py-12 px-4 font-sans">
       <div className="max-w-4xl mx-auto">
@@ -25,7 +22,7 @@ export function AnswerReviewUI({ questions, summary }: AnswerReviewUIProps) {
                 <h1 className="text-2xl sm:text-3xl font-black text-neutral-900 uppercase tracking-tighter">Answer Review</h1>
                 <p className="text-neutral-400 font-bold text-sm">{summary?.dateFormatted}</p>
              </div>
-             <Link href="/questions" className="text-xs font-bold text-neutral-400 hover:text-brand-green transition-colors uppercase tracking-widest">← Exit Review</Link>
+             <Link href="/questions" className="btn-danger px-4 py-2 text-xs">← Exit Review</Link>
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
@@ -61,14 +58,9 @@ export function AnswerReviewUI({ questions, summary }: AnswerReviewUIProps) {
             const isCorrect = selectedOption === correctAnswerKey;
             const isUnattempted = selectedOption === 'unattempted' || selectedOption === '';
 
-            const isExpanded = expandedId === q.id || !isCorrect;
-
             return (
               <div key={q.id || idx} className="card overflow-hidden transition-all">
-                <button
-                  onClick={() => setExpandedId(expandedId === q.id ? null : q.id)}
-                  className="w-full p-5 sm:p-8 flex justify-between items-center text-left hover:bg-neutral-100/50 transition-colors"
-                >
+                <div className="w-full p-5 sm:p-8 flex justify-between items-center text-left">
                   <div className="flex items-center gap-4 sm:gap-5">
                     <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black text-lg flex-shrink-0
                       ${isCorrect ? 'bg-green-100 text-brand-green' : isUnattempted ? 'bg-neutral-100 text-neutral-400' : 'bg-red-100 text-brand-coral'}`}>
@@ -81,13 +73,9 @@ export function AnswerReviewUI({ questions, summary }: AnswerReviewUIProps) {
                         </span>
                     </div>
                   </div>
-                  <div className={`transform transition-transform duration-200 flex-shrink-0 ${isExpanded ? 'rotate-180' : ''}`}>
-                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="text-neutral-300"><path d="M5 7.5L10 12.5L15 7.5" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                  </div>
-                </button>
+                </div>
 
-                {isExpanded && (
-                  <div className="px-5 sm:px-10 pb-6 sm:pb-10 animate-in fade-in slide-in-from-top-2 duration-300">
+                <div className="px-5 sm:px-10 pb-6 sm:pb-10">
                     <div className="h-px bg-neutral-100 mb-6 sm:mb-8" />
                     <p className="text-lg sm:text-xl font-bold text-neutral-800 mb-6 sm:mb-8 leading-relaxed">{q.question_text}</p>
 
@@ -126,8 +114,7 @@ export function AnswerReviewUI({ questions, summary }: AnswerReviewUIProps) {
                         <p className="text-neutral-700 text-sm leading-relaxed">{q.explanation}</p>
                       </div>
                     )}
-                  </div>
-                )}
+                </div>
               </div>
             );
           })}

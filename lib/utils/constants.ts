@@ -12,6 +12,30 @@ export const COURSE_PRICE_DISPLAY: Record<string, string> = {
   FE:  '$49',
 };
 
+export const COURSE_CATALOG = [
+  {
+    exam_type: 'CMA',
+    name: 'CMA — Certified Management Accountant',
+    description: 'Financial planning, analysis, control, decision support, and professional ethics.',
+    icon: '📊',
+    color: 'amber',
+  },
+  {
+    exam_type: 'CFA',
+    name: 'CFA — Chartered Financial Analyst',
+    description: 'Portfolio management, equity analysis, fixed income, derivatives, and ethics.',
+    icon: '📈',
+    color: 'violet',
+  },
+  {
+    exam_type: 'FE',
+    name: 'FE — Fundamentals of Engineering',
+    description: 'Mathematics, engineering sciences, and discipline-specific technical topics.',
+    icon: '⚙️',
+    color: 'teal',
+  },
+] as const;
+
 export const EXAM_TYPES = {
   CMA: 'CMA',
   CFA: 'CFA',

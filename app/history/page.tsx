@@ -88,7 +88,7 @@ export default function HistoryPage() {
           <p className="text-neutral-500 font-medium text-sm">Loading your history…</p>
         </div>
       ) : sessions.length > 0 ? (
-        <div className="card overflow-hidden divide-y divide-neutral-100">
+        <div className="space-y-3">
           {sessions.map((s, i) => <SessionRow key={s.id} session={s} index={i} />)}
         </div>
       ) : (

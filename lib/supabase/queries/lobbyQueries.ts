@@ -99,6 +99,52 @@ export async function fetchDMConversations(userId: string) {
   return Array.from(conversations.values());
 }
 
+export async function fetchUnreadCounts(userId: string): Promise<{ rooms: Record<string, number>; dms: Record<string, number> }> {
+  const supabase = createClient();
+
+  const [readsRes, roomMsgsRes, dmMsgsRes] = await Promise.all([
+    supabase
+      .from('conversation_reads')
+      .select('conversation_id, conversation_type, last_read_at')
+      .eq('user_id', userId),
+    supabase
+      .from('lobby_messages')
+      .select('room_id, created_at')
+      .eq('message_type', 'room')
+      .neq('sender_id', userId),
+    supabase
+      .from('lobby_messages')
+      .select('sender_id, created_at')
+      .eq('message_type', 'dm')
+      .eq('recipient_id', userId),
+  ]);
+
+  const lastRead = new Map<string, string>();
+  for (const row of readsRes.data ?? []) {
+    lastRead.set(`${row.conversation_type}:${row.conversation_id}`, row.last_read_at);
+  }
+
+  const rooms: Record<string, number> = {};
+  for (const msg of roomMsgsRes.data ?? []) {
+    if (!msg.room_id) continue;
+    const readAt = lastRead.get(`room:${msg.room_id}`);
+    if (!readAt || msg.created_at > readAt) {
+      rooms[msg.room_id] = (rooms[msg.room_id] ?? 0) + 1;
+    }
+  }
+
+  const dms: Record<string, number> = {};
+  for (const msg of dmMsgsRes.data ?? []) {
+    if (!msg.sender_id) continue;
+    const readAt = lastRead.get(`dm:${msg.sender_id}`);
+    if (!readAt || msg.created_at > readAt) {
+      dms[msg.sender_id] = (dms[msg.sender_id] ?? 0) + 1;
+    }
+  }
+
+  return { rooms, dms };
+}
+
 export async function fetchUserRoomActivity(userId: string) {
   const supabase = createClient();
   const { data, error } = await supabase

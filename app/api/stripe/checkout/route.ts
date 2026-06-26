@@ -26,27 +26,30 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    let course: CourseName;
+    let requestedCourses: CourseName[];
     try {
       const body = await request.json();
-      if (!VALID_COURSES.includes(body.course)) {
-        return NextResponse.json({ error: 'Invalid course' }, { status: 400 });
+      const raw: unknown[] = Array.isArray(body.courses) ? body.courses : [];
+      requestedCourses = raw.filter((c): c is CourseName => VALID_COURSES.includes(c as CourseName));
+      if (requestedCourses.length === 0) {
+        return NextResponse.json({ error: 'No valid courses provided' }, { status: 400 });
       }
-      course = body.course as CourseName;
     } catch {
       return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
     }
 
-    // Check if user already has this course
-    const { data: existingSub } = await supabase
+    // Drop any course the user already owns rather than failing the whole request
+    const { data: existingSubs } = await supabase
       .from('course_subscriptions')
-      .select('id')
+      .select('course')
       .eq('user_id', user.id)
-      .eq('course', course)
-      .maybeSingle();
+      .in('course', requestedCourses);
 
-    if (existingSub) {
-      return NextResponse.json({ error: 'Already subscribed to this course' }, { status: 400 });
+    const alreadyOwned = new Set((existingSubs ?? []).map((s) => s.course));
+    const courses = requestedCourses.filter((c) => !alreadyOwned.has(c));
+
+    if (courses.length === 0) {
+      return NextResponse.json({ error: 'Already subscribed to all selected courses' }, { status: 400 });
     }
 
     // Create or retrieve Stripe customer
@@ -75,23 +78,21 @@ export async function POST(request: Request) {
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       payment_method_types: ['card'],
-      line_items: [
-        {
-          price_data: {
-            currency: 'usd',
-            product_data: {
-              name: `${course} Pro Access`,
-              description: `Unlimited access to all ${COURSE_LABELS[course]} exam questions`,
-            },
-            unit_amount: COURSE_PRICES_CENTS[course] ?? 4900,
+      line_items: courses.map((course) => ({
+        price_data: {
+          currency: 'usd',
+          product_data: {
+            name: `${course} Pro Access`,
+            description: `Unlimited access to all ${COURSE_LABELS[course]} exam questions`,
           },
-          quantity: 1,
+          unit_amount: COURSE_PRICES_CENTS[course] ?? 4900,
         },
-      ],
+        quantity: 1,
+      })),
       mode: 'payment',
-      success_url: `${baseUrl}/courses?success=true&session_id={CHECKOUT_SESSION_ID}&course=${course}`,
-      cancel_url: `${baseUrl}/courses`,
-      metadata: { supabase_user_id: user.id, course },
+      success_url: `${baseUrl}/courses?success=true&session_id={CHECKOUT_SESSION_ID}&courses=${courses.join(',')}`,
+      cancel_url: `${baseUrl}/checkout`,
+      metadata: { supabase_user_id: user.id, courses: courses.join(',') },
     });
 
     return NextResponse.json({ url: session.url });

@@ -224,10 +224,10 @@ export function ProfileTab({ userId, userProfile, onUpdate, authProvider }: Prof
                 JPG, PNG or GIF. Max size 5MB.
               </p>
               {uploading && (
-                <p className="text-xs text-brand-green mt-2 flex items-center gap-2">
+                <div className="text-xs text-brand-green mt-2 flex items-center gap-2">
                   <div className="w-3 h-3 border-2 border-brand-green/30 border-t-brand-green rounded-full animate-spin" />
                   Uploading...
-                </p>
+                </div>
               )}
             </div>
           </div>

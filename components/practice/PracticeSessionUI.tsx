@@ -277,6 +277,7 @@ export function PracticeSessionUI({
   const [showSaveExitPopup, setShowSaveExitPopup] = useState(false);
   const [panelOpen, setPanelOpen]                 = useState(false);
   const [saving, setSaving]                       = useState(false);
+  const savedSessionIdRef = useRef<string | null>(null);
 
   const [elapsed, setElapsed]         = useState(0);
   const [timerActive, setTimerActive] = useState(true);
@@ -437,6 +438,7 @@ export function PracticeSessionUI({
       if (sessionError) throw sessionError;
 
       const dbSessionId = sessionData.id;
+      savedSessionIdRef.current = dbSessionId;
 
       const rows = sessionLog.map(entry => ({
         user_id:         user.id,
@@ -485,7 +487,7 @@ export function PracticeSessionUI({
         gamification.revealBadges(newBadges);
         // navigation happens in the BadgeModal onDismiss handler below
       } else {
-        router.push('/practice');
+        router.push(`/practice/results?session=${dbSessionId}`);
       }
     } catch (err) {
       console.error('Failed to save session:', err);
@@ -517,7 +519,11 @@ export function PracticeSessionUI({
         onDismiss={() => {
           const remaining = gamification.newBadges.length;
           gamification.dismissBadge();
-          if (remaining <= 1) router.push('/practice');
+          if (remaining <= 1) {
+            router.push(
+              savedSessionIdRef.current ? `/practice/results?session=${savedSessionIdRef.current}` : '/practice'
+            );
+          }
         }}
       />
 

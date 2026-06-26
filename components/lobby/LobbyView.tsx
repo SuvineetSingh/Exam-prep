@@ -1,7 +1,9 @@
 'use client';
 
 import { useState, useCallback, useEffect, useRef } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import { fetchDMConversations } from '@/lib/supabase/queries/lobbyQueries';
 import { useLobbyPresence } from '@/hooks/useLobbyPresence';
 import { useLobbyMessages } from '@/hooks/useLobbyMessages';
 import { useDMMessages } from '@/hooks/useDMMessages';
@@ -14,6 +16,14 @@ import { MiniProfileCard } from './MiniProfileCard';
 import { IndustrySelector } from './IndustrySelector';
 import { NotificationToast } from './NotificationToast';
 import type { LobbyRoom, LobbyUserProfile, LobbyMessage, NotificationToast as NotificationToastType } from '@/lib/types/lobby';
+
+type DMConversation = {
+  partner_id: string;
+  partner_username: string;
+  partner_avatar_url: string | null;
+  last_message: string;
+  last_message_at: string;
+};
 
 interface LobbyViewProps {
   rooms: LobbyRoom[];
@@ -36,6 +46,7 @@ export function LobbyView({ rooms, currentUser, userProfile }: LobbyViewProps) {
   const [mobileTab, setMobileTab] = useState<'rooms' | 'chat' | 'people'>('chat');
   // 'list' = conversation history view, 'active' = open chat view
   const [chatView, setChatView] = useState<'list' | 'active'>('list');
+  const [dmConversations, setDmConversations] = useState<DMConversation[]>([]);
 
   // Refs so stable async closures can read latest values
   const chatModeRef = useRef(chatMode);
@@ -51,6 +62,36 @@ export function LobbyView({ rooms, currentUser, userProfile }: LobbyViewProps) {
   // Track previous message states to detect new messages
   const prevRoomMessagesRef = useRef<LobbyMessage[]>([]);
   const prevDmMessagesRef = useRef<LobbyMessage[]>([]);
+
+  // ── Keep the desktop "Direct Messages" list (in RoomList) up to date ──
+  useEffect(() => {
+    let cancelled = false;
+    const load = () => fetchDMConversations(currentUser.id).then((convs) => {
+      if (!cancelled) setDmConversations(convs);
+    }).catch(() => {});
+
+    load();
+
+    const supabase = createClient();
+    const channel = supabase
+      .channel(`dm-conversations:${currentUser.id}`)
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'lobby_messages', filter: `sender_id=eq.${currentUser.id}` },
+        load
+      )
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'lobby_messages', filter: `recipient_id=eq.${currentUser.id}` },
+        load
+      )
+      .subscribe();
+
+    return () => {
+      cancelled = true;
+      channel.unsubscribe();
+    };
+  }, [currentUser.id]);
 
   // ── Global DM listener: catches DMs from ANY sender, not just the active partner ──
   useEffect(() => {
@@ -140,6 +181,20 @@ export function LobbyView({ rooms, currentUser, userProfile }: LobbyViewProps) {
     }
     removeToast(toast.id);
   }, [rooms, handleRoomSelect, handleStartDM, removeToast]);
+
+  // Deep-link support: `/lobby?room=<slug>` or `/lobby?dm=<userId>` (e.g. from the sidebar)
+  const searchParams = useSearchParams();
+  useEffect(() => {
+    const dmParam = searchParams.get('dm');
+    const roomParam = searchParams.get('room');
+    if (dmParam) {
+      handleStartDM(dmParam);
+    } else if (roomParam) {
+      const room = rooms.find(r => r.slug === roomParam);
+      if (room) handleRoomSelect(room);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Detect new room messages and trigger notifications
   useEffect(() => {
@@ -251,6 +306,10 @@ export function LobbyView({ rooms, currentUser, userProfile }: LobbyViewProps) {
             onSelectRoom={handleRoomSelect}
             currentUserId={currentUser.id}
             unreadCounts={unreadCounts.rooms}
+            dmConversations={dmConversations}
+            activeDmPartnerId={chatMode === 'dm' ? dmPartnerId : null}
+            onSelectDM={handleStartDM}
+            dmUnreadCounts={unreadCounts.dms}
           />
         </aside>
 
@@ -258,19 +317,21 @@ export function LobbyView({ rooms, currentUser, userProfile }: LobbyViewProps) {
         <main className={`overflow-hidden ${
           mobileTab === 'chat' ? 'flex flex-col' : 'hidden md:flex md:flex-col'
         }`}>
-          {/* Mobile: conversation list view */}
+          {/* Mobile: conversation list view (desktop always shows the chat instead — see RoomList's Direct Messages section + always-on RoomChat below) */}
           {showConversationList && (
-            <ConversationList
-              currentUserId={currentUser.id}
-              rooms={rooms}
-              unreadCounts={unreadCounts}
-              onOpenRoom={handleRoomSelect}
-              onOpenDM={handleStartDM}
-            />
+            <div className="md:hidden h-full">
+              <ConversationList
+                currentUserId={currentUser.id}
+                rooms={rooms}
+                unreadCounts={unreadCounts}
+                onOpenRoom={handleRoomSelect}
+                onOpenDM={handleStartDM}
+              />
+            </div>
           )}
 
           {/* Mobile active chat OR desktop always-on chat */}
-          <div className={`flex flex-col h-full ${showConversationList ? 'hidden' : ''}`}>
+          <div className={`flex flex-col h-full ${showConversationList ? 'hidden md:flex' : ''}`}>
             <RoomChat
               room={chatMode === 'room' ? activeRoom : null}
               messages={chatMode === 'room' ? roomMessages : dmMessages}

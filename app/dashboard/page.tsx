@@ -323,7 +323,7 @@ export default function DashboardPage() {
             </Link>
           </div>
         ) : (
-          <div className="card overflow-hidden divide-y divide-neutral-100">
+          <div className="space-y-3">
             {recentSessions.map((session, idx) => (
               <SessionRow key={session.id} session={session} index={idx} />
             ))}

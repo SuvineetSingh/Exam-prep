@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 
-const PROTECTED = ['/questions', '/practice', '/timed-exam', '/dashboard', '/lobby', '/history', '/courses', '/settings'];
+const PROTECTED = ['/questions', '/practice', '/timed-exam', '/dashboard', '/lobby', '/history', '/courses', '/settings', '/badges', '/checkout'];
 const AUTH_ONLY = ['/login', '/register'];
 
 export function middleware(request: NextRequest) {

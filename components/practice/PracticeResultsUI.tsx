@@ -2,13 +2,11 @@
 
 import Link from 'next/link';
 
-interface ResultsUIProps {
+interface PracticeResultsUIProps {
   score: number;
   total: number;
   percentage: number;
   timeTaken: string;
-  timeGiven: string;
-  answered: number;
   unanswered: number;
   correct: number;
   incorrect: number;
@@ -17,10 +15,10 @@ interface ResultsUIProps {
   sessionId: string;
 }
 
-export function ExamResultsUI({
-  score, total, percentage, timeTaken, timeGiven,
+export function PracticeResultsUI({
+  score, total, percentage, timeTaken,
   unanswered, correct, incorrect, examType, date, sessionId
-}: ResultsUIProps) {
+}: PracticeResultsUIProps) {
 
   const getMessage = (pct: number) => {
     if (pct >= 90) return { emoji: '🏆', text: 'Outstanding!' };
@@ -45,7 +43,7 @@ export function ExamResultsUI({
           {/* Header */}
           <div className="bg-gradient-to-br from-neutral-900 to-neutral-800 p-10 text-center text-white">
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 rounded-full text-xs font-extrabold uppercase tracking-widest mb-5">
-              {examType} · Timed Exam
+              {examType} · Practice Session
             </div>
             <p className="text-6xl mb-2">{emoji}</p>
             <h1 className={`text-7xl font-extrabold mb-1 ${scoreColor}`}>
@@ -69,9 +67,8 @@ export function ExamResultsUI({
                 <p className="text-3xl font-extrabold text-red-600">{incorrect}</p>
               </div>
               <div className="bg-neutral-50 p-4 rounded-2xl border border-neutral-200">
-                <p className="section-label mb-1">Time Taken</p>
+                <p className="section-label mb-1">Time Spent</p>
                 <p className="text-xl font-extrabold text-neutral-800">{timeTaken}</p>
-                <p className="text-xs text-neutral-400 mt-0.5">of {timeGiven} allowed</p>
               </div>
               <div className="bg-amber-50 p-4 rounded-2xl border border-amber-100">
                 <p className="section-label text-amber-600 mb-1">Skipped</p>
@@ -82,17 +79,17 @@ export function ExamResultsUI({
             {/* Actions */}
             <div className="space-y-3">
               <Link
-                href={`/timed-exam/${sessionId}/review`}
+                href={`/history/${sessionId}/review`}
                 className="btn-primary w-full py-4 justify-center text-base"
               >
                 Review Answers →
               </Link>
               <div className="grid grid-cols-2 gap-3">
                 <Link
-                  href="/timed-exam"
+                  href="/practice"
                   className="btn-secondary py-3.5 justify-center text-center text-sm"
                 >
-                  Retake Exam
+                  Practice More
                 </Link>
                 <Link
                   href="/dashboard"

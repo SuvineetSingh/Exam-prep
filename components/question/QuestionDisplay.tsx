@@ -20,9 +20,11 @@ interface QuestionDisplayProps {
   };
   mode: "practice" | "timed";
   onAnswer?: (selected: string, isCorrect: boolean) => void;
+  questionNumber?: number;
+  totalQuestions?: number;
 }
 
-export function QuestionDisplay({ question: q, mode, onAnswer }: QuestionDisplayProps) {
+export function QuestionDisplay({ question: q, mode, onAnswer, questionNumber, totalQuestions }: QuestionDisplayProps) {
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
 
@@ -64,6 +66,11 @@ export function QuestionDisplay({ question: q, mode, onAnswer }: QuestionDisplay
     <div className="card p-5 sm:p-8 max-w-3xl mx-auto">
       {/* Header Info */}
       <div className="flex items-center gap-2 mb-6 flex-wrap">
+        {questionNumber != null && (
+          <span className="px-2.5 py-1 bg-neutral-100 text-neutral-500 text-[10px] font-black uppercase rounded-md">
+            {totalQuestions != null ? `Question ${questionNumber} of ${totalQuestions}` : `Question ${questionNumber}`}
+          </span>
+        )}
         <span className="px-2.5 py-1 bg-brand-green text-white text-[10px] font-black uppercase rounded-md shadow-sm">
           {q.exam_type}
         </span>

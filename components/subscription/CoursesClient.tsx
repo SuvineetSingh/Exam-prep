@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { CourseName, UserStats } from '@/lib/types';
 import { COURSE_PRICE_DISPLAY } from '@/lib/utils/constants';
+import { useCart } from '@/lib/cart/CartContext';
 
 interface CourseData {
   exam_type: string;
@@ -22,32 +23,30 @@ interface CoursesClientProps {
   stats: UserStats;
   successPending: boolean;
   sessionId?: string;
-  successCourse?: string;
+  successCourses?: string[];
 }
 
 const FREE_QUESTION_LIMIT = 15;
+const METER_TICKS = 20;
 
 const colorMap = {
   amber: {
-    bg: 'bg-amber-50',
     border: 'border-amber-200',
-    badge: 'bg-amber-100 text-amber-700',
+    accent: 'text-amber-600',
     button: 'bg-amber-600 hover:bg-amber-700',
-    proBadge: 'bg-green-100 text-green-700',
+    tick: 'bg-amber-500',
   },
   violet: {
-    bg: 'bg-violet-50',
     border: 'border-violet-200',
-    badge: 'bg-violet-100 text-violet-700',
+    accent: 'text-violet-600',
     button: 'bg-violet-600 hover:bg-violet-700',
-    proBadge: 'bg-green-100 text-green-700',
+    tick: 'bg-violet-500',
   },
   teal: {
-    bg: 'bg-teal-50',
     border: 'border-teal-200',
-    badge: 'bg-teal-100 text-teal-700',
+    accent: 'text-teal-600',
     button: 'bg-teal-600 hover:bg-teal-700',
-    proBadge: 'bg-green-100 text-green-700',
+    tick: 'bg-teal-500',
   },
 };
 const DEFAULT_COLOR = colorMap.amber;
@@ -59,15 +58,14 @@ export function CoursesClient({
   stats,
   successPending,
   sessionId,
-  successCourse,
+  successCourses,
 }: CoursesClientProps) {
   const router = useRouter();
+  const cart = useCart();
   const [purchasedCourses, setPurchasedCourses] = useState<CourseName[]>(initialPurchased);
   const [checkingPayment, setCheckingPayment] = useState(successPending && !!sessionId);
   const [showSuccessBanner, setShowSuccessBanner] = useState(false);
-  const [successCourseName, setSuccessCourseName] = useState<string | null>(successCourse ?? null);
-  // Per-course loading state
-  const [loadingCourse, setLoadingCourse] = useState<string | null>(null);
+  const [successCourseNames, setSuccessCourseNames] = useState<string[]>(successCourses ?? []);
 
   // Webhook fallback: verify payment if arriving from success URL
   useEffect(() => {
@@ -79,11 +77,14 @@ export function CoursesClient({
     async function verify() {
       const res = await fetch(`/api/stripe/verify?session_id=${sessionId}`);
       const data = await res.json();
-      if (data.upgraded && data.course) {
-        setPurchasedCourses((prev) =>
-          prev.includes(data.course) ? prev : [...prev, data.course]
-        );
-        setSuccessCourseName(data.course);
+      if (data.upgraded && data.courses?.length) {
+        setPurchasedCourses((prev) => {
+          const next = new Set(prev);
+          data.courses.forEach((c: CourseName) => next.add(c));
+          return Array.from(next);
+        });
+        data.courses.forEach((c: CourseName) => cart.removeItem(c));
+        setSuccessCourseNames(data.courses);
         setShowSuccessBanner(true);
       } else if (data.upgraded) {
         setShowSuccessBanner(true);
@@ -93,27 +94,12 @@ export function CoursesClient({
     }
 
     verify();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  const handleCheckout = async (course: string) => {
-    setLoadingCourse(course);
-    try {
-      const res = await fetch('/api/stripe/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ course }),
-      });
-      const text = await res.text();
-      const data = text ? JSON.parse(text) : {};
-      if (data.url) {
-        window.location.href = data.url;
-        return;
-      }
-      console.error('Checkout error:', data.error ?? 'No URL returned');
-    } catch (err) {
-      console.error('Checkout request failed:', err);
-    }
-    setLoadingCourse(null);
+  const handleBuyNow = (course: string) => {
+    cart.addItem(course as CourseName);
+    router.push('/checkout');
   };
 
   const myCourses = courses.filter((c) => purchasedCourses.includes(c.exam_type as CourseName));
@@ -198,7 +184,7 @@ export function CoursesClient({
           </div>
           <div>
             <p className="font-semibold text-green-800">
-              Payment successful!{successCourseName ? ` You now have Pro access to ${successCourseName}.` : ' You now have Pro access.'}
+              Payment successful!{successCourseNames.length > 0 ? ` You now have Pro access to ${successCourseNames.join(', ')}.` : ' You now have Pro access.'}
             </p>
             <p className="text-sm text-green-600">A receipt has been sent to your email.</p>
           </div>
@@ -223,22 +209,26 @@ export function CoursesClient({
       {myCourses.length > 0 && (
         <div>
           <h2 className="text-lg font-bold text-neutral-900 mb-4">My Courses</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
             {myCourses.map((course) => {
               const colors = colorMap[course.color as keyof typeof colorMap] ?? DEFAULT_COLOR;
               return (
                 <div
                   key={course.exam_type}
-                  className={`rounded-card border-2 ${colors.border} ${colors.bg} px-5 py-4 flex items-center gap-4 shadow-card`}
+                  className="rounded-card border border-neutral-200 bg-paper px-4 py-3 flex items-center gap-3"
                 >
-                  <span className="text-2xl">{course.icon}</span>
+                  <span className={`font-mono text-[11px] font-bold uppercase tracking-[0.1em] px-2 py-1 rounded-md bg-white border border-neutral-200 ${colors.accent}`}>
+                    {course.exam_type}
+                  </span>
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-neutral-900 text-sm truncate">{course.name}</p>
-                    <span className="text-xs font-bold text-brand-green">Pro Access ✓</span>
+                    <span className="text-xs font-bold text-brand-green flex items-center gap-1">
+                      ✓ Pro Access
+                    </span>
                   </div>
                   <Link
                     href={`/questions?exam=${course.exam_type}`}
-                    className={`text-xs font-bold px-3 py-1.5 rounded-lg text-white transition-colors ${colors.button}`}
+                    className={`text-xs font-bold whitespace-nowrap hover:underline ${colors.accent}`}
                   >
                     Browse →
                   </Link>
@@ -256,54 +246,58 @@ export function CoursesClient({
           {courses.map((course) => {
             const colors = colorMap[course.color as keyof typeof colorMap] ?? DEFAULT_COLOR;
             const isPro = purchasedCourses.includes(course.exam_type as CourseName);
-            const isLoading = loadingCourse === course.exam_type;
-            const borderClass = isPro ? colors.border : 'border-neutral-200';
+            const inCart = cart.isInCart(course.exam_type as CourseName);
+            const freeCount = Math.min(FREE_QUESTION_LIMIT, course.questionCount);
+            const ratio = course.questionCount > 0 ? freeCount / course.questionCount : 0;
+            const filledTicks = Math.round(ratio * METER_TICKS);
 
             return (
               <div
                 key={course.exam_type}
-                className={`rounded-card shadow-card border-2 overflow-hidden transition-all hover:shadow-card-hover ${borderClass}`}
+                className={`rounded-card border ${isPro ? colors.border : 'border-neutral-200'} bg-paper overflow-hidden transition-all hover:shadow-card-hover flex`}
               >
-                {/* Card header */}
-                <div className={`px-6 py-5 ${isPro ? colors.bg : 'bg-neutral-100'}`}>
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-3xl">{course.icon}</span>
-                    {isPro ? (
-                      <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-green-100 text-green-700">
-                        Pro ✓
-                      </span>
-                    ) : (
-                      <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-neutral-200 text-neutral-500">
-                        {FREE_QUESTION_LIMIT} Free
-                      </span>
-                    )}
-                  </div>
-                  <h3 className="font-bold text-neutral-900 leading-tight">{course.name}</h3>
+                {/* Stub */}
+                <div className="w-20 sm:w-24 flex-shrink-0 flex flex-col items-center justify-between py-5 px-2">
+                  <span className="text-2xl">{course.icon}</span>
+                  <span className={`font-mono text-[11px] font-bold uppercase tracking-[0.15em] ${colors.accent}`}>
+                    {course.exam_type}
+                  </span>
+                  {isPro ? (
+                    <span
+                      className={`-rotate-6 border-2 border-dashed rounded-full w-12 h-12 flex items-center justify-center font-mono text-[9px] font-bold uppercase tracking-wide ${colors.accent} ${colors.border}`}
+                    >
+                      Pro✓
+                    </span>
+                  ) : (
+                    <span className="rotate-3 bg-neutral-100 border border-neutral-200 text-neutral-500 font-mono text-[9px] font-bold uppercase tracking-wide px-1.5 py-1 rounded">
+                      {freeCount} Free
+                    </span>
+                  )}
                 </div>
 
-                {/* Card body */}
-                <div className="px-6 py-5 space-y-4 bg-white">
+                <div className="ticket-seam" />
+
+                {/* Body */}
+                <div className="flex-1 px-5 py-5 space-y-3 min-w-0">
+                  <h3 className="font-extrabold text-neutral-900 leading-tight tracking-tight">{course.name}</h3>
                   <p className="text-sm text-neutral-500 leading-relaxed">{course.description}</p>
 
-                  <div className="flex items-center gap-2 text-sm text-neutral-600">
-                    <svg className="w-4 h-4 text-neutral-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <span>
-                      {isPro ? (
-                        <><strong className="text-neutral-900">{course.questionCount.toLocaleString()}</strong> questions</>
-                      ) : (
-                        <><strong className="text-neutral-900">{FREE_QUESTION_LIMIT}</strong> of {course.questionCount.toLocaleString()} questions free</>
-                      )}
-                    </span>
+                  <div className="text-sm text-neutral-600">
+                    {isPro ? (
+                      <span><strong className="text-neutral-900">{course.questionCount.toLocaleString()}</strong> questions</span>
+                    ) : (
+                      <span><strong className="text-neutral-900">{freeCount}</strong> of {course.questionCount.toLocaleString()} questions free</span>
+                    )}
                   </div>
 
                   {!isPro && (
-                    <div className="progress-bar h-1.5">
-                      <div
-                        className="progress-fill h-1.5"
-                        style={{ width: `${Math.min((FREE_QUESTION_LIMIT / Math.max(course.questionCount, 1)) * 100, 100)}%` }}
-                      />
+                    <div className="flex gap-0.5">
+                      {Array.from({ length: METER_TICKS }).map((_, i) => (
+                        <span
+                          key={i}
+                          className={`h-3 w-1 rounded-sm ${i < filledTicks ? colors.tick : 'bg-neutral-200'}`}
+                        />
+                      ))}
                     </div>
                   )}
 
@@ -315,20 +309,22 @@ export function CoursesClient({
                       Browse Questions →
                     </Link>
                   ) : (
-                    <div className="space-y-2">
+                    <div className="space-y-2 pt-1">
                       <button
-                        onClick={() => handleCheckout(course.exam_type)}
-                        disabled={isLoading || loadingCourse !== null}
-                        className={`block w-full text-center py-2.5 px-4 rounded-btn text-white text-sm font-bold transition-colors disabled:opacity-60 ${colors.button}`}
+                        onClick={() => handleBuyNow(course.exam_type)}
+                        className={`block w-full text-center py-2.5 px-4 rounded-btn text-white text-sm font-bold transition-colors ${colors.button}`}
                       >
-                        {isLoading ? (
-                          <span className="flex items-center justify-center gap-2">
-                            <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                            Redirecting...
-                          </span>
-                        ) : (
-                          `Buy Pro Access — ${COURSE_PRICE_DISPLAY[course.exam_type] ?? '$49'}`
-                        )}
+                        Buy Pro Access — {COURSE_PRICE_DISPLAY[course.exam_type] ?? '$49'}
+                      </button>
+                      <button
+                        onClick={() =>
+                          inCart
+                            ? cart.removeItem(course.exam_type as CourseName)
+                            : cart.addItem(course.exam_type as CourseName)
+                        }
+                        className={`btn-ghost block w-full py-2 ${inCart ? 'text-brand-green' : ''}`}
+                      >
+                        {inCart ? '✓ In Cart — Remove' : 'Add to Cart'}
                       </button>
                       <Link
                         href={`/questions?exam=${course.exam_type}`}

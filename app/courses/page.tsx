@@ -2,36 +2,15 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { AppShell } from '@/components/layout/AppShell';
 import { CoursesClient } from '@/components/subscription/CoursesClient';
+import { COURSE_CATALOG } from '@/lib/utils/constants';
 import type { CourseName, UserStats } from '@/lib/types';
 
-const COURSES = [
-  {
-    exam_type: 'CMA',
-    name: 'CMA — Certified Management Accountant',
-    description: 'Financial planning, analysis, control, decision support, and professional ethics.',
-    icon: '📊',
-    color: 'amber',
-  },
-  {
-    exam_type: 'CFA',
-    name: 'CFA — Chartered Financial Analyst',
-    description: 'Portfolio management, equity analysis, fixed income, derivatives, and ethics.',
-    icon: '📈',
-    color: 'violet',
-  },
-  {
-    exam_type: 'FE',
-    name: 'FE — Fundamentals of Engineering',
-    description: 'Mathematics, engineering sciences, and discipline-specific technical topics.',
-    icon: '⚙️',
-    color: 'teal',
-  },
-];
+const COURSES = COURSE_CATALOG;
 
 export default async function CoursesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ success?: string; session_id?: string; course?: string }>;
+  searchParams: Promise<{ success?: string; session_id?: string; courses?: string }>;
 }) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -87,7 +66,7 @@ export default async function CoursesPage({
   const params = await searchParams;
   const successPending = params.success === 'true';
   const sessionId = params.session_id;
-  const successCourse = params.course;
+  const successCourses = params.courses?.split(',').filter(Boolean);
 
   const displayName =
     user.user_metadata?.full_name ||
@@ -117,7 +96,7 @@ export default async function CoursesPage({
         stats={stats}
         successPending={successPending}
         sessionId={sessionId}
-        successCourse={successCourse}
+        successCourses={successCourses}
       />
     </AppShell>
   );

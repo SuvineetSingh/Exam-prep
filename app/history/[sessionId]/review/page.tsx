@@ -4,7 +4,6 @@ import { useEffect, useState, use } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import { HistoryAnswerReviewUI } from '@/components/history/HistoryAnswerReviewUI';
-import type { User } from '@supabase/supabase-js';
 import type { ExamSession } from '@/components/history/HistoryComponents';
 
 interface ReviewQuestion {
@@ -29,7 +28,6 @@ export default function HistoryReviewPage({ params }: { params: Promise<{ sessio
 
   const [reviewData, setReviewData] = useState<ReviewQuestion[]>([]);
   const [summary, setSummary] = useState<ReviewSummary | null>(null);
-  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -40,7 +38,6 @@ export default function HistoryReviewPage({ params }: { params: Promise<{ sessio
       // Auth guard
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return router.push('/login');
-      setUser(user);
 
       // 1. Session summary
       const { data: session, error: sErr } = await supabase
@@ -121,5 +118,5 @@ export default function HistoryReviewPage({ params }: { params: Promise<{ sessio
   }
 
   if (!summary) return null;
-  return <HistoryAnswerReviewUI questions={reviewData} summary={summary} user={user ?? undefined} />;
+  return <HistoryAnswerReviewUI questions={reviewData} summary={summary} />;
 }

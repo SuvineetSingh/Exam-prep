@@ -1,10 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
-import { createClient } from '@/lib/supabase/client';
-import { toggleStar, isQuestionStarred } from '@/lib/supabase/queries/starredQueries';
-import type { User } from '@supabase/supabase-js';
 import type { ExamSession } from '@/components/history/HistoryComponents';
 
 interface ReviewQuestion {
@@ -24,7 +21,6 @@ interface ReviewQuestion {
 interface HistoryAnswerReviewUIProps {
   questions: ReviewQuestion[];
   summary: ExamSession & { timeFormatted: string; dateFormatted: string };
-  user?: User;
 }
 
 // --- Helpers ---
@@ -85,15 +81,6 @@ function ReviewSummary({ summary }: { summary: HistoryAnswerReviewUIProps['summa
             </svg>
             Print
           </button>
-          <Link
-            href="/history"
-            className="flex items-center gap-1.5 text-sm font-bold text-neutral-500 hover:text-brand-green transition-colors"
-          >
-            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-            </svg>
-            Back to History
-          </Link>
         </div>
       </div>
 
@@ -160,30 +147,8 @@ function ReviewFilters({ active, setActive, counts }: {
 }
 
 // --- Single question card ---
-function QuestionCard({ question, index, userId }: { question: ReviewQuestion; index: number; userId?: string }) {
+function QuestionCard({ question, index }: { question: ReviewQuestion; index: number }) {
   const [expanded, setExpanded] = useState(false);
-  const [starred, setStarred] = useState(false);
-  const [starLoading, setStarLoading] = useState(false);
-
-  useEffect(() => {
-    if (!userId || !question.id) return;
-    isQuestionStarred(userId, Number(question.id)).then(setStarred);
-  }, [userId, question.id]);
-
-  const handleToggleStar = useCallback(async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!userId || !question.id) return;
-    setStarLoading(true);
-    const next = !starred;
-    setStarred(next);
-    try {
-      await toggleStar(userId, Number(question.id), question.exam_type, !next);
-    } catch {
-      setStarred(!next);
-    } finally {
-      setStarLoading(false);
-    }
-  }, [userId, question.id, question.exam_type, starred]);
 
   const correctKey   = (question.correct_option || question.correct_answer || '').trim().toLowerCase();
   const selectedKey  = (question.userAnswer || '').trim().toLowerCase();
@@ -195,10 +160,10 @@ function QuestionCard({ question, index, userId }: { question: ReviewQuestion; i
   const isUnanswered = selectedKey === 'unattempted' || selectedKey === '';
 
   const statusColor = isCorrect
-    ? 'border-green-200 bg-green-50/40'
+    ? 'border-green-200 bg-white'
     : isUnanswered
-    ? 'border-neutral-200 bg-neutral-100/40'
-    : 'border-red-200 bg-red-50/40';
+    ? 'border-neutral-200 bg-white'
+    : 'border-red-200 bg-white';
 
   const iconStyle = isCorrect
     ? 'bg-green-100 text-brand-green'
@@ -232,20 +197,6 @@ function QuestionCard({ question, index, userId }: { question: ReviewQuestion; i
         )}
 
         <div className="flex items-center gap-2 flex-shrink-0 print:hidden">
-          {userId && (
-            <button
-              onClick={handleToggleStar}
-              disabled={starLoading}
-              title={starred ? 'Unstar question' : 'Star for later review'}
-              className={`w-7 h-7 flex items-center justify-center rounded-full transition-all ${
-                starred ? 'text-amber-400 hover:text-amber-500' : 'text-neutral-200 hover:text-amber-400'
-              }`}
-            >
-              <svg className="w-4.5 h-4.5" viewBox="0 0 24 24" fill={starred ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-              </svg>
-            </button>
-          )}
           <svg
             width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}
             className={`text-neutral-300 transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`}
@@ -309,17 +260,8 @@ function QuestionCard({ question, index, userId }: { question: ReviewQuestion; i
 }
 
 // --- Main component ---
-export function HistoryAnswerReviewUI({ questions, summary, user }: HistoryAnswerReviewUIProps) {
+export function HistoryAnswerReviewUI({ questions, summary }: HistoryAnswerReviewUIProps) {
   const [filter, setFilter] = useState<ReviewFilter>('all');
-  const [userId, setUserId] = useState<string | undefined>(undefined);
-
-  useEffect(() => {
-    if (user) { setUserId(user.id); return; }
-    const supabase = createClient();
-    supabase.auth.getUser().then(({ data: { user: u } }) => {
-      if (u) setUserId(u.id);
-    });
-  }, [user]);
 
   const counts: Record<ReviewFilter, number> = {
     all:        questions.length,
@@ -357,13 +299,16 @@ export function HistoryAnswerReviewUI({ questions, summary, user }: HistoryAnswe
       `}</style>
 
       <main className="max-w-4xl mx-auto w-full">
+        <Link href="/history" className="btn-danger px-4 py-2 text-xs mb-6 inline-flex print:hidden">
+          ← Back to History
+        </Link>
         <ReviewSummary summary={summary} />
         <ReviewFilters active={filter} setActive={setFilter} counts={counts} />
 
         {filtered.length > 0 ? (
           <div className="space-y-3">
             {filtered.map((q, i) => (
-              <QuestionCard key={q.id ?? i} question={q} index={questions.indexOf(q)} userId={userId} />
+              <QuestionCard key={q.id ?? i} question={q} index={questions.indexOf(q)} />
             ))}
           </div>
         ) : (

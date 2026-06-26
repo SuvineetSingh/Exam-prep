@@ -218,7 +218,13 @@ export default function QuestionsDashboard() {
                <p className="text-neutral-500 font-medium">Fetching from database...</p>
             </div>
           ) : questions.length > 0 ? (
-            questions.map((q) => <QuestionCard key={q.id} question={q} />)
+            questions.map((q, idx) => (
+              <QuestionCard
+                key={q.id}
+                question={q}
+                questionNumber={(currentPage - 1) * ITEMS_PER_PAGE + idx + 1}
+              />
+            ))
           ) : (
             <div className="text-center py-20 bg-white rounded-2xl border-2 border-dashed border-neutral-200">
               <p className="text-neutral-400 font-medium">No results found for the current filters.</p>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { fetchRooms, fetchUserProfile } from '@/lib/supabase/queries/lobbyQueries';
@@ -61,11 +61,13 @@ export default function LobbyPage() {
       <Sidebar user={user} />
       <MobileTabBar />
       <div className="h-screen md:ml-sidebar overflow-hidden">
-        <LobbyView
-          rooms={rooms}
-          currentUser={currentUser}
-          userProfile={userProfile}
-        />
+        <Suspense>
+          <LobbyView
+            rooms={rooms}
+            currentUser={currentUser}
+            userProfile={userProfile}
+          />
+        </Suspense>
       </div>
     </div>
   );

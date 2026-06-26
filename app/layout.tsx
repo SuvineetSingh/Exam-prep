@@ -1,8 +1,9 @@
 import type { Metadata, Viewport } from 'next'; // Added Viewport type
-import { Inter, Plus_Jakarta_Sans } from 'next/font/google';
+import { Inter, Plus_Jakarta_Sans, IBM_Plex_Mono } from 'next/font/google';
 import './globals.css';
 import { APP_CONFIG } from '@/lib/utils/constants';
 import { ErrorBoundary } from '@/components/error-boundary';
+import { CartProvider } from '@/lib/cart/CartContext';
 
 // 1. ADD THIS SECTION: This tells the mobile browser to match the screen width
 export const viewport: Viewport = {
@@ -22,6 +23,13 @@ const jakarta = Plus_Jakarta_Sans({
   variable: '--font-jakarta',
   display: 'swap',
   weight: ['400', '500', '600', '700', '800'],
+});
+
+const plexMono = IBM_Plex_Mono({
+  subsets: ['latin'],
+  variable: '--font-plex-mono',
+  display: 'swap',
+  weight: ['500', '600', '700'],
 });
 
 export const metadata: Metadata = {
@@ -58,9 +66,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} ${jakarta.variable}`}>
+    <html lang="en" className={`${inter.variable} ${jakarta.variable} ${plexMono.variable}`}>
       <body className="antialiased">
-        <ErrorBoundary>{children}</ErrorBoundary>
+        <ErrorBoundary>
+          <CartProvider>{children}</CartProvider>
+        </ErrorBoundary>
       </body>
     </html>
   );

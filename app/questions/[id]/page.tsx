@@ -34,9 +34,14 @@ export default async function FullQuestionPage({
 
     let prevId: number | null = null;
     let nextId: number | null = null;
+    let questionNumber: number | null = null;
+    const totalQuestions = allQuestions?.length ?? null;
 
     if (allQuestions) {
       const currentIndex = allQuestions.findIndex(q => q.id === parseInt(id));
+      // Question Bank list numbers questions by id descending — mirror that here so
+      // the same question shows the same number in both views.
+      questionNumber = currentIndex >= 0 ? allQuestions.length - currentIndex : null;
       if (currentIndex > 0) {
         prevId = allQuestions[currentIndex - 1]?.id ?? null;
       }
@@ -47,7 +52,12 @@ export default async function FullQuestionPage({
 
     return (
       <AppShell user={user}>
-        <QuestionDisplay question={question} mode="practice" />
+        <QuestionDisplay
+          question={question}
+          mode="practice"
+          questionNumber={questionNumber ?? undefined}
+          totalQuestions={totalQuestions ?? undefined}
+        />
         <QuestionNavigation prevId={prevId} nextId={nextId} />
       </AppShell>
     );
