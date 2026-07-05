@@ -1,22 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-
-interface Question {
-  id: string;
-  question_text: string;
-  options?: string[] | null;
-  option_a?: string | null;
-  option_b?: string | null;
-  option_c?: string | null;
-  option_d?: string | null;
-}
+import type { Question } from '@/lib/types';
+import { QuestionView } from '@/components/question/QuestionView';
 
 interface ExamSessionUIProps {
   questions: Question[];
   currentIndex: number;
   setCurrentIndex: (index: number) => void;
-  userAnswers: Record<string, string>;
+  userAnswers: Record<string, string>;   // question id → lowercase 'a'|'b'|'c'|'d'
   setUserAnswers: (answers: Record<string, string>) => void;
   timeLeft: number;
   formatTime: (seconds: number) => string;
@@ -48,23 +40,113 @@ export function ExamSessionUI({
   onSubmit,
   onExit,
 }: ExamSessionUIProps) {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(
-    () => typeof window !== 'undefined' && window.innerWidth >= 768
-  );
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const currentQuestion = questions[currentIndex];
-  const answeredCount = Object.keys(userAnswers).length;
+  const answeredCount   = Object.keys(userAnswers).length;
   const unattemptedCount = questions.length - answeredCount;
 
   const timerCritical = timeLeft < 60;
-  const timerWarning = !timerCritical && timeLeft < 300; // under 5 minutes
+  const timerWarning  = !timerCritical && timeLeft < 300;
+
+  const timerSlot = (
+    <div className={`flex items-center gap-1.5 px-4 py-2 rounded-full border font-mono font-extrabold tabular-nums text-[15px] transition-colors ${
+      timerCritical ? 'bg-red-50 text-red-600 border-red-200 animate-pulse' :
+      timerWarning  ? 'bg-amber-50 text-amber-600 border-amber-200' :
+                      'bg-[#FFF0ED] text-[#FF7C5C] border-[#FFD5C8]'
+    }`}>
+      <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+        <circle cx="7" cy="7" r="5.5" stroke="currentColor" strokeWidth="1.5" />
+        <path d="M7 4.5v2.8l2 1.4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+      {formatTime(timeLeft)}
+    </div>
+  );
+
+  const secsPerQuestion = questions.length > 0 ? Math.round(timeLeft / questions.length) : 0;
+
+  const statsSlot = (
+    <div>
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-4 text-[12px] font-semibold">
+          <span className="flex items-center gap-1.5 text-brand-violet">
+            <span className="w-2 h-2 rounded-full bg-brand-violet flex-shrink-0" />
+            {answeredCount} answered
+          </span>
+          <span className="flex items-center gap-1.5 text-neutral-400">
+            <span className="w-2 h-2 rounded-full bg-brand-violet-light flex-shrink-0" />
+            {unattemptedCount} remaining
+          </span>
+        </div>
+        <span className="text-[11px] text-neutral-300 hidden sm:block">~{secsPerQuestion}s / question</span>
+      </div>
+      <div className="flex flex-wrap gap-1">
+        {questions.map((q, idx) => {
+          const isCurrent  = idx === currentIndex;
+          const isAnswered = !!userAnswers[q.id];
+          return (
+            <button
+              key={q.id}
+              onClick={() => { setCurrentIndex(idx); setIsSidebarOpen(false); }}
+              title={`Question ${idx + 1}`}
+              className={`rounded-full flex-shrink-0 transition-all hover:scale-125 ${
+                isCurrent
+                  ? 'bg-brand-violet'
+                  : isAnswered
+                  ? 'bg-brand-violet'
+                  : 'bg-brand-violet-light'
+              }`}
+              style={{
+                width:  isCurrent ? 13 : 9,
+                height: isCurrent ? 13 : 9,
+                boxShadow: isCurrent ? '0 0 0 2.5px #F3F0FC, 0 0 0 4.5px #6F56E5' : undefined,
+              }}
+            />
+          );
+        })}
+      </div>
+    </div>
+  );
+
+  const headerExtra = (
+    <>
+      {/* Question map toggle (mobile / sidebar fallback) */}
+      <button
+        onClick={() => setIsSidebarOpen(true)}
+        className="flex items-center gap-1.5 px-3 py-1.5 bg-brand-violet-light hover:bg-[#DDD8F5] rounded-full text-xs font-bold text-brand-violet transition-colors"
+        title="Question map"
+      >
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+        <span className="hidden sm:inline">Map</span>
+        {answeredCount > 0 && (
+          <span className="w-4 h-4 bg-brand-violet text-white rounded-full text-[10px] flex items-center justify-center font-black">
+            {answeredCount}
+          </span>
+        )}
+      </button>
+
+      {/* Cancel exam */}
+      <button
+        onClick={() => modals.setShowExit(true)}
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-btn text-xs font-bold text-red-500 bg-white border border-neutral-200 hover:bg-red-50 hover:border-red-200 transition-all"
+      >
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+        </svg>
+        <span className="hidden sm:inline">Cancel</span>
+      </button>
+    </>
+  );
 
   return (
     <div
-      className="h-screen bg-neutral-100 flex overflow-hidden relative select-none"
+      className="relative select-none"
       onContextMenu={(e) => e.preventDefault()}
       onCopy={(e) => e.preventDefault()}
     >
-      {/* Exit Confirm Modal */}
+      {/* ── Modals ─────────────────────────────────────────────── */}
+
       {modals.showExit && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <div className="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl border-2 border-red-50">
@@ -78,7 +160,6 @@ export function ExamSessionUI({
         </div>
       )}
 
-      {/* Summary Modal */}
       {modals.showSummary && (
         <div className="fixed inset-0 z-[210] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           <div className="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl">
@@ -110,7 +191,6 @@ export function ExamSessionUI({
         </div>
       )}
 
-      {/* Confirm Modal */}
       {modals.showConfirm && (
         <div className="fixed inset-0 z-[220] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <div className="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl border-2 border-green-100">
@@ -131,37 +211,23 @@ export function ExamSessionUI({
         </div>
       )}
 
-      {/* Cancel button */}
-      <button
-        onClick={() => modals.setShowExit(true)}
-        className="fixed top-4 right-4 z-50 p-2 px-4 bg-white hover:bg-red-50 text-red-500 rounded-xl font-bold text-sm shadow-card border border-neutral-200 transition-all flex items-center gap-2"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
-        </svg>
-        Cancel
-      </button>
+      {/* ── Question map sidebar (always fixed overlay) ─────── */}
 
-      {!isSidebarOpen && (
-        <button onClick={() => setIsSidebarOpen(true)} className="fixed top-6 left-6 z-50 p-3 bg-white shadow-xl rounded-xl text-neutral-600">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-          </svg>
-        </button>
-      )}
-
-      {/* Mobile overlay */}
       {isSidebarOpen && (
-        <div className="fixed inset-0 bg-neutral-900/40 z-[140] md:hidden backdrop-blur-sm" onClick={() => setIsSidebarOpen(false)} />
+        <div
+          className="fixed inset-0 z-[140] bg-neutral-900/40 backdrop-blur-sm"
+          onClick={() => setIsSidebarOpen(false)}
+        />
       )}
 
-      {/* Sidebar */}
-      <aside className={`fixed md:relative inset-y-0 left-0 bg-white border-r border-neutral-200 shadow-sidebar transition-all duration-300 flex flex-col flex-shrink-0 z-[150] md:z-30 overflow-hidden ${isSidebarOpen ? 'w-64 translate-x-0' : 'w-0 -translate-x-full md:w-0'}`}>
-        <div className="p-5 overflow-y-auto flex-1 min-w-[16rem] flex flex-col">
+      <aside className={`fixed inset-y-0 left-0 bg-white border-r border-neutral-200 shadow-sidebar z-[150] flex flex-col transition-transform duration-300 ${
+        isSidebarOpen ? 'translate-x-0 w-64' : '-translate-x-full w-64'
+      }`}>
+        <div className="p-5 overflow-y-auto flex-1 flex flex-col">
           <div className="flex justify-between items-center mb-5">
             <h3 className="text-xs font-extrabold uppercase text-neutral-400 tracking-widest">Question Map</h3>
             <button onClick={() => setIsSidebarOpen(false)} className="p-2 hover:bg-neutral-100 rounded-lg text-neutral-400 transition-colors">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
               </svg>
             </button>
@@ -171,7 +237,7 @@ export function ExamSessionUI({
             {questions.map((q, idx) => (
               <button
                 key={q.id}
-                onClick={() => { setCurrentIndex(idx); if (window.innerWidth < 768) setIsSidebarOpen(false); }}
+                onClick={() => { setCurrentIndex(idx); setIsSidebarOpen(false); }}
                 className={`h-10 rounded-xl font-extrabold text-sm border-2 transition-all ${
                   currentIndex === idx
                     ? 'border-brand-green bg-brand-green text-white shadow-sm'
@@ -205,7 +271,7 @@ export function ExamSessionUI({
 
           <div className="mt-auto pt-5 border-t border-neutral-100">
             <button
-              onClick={() => modals.setShowSummary(true)}
+              onClick={() => { setIsSidebarOpen(false); modals.setShowSummary(true); }}
               disabled={isSubmitting}
               className="btn-primary w-full py-3 justify-center disabled:opacity-50"
             >
@@ -215,93 +281,44 @@ export function ExamSessionUI({
         </div>
       </aside>
 
-      {/* Main content */}
-      <main className="flex-1 min-w-0 overflow-y-auto bg-neutral-100">
-        <div className="w-full max-w-3xl mx-auto px-4 md:px-8 py-4 md:py-8">
+      {/* ── Main question view ───────────────────────────────── */}
 
-          {/* Header bar */}
-          <div className="flex justify-between items-center mb-6 bg-white p-4 rounded-2xl shadow-card border border-neutral-200 w-full">
-            <div className={!isSidebarOpen ? 'pl-14' : ''}>
-              <span className="section-label block mb-0.5">Exam Session</span>
-              <span className="text-base md:text-lg font-extrabold text-neutral-900">Q{currentIndex + 1} / {questions.length}</span>
-            </div>
-            <div className={`text-right p-2 px-4 md:px-6 rounded-xl border-2 transition-colors ${
-              timerCritical ? 'bg-red-50 text-red-600 border-red-200 animate-pulse' :
-              timerWarning  ? 'bg-amber-50 text-amber-600 border-amber-200' :
-                              'bg-neutral-50 text-neutral-700 border-neutral-200'
-            }`}>
-              <span className="text-[10px] font-bold uppercase block leading-none mb-1">
-                {timerCritical ? 'Hurry!' : timerWarning ? '5 min left' : 'Timer'}
-              </span>
-              <span className="text-xl md:text-2xl font-extrabold tabular-nums">{formatTime(timeLeft)}</span>
-            </div>
-          </div>
+      {currentQuestion && (
+        <QuestionView
+          question={currentQuestion}
+          showSubmitButton={false}
+          showExplanation={false}
+          lockAfterSubmit={false}
+          fireSelectImmediately={true}
+          selectedOption={userAnswers[currentQuestion.id] ?? null}
+          onOptionSelect={(key) =>
+            setUserAnswers({ ...userAnswers, [currentQuestion.id]: key })
+          }
+          isSubmitted={!!userAnswers[currentQuestion.id]}
+          onSubmit={() => modals.setShowSummary(true)}
+          questionNumber={currentIndex + 1}
+          totalQuestions={questions.length}
+          onPrev={() => setCurrentIndex(Math.max(0, currentIndex - 1))}
+          onNext={
+            currentIndex === questions.length - 1
+              ? () => modals.setShowSummary(true)
+              : () => setCurrentIndex(currentIndex + 1)
+          }
+          isFirst={currentIndex === 0}
+          isLast={currentIndex === questions.length - 1}
+          timerSlot={timerSlot}
+          statsSlot={statsSlot}
+          headerExtra={headerExtra}
+        />
+      )}
 
-          {/* Question card */}
-          {currentQuestion && (
-            <div className="bg-white rounded-2xl shadow-card border border-neutral-200 p-6 md:p-8 mb-6 w-full">
-              <p className="text-lg md:text-xl font-semibold text-neutral-900 mb-7 leading-relaxed">{currentQuestion.question_text}</p>
-              <div className="space-y-3">
-                {(currentQuestion.options?.length
-                  ? currentQuestion.options
-                  : [currentQuestion.option_a, currentQuestion.option_b, currentQuestion.option_c, currentQuestion.option_d].filter(Boolean)
-                ).map((optText, idx) => {
-                  const optKey = String.fromCharCode(65 + idx);
-                  const isSelected = userAnswers[currentQuestion.id] === optKey;
-                  return (
-                    <button
-                      key={optKey}
-                      onClick={() => setUserAnswers({ ...userAnswers, [currentQuestion.id]: optKey })}
-                      className={`answer-option ${isSelected ? 'answer-option-selected' : ''}`}
-                    >
-                      <span className={`w-8 h-8 md:w-9 md:h-9 shrink-0 rounded-lg flex items-center justify-center font-extrabold text-sm transition-colors ${
-                        isSelected ? 'bg-brand-green text-white' : 'bg-neutral-100 text-neutral-500'
-                      }`}>
-                        {optKey}
-                      </span>
-                      <span className="text-sm md:text-base font-semibold">{optText}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* Submission error shown below question if not in modal */}
-          {submitError && !modals.showConfirm && (
-            <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm font-medium text-center">
-              {submitError} —{' '}
-              <button onClick={() => modals.setShowConfirm(true)} className="underline font-bold">Try again</button>
-            </div>
-          )}
-
-          {/* Navigation */}
-          <div className="flex justify-between items-center px-2 pb-8 gap-3">
-            <button
-              disabled={currentIndex === 0}
-              onClick={() => setCurrentIndex(currentIndex - 1)}
-              className="px-6 md:px-8 py-3 bg-white border border-neutral-200 text-neutral-600 rounded-xl font-bold hover:bg-neutral-50 transition-all active:scale-95 disabled:opacity-0 text-xs md:text-sm"
-            >
-              ← Previous
-            </button>
-            {currentIndex === questions.length - 1 ? (
-              <button
-                onClick={() => modals.setShowSummary(true)}
-                className="btn-primary px-8 md:px-10 py-3 text-xs md:text-sm"
-              >
-                Finish Exam
-              </button>
-            ) : (
-              <button
-                onClick={() => setCurrentIndex(currentIndex + 1)}
-                className="btn-primary px-8 md:px-10 py-3 text-xs md:text-sm"
-              >
-                Next →
-              </button>
-            )}
-          </div>
+      {/* Submission error outside modals */}
+      {submitError && !modals.showConfirm && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-5 py-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm font-medium shadow-lg">
+          {submitError} —{' '}
+          <button onClick={() => modals.setShowConfirm(true)} className="underline font-bold">Try again</button>
         </div>
-      </main>
+      )}
     </div>
   );
 }

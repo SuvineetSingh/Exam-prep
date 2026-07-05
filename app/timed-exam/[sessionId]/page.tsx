@@ -145,8 +145,9 @@ export default function ExamPage({ params }: { params: Promise<{ sessionId: stri
       let correctCount = 0;
 
       const answerRows = questions.map(q => {
-        const userChoice = userAnswers[q.id] || 'UNATTEMPTED';
-        const isCorrect = userChoice === String(q.correct_option || q.correct_answer).toUpperCase();
+        const userChoice = userAnswers[q.id] || 'unattempted';
+        const correctKey = String(q.correct_option || q.correct_answer).trim().toLowerCase();
+        const isCorrect = userChoice === correctKey;
         if (isCorrect) correctCount++;
         return {
           user_id: user.id,
@@ -187,7 +188,7 @@ export default function ExamPage({ params }: { params: Promise<{ sessionId: stri
       try {
         const xpTxns: { source: 'answer_correct' | 'answer_wrong' | 'exam_complete' | 'perfect_bonus'; referenceId: string }[] = [
           ...questions.map(q => ({
-            source: (userAnswers[q.id] === String(q.correct_option || q.correct_answer).toUpperCase()
+            source: (userAnswers[q.id] === String(q.correct_option || q.correct_answer).trim().toLowerCase()
               ? 'answer_correct' : 'answer_wrong') as 'answer_correct' | 'answer_wrong',
             referenceId: String(q.id),
           })),

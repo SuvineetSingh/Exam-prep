@@ -114,14 +114,14 @@
 
   /* ── Answer option buttons (practice/exam) ── */
   .answer-option {
-    @apply w-full flex items-center gap-4 px-5 py-4 rounded-xl border-2 border-neutral-200 bg-white
-           text-left font-semibold text-neutral-800 shadow-answer
-           hover:border-brand-green hover:bg-green-50 hover:shadow-answer-hover
+    @apply w-full flex items-center gap-4 px-5 py-4 rounded-xl border-2 border-transparent bg-[#F7F7F9]
+           text-left font-semibold text-neutral-700
+           hover:border-[#C4B9F5] hover:bg-brand-violet-light
            active:scale-[0.99] transition-all cursor-pointer;
   }
 
   .answer-option-selected {
-    @apply border-brand-green bg-green-50 shadow-answer-hover;
+    @apply border-brand-violet bg-brand-violet-light text-neutral-900;
   }
 
   .answer-option-correct {
@@ -130,6 +130,17 @@
 
   .answer-option-wrong {
     @apply border-brand-coral bg-red-50 text-red-800;
+  }
+
+  .answer-option-circle {
+    @apply w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0 transition-colors;
+  }
+
+  .btn-violet {
+    @apply inline-flex items-center justify-center gap-2 font-bold text-white
+           bg-brand-violet hover:bg-brand-violet-dark
+           active:scale-[0.97] transition-all
+           focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-violet;
   }
 
   /* ── Badges ── */

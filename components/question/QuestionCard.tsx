@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { CheckCircle2 } from "lucide-react";
+import { getDifficultyStyle, getExamTypeBadgeClass } from "@/lib/utils/questionHelpers";
 
 interface QuestionCardProps {
   question: {
@@ -14,6 +15,9 @@ interface QuestionCardProps {
 }
 
 export function QuestionCard({ question: q, questionNumber }: QuestionCardProps) {
+  const diffStyle    = getDifficultyStyle(q.difficulty);
+  const examBadgeCls = getExamTypeBadgeClass(q.exam_type);
+
   return (
     <Link href={`/questions/${q.id}`} target="_blank" className="block">
       <div className="card-hover p-5 sm:p-6 hover:border-brand-green group relative overflow-hidden">
@@ -23,17 +27,12 @@ export function QuestionCard({ question: q, questionNumber }: QuestionCardProps)
               Q{questionNumber}
             </span>
           )}
-          <span className="px-2.5 py-1 bg-brand-green text-white text-[10px] font-black uppercase rounded-md shadow-sm">
-            {q.exam_type}
-          </span>
+          <span className={examBadgeCls}>{q.exam_type}</span>
           <span className="px-2.5 py-1 bg-neutral-100 text-neutral-500 text-[10px] font-bold uppercase rounded-md">
             {q.category}
           </span>
-          <span className={`ml-auto text-[10px] font-black uppercase px-2 py-1 rounded ${
-            q.difficulty === 'hard' ? 'text-brand-coral bg-red-50' :
-            q.difficulty === 'medium' ? 'text-amber-600 bg-amber-50' : 'text-green-600 bg-green-50'
-          }`}>
-            {q.difficulty}
+          <span className={`ml-auto text-[10px] font-black uppercase px-2 py-1 rounded ${diffStyle.className}`}>
+            {diffStyle.label}
           </span>
         </div>
 

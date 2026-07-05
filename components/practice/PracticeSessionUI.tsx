@@ -13,6 +13,8 @@ import { useUserStats } from '@/hooks/useUserStats';
 import { XPToast } from '@/components/gamification/XPToast';
 import { BadgeModal } from '@/components/gamification/BadgeModal';
 import { XP_CORRECT, XP_WRONG } from '@/lib/gamification/constants';
+import { QuestionView } from '@/components/question/QuestionView';
+import { getCorrectKey } from '@/lib/utils/questionHelpers';
 
 export interface QuestionLog {
   questionId: string;
@@ -283,8 +285,7 @@ export function PracticeSessionUI({
   const [timerActive, setTimerActive] = useState(true);
   const intervalRef                   = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const [starred, setStarred]         = useState(false);
-  const [starLoading, setStarLoading] = useState(false);
+  const [starred, setStarred]             = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   const gamification = useGamification(currentUserId ?? undefined);
@@ -310,15 +311,12 @@ export function PracticeSessionUI({
 
   const handleToggleStar = useCallback(async () => {
     if (!currentUserId || !question) return;
-    setStarLoading(true);
     const next = !starred;
     setStarred(next);
     try {
       await toggleStar(currentUserId, Number(question.id), question.exam_type, !next);
     } catch {
       setStarred(!next); // revert on failure
-    } finally {
-      setStarLoading(false);
     }
   }, [currentUserId, question, starred]);
 
@@ -330,36 +328,6 @@ export function PracticeSessionUI({
     return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
   }, [timerActive]);
 
-  const alreadyLogged = sessionLog.some(e => e.questionId === String(question.id));
-
-  useEffect(() => {
-    const handleKey = (e: KeyboardEvent) => {
-      if (isSubmitted) return;
-      const key = e.key.toLowerCase();
-      if (['a', 'b', 'c', 'd'].includes(key)) {
-        setSelectedOption(key);
-      } else if (e.key === 'Enter' && selectedOption) {
-        document.getElementById('check-answer-btn')?.click();
-      }
-    };
-    window.addEventListener('keydown', handleKey);
-    return () => window.removeEventListener('keydown', handleKey);
-  }, [isSubmitted, selectedOption, setSelectedOption]);
-
-  const rawCorrectValue  = String(question.correct_answer || question.correct_option || '');
-  const correctAnswerKey = rawCorrectValue.trim().toLowerCase();
-  const isCorrect        = selectedOption?.toLowerCase() === correctAnswerKey;
-
-  // Support both formats: DB uses option_a/b/c/d; legacy dummy data used options[]
-  const optionsArray: string[] = (question.options?.length
-    ? question.options
-    : [question.option_a, question.option_b, question.option_c, question.option_d].filter(Boolean)
-  ) as string[];
-  const options = optionsArray.map((text: string, idx: number) => ({
-    key: String.fromCharCode(97 + idx),
-    text,
-  }));
-
   // No DB write on check — answers persist to DB only when user ends session
   const handleCheckAnswer = useCallback(() => {
     if (!selectedOption) return;
@@ -368,7 +336,7 @@ export function PracticeSessionUI({
     const timeSpent = elapsed;
     setIsSubmitted(true);
 
-    const correct = selectedOption.toLowerCase() === correctAnswerKey;
+    const correct = selectedOption === getCorrectKey(question);
     const entry: QuestionLog = {
       questionId:     String(question.id),
       questionText:   question.question_text,
@@ -391,7 +359,7 @@ export function PracticeSessionUI({
       gamification.addXPToast(xpAmount, `+${xpAmount} XP`);
       pendingXpRef.current.push({ source, referenceId: String(question.id) });
     }
-  }, [selectedOption, elapsed, question, correctAnswerKey, setIsSubmitted, onLogUpdate, gamification]);
+  }, [selectedOption, elapsed, question, setIsSubmitted, onLogUpdate, gamification]);
 
   const handleNext = () => { setElapsed(0); setTimerActive(true); navigate('next'); };
   const handlePrev = () => { setElapsed(0); setTimerActive(true); navigate('prev'); };
@@ -497,22 +465,64 @@ export function PracticeSessionUI({
     }
   }, [sessionLog, sessionId, examFilter, supabase, router, stats, gamification]);
 
-  const timerColour = isSubmitted
-    ? 'text-neutral-400'
-    : elapsed >= 60
-    ? 'text-red-500'
-    : elapsed >= 30
-    ? 'text-amber-500'
-    : 'text-neutral-700';
-
-  /* ── Progress bar pct ── */
   const answeredCount = sessionLog.length;
-  const progressPct   = totalQuestions && totalQuestions > 0
-    ? Math.round(((questionNumber ?? 1) - 1) / totalQuestions * 100)
-    : 0;
+
+  const timerSlot = (
+    <div className="flex items-center gap-1.5 px-4 py-2 rounded-full border border-[#FFD5C8] bg-[#FFF0ED]">
+      <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+        <circle cx="7" cy="7" r="5.5" stroke="#FF7C5C" strokeWidth="1.5" />
+        <path d="M7 4.5v2.8l2 1.4" stroke="#FF7C5C" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+      <span
+        className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
+          timerActive && !isSubmitted ? 'bg-[#FF7C5C] animate-pulse' : 'bg-[#FF7C5C] opacity-40'
+        }`}
+      />
+      <span className="font-mono font-extrabold text-[15px] text-[#FF7C5C] tabular-nums">
+        {formatTime(elapsed)}
+      </span>
+    </div>
+  );
+
+  const headerExtra = (
+    <>
+      {/* Exit button */}
+      <button
+        onClick={() => setShowExitPopup(true)}
+        className="w-8 h-8 rounded-full bg-brand-violet-light hover:bg-[#DDD8F5] flex items-center justify-center transition-colors"
+        title="Exit practice"
+      >
+        <svg className="w-4 h-4 text-brand-violet" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+
+      {/* Session stats panel */}
+      <button
+        onClick={() => setPanelOpen(true)}
+        className="flex items-center gap-1.5 px-3 py-1.5 bg-brand-violet-light hover:bg-[#DDD8F5] rounded-full text-xs font-bold text-brand-violet transition-colors"
+        title="Session stats"
+      >
+        📋
+        {answeredCount > 0 && (
+          <span className="w-4 h-4 bg-brand-violet text-white rounded-full text-[10px] flex items-center justify-center font-black">
+            {answeredCount}
+          </span>
+        )}
+      </button>
+
+      {/* Save / end session */}
+      <button
+        onClick={() => answeredCount > 0 ? setShowSaveExitPopup(true) : setShowExitPopup(true)}
+        className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-btn text-xs font-bold border border-[#D6D0F0] bg-white text-neutral-600 hover:border-brand-violet hover:text-brand-violet hover:bg-brand-violet-light transition-all"
+      >
+        {answeredCount > 0 ? '💾 Save & Exit' : '✕ End'}
+      </button>
+    </>
+  );
 
   return (
-    <div className="min-h-screen bg-neutral-100 flex flex-col relative">
+    <>
       <XPToast toasts={gamification.toasts} />
       <BadgeModal
         badge={gamification.newBadges[0] ?? null}
@@ -521,7 +531,9 @@ export function PracticeSessionUI({
           gamification.dismissBadge();
           if (remaining <= 1) {
             router.push(
-              savedSessionIdRef.current ? `/practice/results?session=${savedSessionIdRef.current}` : '/practice'
+              savedSessionIdRef.current
+                ? `/practice/results?session=${savedSessionIdRef.current}`
+                : '/practice'
             );
           }
         }}
@@ -556,207 +568,27 @@ export function PracticeSessionUI({
         />
       )}
 
-      {/* ── Top bar ── */}
-      <div className="bg-white border-b border-neutral-200 sticky top-0 z-30">
-        {/* Progress bar */}
-        {totalQuestions && (
-          <div className="h-1.5 bg-neutral-100">
-            <div
-              className="h-full bg-brand-green transition-all duration-500"
-              style={{ width: `${progressPct}%` }}
-            />
-          </div>
-        )}
-        <div className="max-w-2xl mx-auto px-4 h-14 flex items-center justify-between gap-4">
-          {/* Exit */}
-          <button
-            onClick={() => setShowExitPopup(true)}
-            className="w-9 h-9 rounded-full bg-neutral-100 hover:bg-neutral-200 flex items-center justify-center transition-colors flex-shrink-0"
-            title="Exit practice"
-          >
-            <svg className="w-5 h-5 text-neutral-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-
-          {/* Question counter */}
-          <div className="flex-1 text-center">
-            {questionNumber != null && (
-              <p className="text-sm font-extrabold text-neutral-700">
-                {totalQuestions
-                  ? `${questionNumber} / ${totalQuestions}`
-                  : `Question ${questionNumber}`}
-              </p>
-            )}
-          </div>
-
-          {/* Right: timer + session */}
-          <div className="flex items-center gap-2 flex-shrink-0">
-            <div className={`flex items-center gap-1.5 font-mono font-bold text-sm transition-colors ${timerColour}`}>
-              <span className={`w-1.5 h-1.5 rounded-full ${timerActive && !isSubmitted ? 'bg-brand-green animate-pulse' : 'bg-neutral-300'}`} />
-              {formatTime(elapsed)}
-            </div>
-            <button
-              onClick={() => setPanelOpen(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-neutral-100 hover:bg-neutral-200 rounded-full text-xs font-bold text-neutral-600 transition-colors"
-            >
-              📋
-              {answeredCount > 0 && (
-                <span className="w-4 h-4 bg-brand-green text-white rounded-full text-[10px] flex items-center justify-center font-black">
-                  {answeredCount}
-                </span>
-              )}
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* ── Question card ── */}
-      <div className="flex-1 flex flex-col max-w-2xl mx-auto w-full px-4 py-8">
-
-        {/* Category + difficulty chips */}
-        <div className="flex items-center gap-2 mb-4 flex-wrap">
-          <span className="text-xs font-bold px-3 py-1 bg-brand-amber/10 text-amber-700 rounded-full uppercase tracking-wide">
-            {question.category || 'General'}
-          </span>
-          <span className={`text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide ${
-            question.difficulty === 'hard'   ? 'bg-red-100 text-red-600'     :
-            question.difficulty === 'medium' ? 'bg-amber-100 text-amber-600' :
-                                               'bg-green-100 text-green-700'
-          }`}>
-            {question.difficulty || 'Easy'}
-          </span>
-          <div className="ml-auto flex items-center gap-1">
-            <button
-              onClick={handleToggleStar}
-              disabled={starLoading || !currentUserId}
-              title={starred ? 'Unstar this question' : 'Star for review'}
-              className={`w-7 h-7 flex items-center justify-center rounded-full transition-all disabled:opacity-40 ${
-                starred ? 'text-brand-amber' : 'text-neutral-300 hover:text-brand-amber'
-              }`}
-            >
-              <svg className="w-5 h-5" viewBox="0 0 24 24" fill={starred ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-              </svg>
-            </button>
-          </div>
-        </div>
-
-        {/* Question text */}
-        <div className="bg-white rounded-2xl border border-neutral-200 shadow-card p-6 mb-5">
-          <p className="text-lg md:text-xl font-semibold text-neutral-900 leading-relaxed">
-            {question.question_text}
-          </p>
-        </div>
-
-        {/* Answer options */}
-        <div className="space-y-3 mb-5">
-          {options.map((opt) => {
-            let cls = 'answer-option';
-            if (isSubmitted) {
-              if (opt.key === correctAnswerKey)    cls = 'answer-option answer-option-correct cursor-default';
-              else if (selectedOption === opt.key) cls = `answer-option answer-option-wrong cursor-default ${!isCorrect ? 'animate-shake' : ''}`;
-              else                                 cls = 'answer-option opacity-40 cursor-default pointer-events-none';
-            } else if (selectedOption === opt.key) {
-              cls = 'answer-option answer-option-selected';
-            }
-
-            const keyBg = isSubmitted
-              ? opt.key === correctAnswerKey ? 'bg-brand-green text-white'
-              : selectedOption === opt.key   ? 'bg-brand-coral text-white'
-              : 'bg-neutral-200 text-neutral-400'
-              : selectedOption === opt.key   ? 'bg-brand-green text-white'
-              : 'bg-neutral-100 text-neutral-500';
-
-            return (
-              <button
-                key={opt.key}
-                disabled={isSubmitted}
-                onClick={() => setSelectedOption(opt.key)}
-                className={cls}
-              >
-                <span className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm flex-shrink-0 transition-colors ${keyBg}`}>
-                  {opt.key.toUpperCase()}
-                </span>
-                <span className="font-semibold">{opt.text}</span>
-                {isSubmitted && opt.key === correctAnswerKey && (
-                  <span className="ml-auto text-brand-green text-lg">✓</span>
-                )}
-                {isSubmitted && selectedOption === opt.key && opt.key !== correctAnswerKey && (
-                  <span className="ml-auto text-brand-coral text-lg">✕</span>
-                )}
-              </button>
-            );
-          })}
-        </div>
-
-        {alreadyLogged && !isSubmitted && (
-          <div className="mb-3 px-4 py-2 bg-neutral-100 rounded-xl text-xs font-bold text-neutral-500 text-center">
-            Already answered — re-selecting won&apos;t overwrite your logged answer.
-          </div>
-        )}
-
-        {/* Submit / feedback */}
-        {!isSubmitted ? (
-          <button
-            id="check-answer-btn"
-            onClick={handleCheckAnswer}
-            disabled={!selectedOption}
-            className="btn-primary w-full py-4 text-base rounded-xl disabled:opacity-30 disabled:cursor-not-allowed"
-          >
-            Check Answer
-            {selectedOption && <span className="ml-2 text-sm opacity-70 font-normal">· Enter</span>}
-          </button>
-        ) : (
-          <div className={`p-5 rounded-2xl border animate-slide-up ${
-            isCorrect
-              ? 'bg-green-50 border-brand-green/30'
-              : 'bg-red-50 border-brand-coral/30'
-          }`}>
-            <p className={`font-extrabold text-base mb-2 ${isCorrect ? 'text-green-700' : 'text-red-600'}`}>
-              {isCorrect ? '🎉 Correct!' : '😬 Not quite — keep going!'}
-            </p>
-            {question.explanation ? (
-              <p className="text-neutral-700 text-sm leading-relaxed">
-                <span className="font-bold">Explanation: </span>{question.explanation}
-              </p>
-            ) : (
-              <p className="text-neutral-400 text-sm italic">No explanation provided.</p>
-            )}
-          </div>
-        )}
-
-        {/* Navigation */}
-        <div className="mt-5 flex gap-3">
-          <button
-            onClick={handlePrev}
-            disabled={isFirst}
-            className="flex-1 py-3 px-4 bg-white border border-neutral-200 rounded-xl font-bold text-neutral-600 hover:bg-neutral-50 transition-all active:scale-95 disabled:opacity-25"
-          >
-            ← Previous
-          </button>
-          <button
-            onClick={handleNext}
-            disabled={isLast}
-            className="flex-1 py-3 px-4 bg-white border border-neutral-200 rounded-xl font-bold text-neutral-600 hover:bg-neutral-50 transition-all active:scale-95 disabled:opacity-25"
-          >
-            Next →
-          </button>
-        </div>
-
-        <div className="mt-3">
-          <button
-            onClick={() =>
-              sessionLog.length > 0
-                ? setShowSaveExitPopup(true)
-                : setShowExitPopup(true)
-            }
-            className="w-full py-3 rounded-xl border-2 border-dashed border-neutral-300 text-neutral-400 font-bold text-sm hover:border-brand-green hover:text-brand-green hover:bg-green-50 transition-all"
-          >
-            {sessionLog.length > 0 ? '💾 Save & End Session' : '✕ End Session'}
-          </button>
-        </div>
-      </div>
-    </div>
+      <QuestionView
+        question={question}
+        showSubmitButton={true}
+        showExplanation={true}
+        lockAfterSubmit={true}
+        fireSelectImmediately={false}
+        selectedOption={selectedOption}
+        onOptionSelect={setSelectedOption}
+        isSubmitted={isSubmitted}
+        onSubmit={handleCheckAnswer}
+        questionNumber={questionNumber}
+        totalQuestions={totalQuestions}
+        onPrev={handlePrev}
+        onNext={handleNext}
+        isFirst={isFirst}
+        isLast={isLast}
+        isStarred={starred}
+        onToggleStar={handleToggleStar}
+        timerSlot={timerSlot}
+        headerExtra={headerExtra}
+      />
+    </>
   );
 }
