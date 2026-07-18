@@ -9,6 +9,7 @@ interface ExamSetupFormProps {
   error: string | null;
   onStart: () => void;
   timeLimit: number;
+  availableCount: number;
 }
 
 export function ExamSetupForm({
@@ -20,6 +21,7 @@ export function ExamSetupForm({
   error,
   onStart,
   timeLimit,
+  availableCount,
 }: ExamSetupFormProps) {
   return (
     <div className="max-w-md w-full">
@@ -73,8 +75,8 @@ export function ExamSetupForm({
 
             <input
               type="range"
-              min="20"
-              max="100"
+              min={Math.min(20, availableCount)}
+              max={availableCount}
               step="5"
               value={config.questionCount}
               onChange={(e) =>
@@ -82,6 +84,9 @@ export function ExamSetupForm({
               }
               className="w-full h-2 bg-neutral-200 rounded-lg appearance-none cursor-pointer accent-brand-green transition-all"
             />
+            {config.examType && (
+              <p className="text-xs text-neutral-400 mt-2">{availableCount} questions available for {config.examType}</p>
+            )}
           </div>
 
           {/* Time Summary Box */}

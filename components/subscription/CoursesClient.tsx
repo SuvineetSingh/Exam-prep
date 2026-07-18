@@ -27,29 +27,55 @@ interface CoursesClientProps {
 }
 
 const FREE_QUESTION_LIMIT = 15;
-const METER_TICKS = 20;
 
-const colorMap = {
-  amber: {
-    border: 'border-amber-200',
-    accent: 'text-amber-600',
+const COURSE_THEME: Record<string, {
+  gradient: string;
+  badge: string;
+  badgeText: string;
+  button: string;
+  accent: string;
+  accentBg: string;
+}> = {
+  CMA: {
+    gradient: 'from-amber-500 via-orange-400 to-amber-600',
+    badge: 'bg-amber-500',
+    badgeText: 'Most Popular',
     button: 'bg-amber-600 hover:bg-amber-700',
-    tick: 'bg-amber-500',
+    accent: 'text-amber-700',
+    accentBg: 'bg-amber-50',
   },
-  violet: {
-    border: 'border-violet-200',
-    accent: 'text-violet-600',
+  CFA: {
+    gradient: 'from-violet-600 via-purple-500 to-violet-700',
+    badge: 'bg-violet-600',
+    badgeText: '',
     button: 'bg-violet-600 hover:bg-violet-700',
-    tick: 'bg-violet-500',
+    accent: 'text-violet-700',
+    accentBg: 'bg-violet-50',
   },
-  teal: {
-    border: 'border-teal-200',
-    accent: 'text-teal-600',
+  FE: {
+    gradient: 'from-teal-500 via-cyan-500 to-teal-600',
+    badge: 'bg-teal-600',
+    badgeText: '',
     button: 'bg-teal-600 hover:bg-teal-700',
-    tick: 'bg-teal-500',
+    accent: 'text-teal-700',
+    accentBg: 'bg-teal-50',
   },
 };
-const DEFAULT_COLOR = colorMap.amber;
+
+const COURSE_DESCRIPTION: Record<string, { headline: string; features: string[] }> = {
+  CMA: {
+    headline: 'Master Management Accounting',
+    features: ['Financial planning & analysis', 'Decision support & control', 'Professional ethics', 'Performance measurement'],
+  },
+  CFA: {
+    headline: 'Become a Chartered Analyst',
+    features: ['Portfolio management', 'Equity & fixed income', 'Derivatives & alternatives', 'Ethics & standards'],
+  },
+  FE: {
+    headline: 'Crack the Engineering Exam',
+    features: ['Mathematics & sciences', 'Engineering fundamentals', 'Discipline-specific topics', 'Computational methods'],
+  },
+};
 
 export function CoursesClient({
   courses,
@@ -67,13 +93,11 @@ export function CoursesClient({
   const [showSuccessBanner, setShowSuccessBanner] = useState(false);
   const [successCourseNames, setSuccessCourseNames] = useState<string[]>(successCourses ?? []);
 
-  // Webhook fallback: verify payment if arriving from success URL
   useEffect(() => {
     if (!successPending || !sessionId) {
       setCheckingPayment(false);
       return;
     }
-
     async function verify() {
       const res = await fetch(`/api/stripe/verify?session_id=${sessionId}`);
       const data = await res.json();
@@ -92,7 +116,6 @@ export function CoursesClient({
       setCheckingPayment(false);
       router.replace('/courses', { scroll: false });
     }
-
     verify();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -101,8 +124,6 @@ export function CoursesClient({
     cart.addItem(course as CourseName);
     router.push('/checkout');
   };
-
-  const myCourses = courses.filter((c) => purchasedCourses.includes(c.exam_type as CourseName));
 
   const isNewUser = stats.total_answered === 0;
 
@@ -114,7 +135,7 @@ export function CoursesClient({
           {
             label: 'Study Streak',
             value: isNewUser ? '—' : `${stats.study_streak}d`,
-            sub: isNewUser ? 'Answer a question to start' : stats.study_streak === 1 ? '1 day' : `${stats.study_streak} days`,
+            sub: isNewUser ? 'Answer a question to start' : `${stats.study_streak} days`,
             icon: (
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z" />
@@ -127,7 +148,7 @@ export function CoursesClient({
           {
             label: 'Answered',
             value: isNewUser ? '0' : stats.total_answered.toLocaleString(),
-            sub: isNewUser ? 'No questions yet' : `${stats.practice_answered} practice · ${stats.timed_answered} timed`,
+            sub: isNewUser ? 'No questions yet' : `${stats.practice_answered} practice`,
             icon: (
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
@@ -151,7 +172,7 @@ export function CoursesClient({
           {
             label: 'Today',
             value: stats.today_count === 0 ? '0' : stats.today_count.toString(),
-            sub: stats.today_count === 0 ? 'Nothing yet today' : `${stats.today_count} question${stats.today_count === 1 ? '' : 's'} answered`,
+            sub: stats.today_count === 0 ? 'Nothing yet today' : `${stats.today_count} answered`,
             icon: (
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -188,16 +209,12 @@ export function CoursesClient({
             </p>
             <p className="text-sm text-green-600">A receipt has been sent to your email.</p>
           </div>
-          <button
-            onClick={() => setShowSuccessBanner(false)}
-            className="ml-auto text-green-400 hover:text-green-600"
-          >
-            ✕
+          <button onClick={() => setShowSuccessBanner(false)} className="ml-auto text-green-400 hover:text-green-600">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
           </button>
         </div>
       )}
 
-      {/* Verifying payment state */}
       {checkingPayment && (
         <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl flex items-center gap-3 text-brand-blue text-sm font-medium">
           <div className="w-4 h-4 border-2 border-blue-400/30 border-t-brand-blue rounded-full animate-spin flex-shrink-0" />
@@ -205,140 +222,124 @@ export function CoursesClient({
         </div>
       )}
 
-      {/* My Courses — shown first if user has purchases */}
-      {myCourses.length > 0 && (
-        <div>
-          <h2 className="text-lg font-bold text-neutral-900 mb-4">My Courses</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-            {myCourses.map((course) => {
-              const colors = colorMap[course.color as keyof typeof colorMap] ?? DEFAULT_COLOR;
-              return (
-                <div
-                  key={course.exam_type}
-                  className="rounded-card border border-neutral-200 bg-paper px-4 py-3 flex items-center gap-3"
-                >
-                  <span className={`font-mono text-[11px] font-bold uppercase tracking-[0.1em] px-2 py-1 rounded-md bg-white border border-neutral-200 ${colors.accent}`}>
-                    {course.exam_type}
-                  </span>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-neutral-900 text-sm truncate">{course.name}</p>
-                    <span className="text-xs font-bold text-brand-green flex items-center gap-1">
-                      ✓ Pro Access
-                    </span>
-                  </div>
-                  <Link
-                    href={`/questions?exam=${course.exam_type}`}
-                    className={`text-xs font-bold whitespace-nowrap hover:underline ${colors.accent}`}
-                  >
-                    Browse →
-                  </Link>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
+      {/* Course cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {courses.map((course) => {
+          const theme = COURSE_THEME[course.exam_type] ?? COURSE_THEME['CMA']!;
+          const extra = COURSE_DESCRIPTION[course.exam_type];
+          const isPro = purchasedCourses.includes(course.exam_type as CourseName);
+          const inCart = cart.isInCart(course.exam_type as CourseName);
 
-      {/* All Courses */}
-      <div>
-        <h2 className="text-lg font-bold text-neutral-900 mb-4">All Courses</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
-          {courses.map((course) => {
-            const colors = colorMap[course.color as keyof typeof colorMap] ?? DEFAULT_COLOR;
-            const isPro = purchasedCourses.includes(course.exam_type as CourseName);
-            const inCart = cart.isInCart(course.exam_type as CourseName);
-            const freeCount = Math.min(FREE_QUESTION_LIMIT, course.questionCount);
-            const ratio = course.questionCount > 0 ? freeCount / course.questionCount : 0;
-            const filledTicks = Math.round(ratio * METER_TICKS);
-
-            return (
-              <div
-                key={course.exam_type}
-                className={`rounded-card border ${isPro ? colors.border : 'border-neutral-200'} bg-paper overflow-hidden transition-all hover:shadow-card-hover flex`}
-              >
-                {/* Stub */}
-                <div className="w-20 sm:w-24 flex-shrink-0 flex flex-col items-center justify-between py-5 px-2">
-                  <span className="text-2xl">{course.icon}</span>
-                  <span className={`font-mono text-[11px] font-bold uppercase tracking-[0.15em] ${colors.accent}`}>
-                    {course.exam_type}
-                  </span>
-                  {isPro ? (
-                    <span
-                      className={`-rotate-6 border-2 border-dashed rounded-full w-12 h-12 flex items-center justify-center font-mono text-[9px] font-bold uppercase tracking-wide ${colors.accent} ${colors.border}`}
-                    >
-                      Pro✓
-                    </span>
-                  ) : (
-                    <span className="rotate-3 bg-neutral-100 border border-neutral-200 text-neutral-500 font-mono text-[9px] font-bold uppercase tracking-wide px-1.5 py-1 rounded">
-                      {freeCount} Free
-                    </span>
-                  )}
+          return (
+            <div
+              key={course.exam_type}
+              className="rounded-[20px] overflow-hidden shadow-sm border border-neutral-200 hover:shadow-lg transition-shadow bg-white flex flex-col"
+            >
+              {/* Banner / image section */}
+              <div className={`relative bg-gradient-to-br ${theme.gradient} h-40 flex items-end p-5`}>
+                {/* Subtle geometric decoration */}
+                <div className="absolute inset-0 overflow-hidden">
+                  <div className="absolute -top-8 -right-8 w-36 h-36 rounded-full bg-white/10" />
+                  <div className="absolute -bottom-4 -left-4 w-24 h-24 rounded-full bg-black/5" />
                 </div>
 
-                <div className="ticket-seam" />
+                {isPro && (
+                  <span className="absolute top-4 right-4 z-10 text-[10px] font-black uppercase tracking-widest bg-white/20 backdrop-blur-sm text-white px-2.5 py-1 rounded-full border border-white/30">
+                    Pro Access
+                  </span>
+                )}
+                {!isPro && theme.badgeText && (
+                  <span className={`absolute top-4 right-4 z-10 text-[10px] font-black uppercase tracking-widest ${theme.badge} text-white px-2.5 py-1 rounded-full`}>
+                    {theme.badgeText}
+                  </span>
+                )}
 
-                {/* Body */}
-                <div className="flex-1 px-5 py-5 space-y-3 min-w-0">
-                  <h3 className="font-extrabold text-neutral-900 leading-tight tracking-tight">{course.name}</h3>
-                  <p className="text-sm text-neutral-500 leading-relaxed">{course.description}</p>
+                <div className="relative z-10">
+                  <p className="text-white/70 text-[11px] font-bold uppercase tracking-[0.15em] mb-1">{course.exam_type}</p>
+                  <h3 className="text-white font-extrabold text-xl leading-tight tracking-tight">
+                    {extra?.headline ?? course.name}
+                  </h3>
+                </div>
+              </div>
 
-                  <div className="text-sm text-neutral-600">
-                    {isPro ? (
-                      <span><strong className="text-neutral-900">{course.questionCount.toLocaleString()}</strong> questions</span>
-                    ) : (
-                      <span><strong className="text-neutral-900">{freeCount}</strong> of {course.questionCount.toLocaleString()} questions free</span>
-                    )}
-                  </div>
+              {/* Content section */}
+              <div className="p-5 flex flex-col flex-1 gap-4">
+                <p className="text-sm text-neutral-500 leading-relaxed">{course.description}</p>
 
-                  {!isPro && (
-                    <div className="flex gap-0.5">
-                      {Array.from({ length: METER_TICKS }).map((_, i) => (
-                        <span
-                          key={i}
-                          className={`h-3 w-1 rounded-sm ${i < filledTicks ? colors.tick : 'bg-neutral-200'}`}
-                        />
-                      ))}
-                    </div>
-                  )}
+                {/* Features list */}
+                {extra?.features && (
+                  <ul className="space-y-1.5">
+                    {extra.features.map((f) => (
+                      <li key={f} className="flex items-center gap-2 text-sm text-neutral-700">
+                        <svg className={`w-4 h-4 flex-shrink-0 ${theme.accent}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        {f}
+                      </li>
+                    ))}
+                  </ul>
+                )}
 
+                {/* Question count */}
+                <div className={`flex items-center gap-2 px-3 py-2 rounded-xl ${theme.accentBg}`}>
+                  <svg className={`w-4 h-4 ${theme.accent}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                  </svg>
+                  <span className="text-sm font-semibold text-neutral-700">
+                    {isPro
+                      ? <><strong>{course.questionCount.toLocaleString()}</strong> questions — full access</>
+                      : <><strong>{Math.min(FREE_QUESTION_LIMIT, course.questionCount)}</strong> free · {course.questionCount.toLocaleString()} total</>
+                    }
+                  </span>
+                </div>
+
+                {/* CTA */}
+                <div className="mt-auto pt-1 space-y-2">
                   {isPro ? (
                     <Link
                       href={`/questions?exam=${course.exam_type}`}
-                      className={`block w-full text-center py-2.5 px-4 rounded-btn text-white text-sm font-bold transition-colors ${colors.button}`}
+                      className={`flex w-full items-center justify-center gap-1.5 py-3 px-4 rounded-[12px] text-white text-sm font-bold transition-colors ${theme.button}`}
                     >
-                      Browse Questions →
+                      Browse Questions
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/></svg>
                     </Link>
                   ) : (
-                    <div className="space-y-2 pt-1">
+                    <>
                       <button
                         onClick={() => handleBuyNow(course.exam_type)}
-                        className={`block w-full text-center py-2.5 px-4 rounded-btn text-white text-sm font-bold transition-colors ${colors.button}`}
+                        className={`flex w-full items-center justify-center gap-2 py-3 px-4 rounded-[12px] text-white text-sm font-bold transition-colors ${theme.button}`}
                       >
-                        Buy Pro Access — {COURSE_PRICE_DISPLAY[course.exam_type] ?? '$49'}
+                        Unlock Pro — {COURSE_PRICE_DISPLAY[course.exam_type] ?? '$49'}
                       </button>
-                      <button
-                        onClick={() =>
-                          inCart
-                            ? cart.removeItem(course.exam_type as CourseName)
-                            : cart.addItem(course.exam_type as CourseName)
-                        }
-                        className={`btn-ghost block w-full py-2 ${inCart ? 'text-brand-green' : ''}`}
-                      >
-                        {inCart ? '✓ In Cart — Remove' : 'Add to Cart'}
-                      </button>
-                      <Link
-                        href={`/questions?exam=${course.exam_type}`}
-                        className="btn-ghost block w-full py-2"
-                      >
-                        Browse Free Questions
-                      </Link>
-                    </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() =>
+                            inCart
+                              ? cart.removeItem(course.exam_type as CourseName)
+                              : cart.addItem(course.exam_type as CourseName)
+                          }
+                          className={`flex-1 py-2 px-3 rounded-[10px] text-xs font-bold border transition-colors ${
+                            inCart
+                              ? 'border-brand-green text-brand-green bg-green-50 hover:bg-green-100'
+                              : 'border-neutral-200 text-neutral-600 hover:border-neutral-300'
+                          }`}
+                        >
+                          {inCart ? 'In Cart — Remove' : 'Add to Cart'}
+                        </button>
+                        <Link
+                          href={`/questions?exam=${course.exam_type}`}
+                          className="flex-1 py-2 px-3 rounded-[10px] text-xs font-bold border border-neutral-200 text-neutral-600 hover:border-neutral-300 text-center transition-colors"
+                        >
+                          Try Free
+                        </Link>
+                      </div>
+                    </>
                   )}
                 </div>
               </div>
-            );
-          })}
-        </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

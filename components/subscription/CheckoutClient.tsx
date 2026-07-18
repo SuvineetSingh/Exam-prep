@@ -58,7 +58,7 @@ export function CheckoutClient({ courses, purchasedCourses }: CheckoutClientProp
   if (items.length === 0) {
     return (
       <div className="card p-16 text-center border-2 border-dashed border-neutral-200">
-        <p className="text-4xl mb-3">🛒</p>
+        <svg className="w-10 h-10 text-neutral-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
         <p className="font-bold text-neutral-700 mb-1">Your cart is empty</p>
         <p className="text-neutral-400 text-sm mb-5">Add a course to get started.</p>
         <Link href="/courses" className="btn-primary inline-flex">Browse Courses →</Link>
@@ -73,7 +73,9 @@ export function CheckoutClient({ courses, purchasedCourses }: CheckoutClientProp
           const meta = courses.find((c) => c.exam_type === code);
           return (
             <div key={code} className="flex items-center gap-4 p-5">
-              <span className="text-2xl">{meta?.icon ?? '📘'}</span>
+              <div className="w-10 h-10 bg-brand-green-light rounded-xl flex items-center justify-center">
+                <span className="text-xs font-black text-brand-green">{meta?.exam_type ?? code}</span>
+              </div>
               <div className="flex-1 min-w-0">
                 <p className="font-bold text-neutral-900 text-sm truncate">{meta?.name ?? code}</p>
                 <p className="text-xs text-neutral-400">Pro Access — one-time payment</p>

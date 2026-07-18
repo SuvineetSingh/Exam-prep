@@ -1,5 +1,6 @@
 'use client';
 
+import React from 'react';
 import { useUserStats } from '@/hooks/useUserStats';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
 import { useGamification } from '@/hooks/useGamification';
@@ -51,7 +52,7 @@ function DailyGoalCard({ answered, goal }: { answered: number; goal: number }) {
       </div>
       <p className="text-xs text-neutral-500 font-medium">
         {pct >= 100
-          ? '🎉 Goal complete! Amazing work today.'
+          ? 'Goal complete! Amazing work today.'
           : `${remaining} more question${remaining !== 1 ? 's' : ''} to hit your goal`}
       </p>
     </div>
@@ -62,13 +63,13 @@ function DailyGoalCard({ answered, goal }: { answered: number; goal: number }) {
 function StatCard({
   icon, label, value, sub, color,
 }: {
-  icon: string; label: string; value: string | number; sub?: string; color?: string;
+  icon: React.ReactNode; label: string; value: string | number; sub?: string; color?: string;
 }) {
   return (
     <div className="card p-5 flex flex-col gap-1">
       <div className="flex items-center justify-between">
         <p className="text-xs font-bold text-neutral-500 uppercase tracking-wide">{label}</p>
-        <span className="text-xl">{icon}</span>
+        <span className="w-7 h-7 flex items-center justify-center text-neutral-400">{icon}</span>
       </div>
       <p className={`text-3xl font-extrabold mt-1 ${color || 'text-neutral-900'}`}>{value}</p>
       {sub && <p className="text-xs text-neutral-400 font-medium">{sub}</p>}
@@ -80,14 +81,14 @@ function StatCard({
 function ActionCard({
   href, icon, label, sub, color,
 }: {
-  href: string; icon: string; label: string; sub: string; color: string;
+  href: string; icon: React.ReactNode; label: string; sub: string; color: string;
 }) {
   return (
     <Link
       href={href}
       className={`card-hover p-5 flex items-center gap-4 group cursor-pointer`}
     >
-      <div className={`w-12 h-12 rounded-2xl ${color} flex items-center justify-center text-2xl flex-shrink-0`}>
+      <div className={`w-12 h-12 rounded-2xl ${color} flex items-center justify-center flex-shrink-0`}>
         {icon}
       </div>
       <div className="flex-1 min-w-0">
@@ -107,7 +108,11 @@ function PremiumBanner() {
   return (
     <div className="card p-4 border-brand-amber bg-amber-50 flex items-center justify-between gap-4 flex-wrap">
       <div className="flex items-center gap-3">
-        <span className="text-2xl">🔒</span>
+        <div className="w-9 h-9 bg-amber-100 rounded-xl flex items-center justify-center flex-shrink-0">
+          <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+          </svg>
+        </div>
         <div>
           <p className="font-bold text-amber-900 text-sm">Unlock unlimited questions</p>
           <p className="text-xs text-amber-700">You&apos;re on the free tier — 15 questions per course</p>
@@ -192,7 +197,7 @@ export default function DashboardPage() {
       <div className="flex items-start justify-between mb-8 flex-wrap gap-3">
         <div>
           <h1 className="text-3xl font-extrabold text-neutral-900 tracking-tight">
-            {getGreeting()}, {displayName} 👋
+            {getGreeting()}, {displayName}
           </h1>
           <p className="text-neutral-500 mt-1 text-sm font-medium">
             {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
@@ -200,7 +205,9 @@ export default function DashboardPage() {
         </div>
         {streak > 0 && (
           <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-2xl px-4 py-2.5">
-            <span className="text-2xl animate-streak-glow">🔥</span>
+            <svg className="w-6 h-6 text-amber-500 animate-streak-glow" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M13.5 0.67s.74 2.65.74 4.8c0 2.06-1.35 3.73-3.41 3.73-2.07 0-3.63-1.67-3.63-3.73l.03-.36C5.21 7.51 4 10.62 4 14c0 4.42 3.58 8 8 8s8-3.58 8-8C20 8.61 17.41 3.8 13.5 0.67z"/>
+            </svg>
             <div>
               <p className="text-sm font-extrabold text-amber-800">{streak} day streak!</p>
               <p className="text-[10px] text-amber-600 font-medium">Keep it going</p>
@@ -224,26 +231,26 @@ export default function DashboardPage() {
       {/* ── Stats grid ── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <StatCard
-          icon="📊"
+          icon={<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>}
           label="Questions Answered"
           value={(stats?.total_answered ?? 0).toLocaleString()}
           sub={`+${stats?.today_count ?? 0} today`}
         />
         <StatCard
-          icon="🎯"
+          icon={<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>}
           label="Accuracy Rate"
           value={`${accuracyRate}%`}
           sub="Overall performance"
           color={scoreColor(accuracyRate)}
         />
         <StatCard
-          icon="⚡"
+          icon={<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>}
           label="Practice Mode"
           value={stats?.practice_answered ?? 0}
           sub="Questions answered"
         />
         <StatCard
-          icon="⏱️"
+          icon={<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>}
           label="Timed Exams"
           value={stats?.timed_answered ?? 0}
           sub="Questions answered"
@@ -272,21 +279,21 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <ActionCard
             href="/practice"
-            icon="⚡"
+            icon={<svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>}
             label="Practice Mode"
             sub="Unlimited questions, instant feedback"
             color="bg-green-100"
           />
           <ActionCard
             href="/timed-exam"
-            icon="⏱"
+            icon={<svg className="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>}
             label="Timed Exam"
             sub="Simulate real exam conditions"
             color="bg-amber-100"
           />
           <ActionCard
             href="/questions"
-            icon="📚"
+            icon={<svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>}
             label="Question Bank"
             sub="Browse & filter all questions"
             color="bg-blue-100"
@@ -315,7 +322,7 @@ export default function DashboardPage() {
           </div>
         ) : recentSessions.length === 0 ? (
           <div className="card p-10 text-center">
-            <p className="text-3xl mb-3">📋</p>
+            <svg className="w-10 h-10 text-neutral-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
             <p className="font-bold text-neutral-700 text-sm mb-1">No tests taken yet</p>
             <p className="text-neutral-400 text-xs">Complete a practice or timed exam to see your results here.</p>
             <Link href="/practice" className="btn-primary mt-5 inline-flex">

@@ -28,7 +28,10 @@ export default function SingleQuestionPractice() {
     next: null,
   });
   const [starredIds, setStarredIds]         = useState<number[]>([]);
+  // Derived from count queries on every fetch — plain state would reset to 1
+  // on each navigation because /practice/[id] remounts this page component.
   const [questionNumber, setQuestionNumber] = useState(1);
+  const [totalCount, setTotalCount]         = useState<number | null>(null);
 
   // ── SESSION LOG ────────────────────────────────────────────────────────────
   // Root cause of the bug: PracticeSessionUI kept the log in its own state,
@@ -106,6 +109,7 @@ export default function SingleQuestionPractice() {
           next: idx >= 0 && idx < ids.length - 1 ? (ids[idx + 1] ?? null) : null,
         });
         if (idx >= 0) setQuestionNumber(idx + 1);
+        setTotalCount(ids.length || null);
       } else {
         let prevQuery = supabase
           .from('questions')
@@ -117,24 +121,42 @@ export default function SingleQuestionPractice() {
           .select('id')
           .gt('id', currentId)
           .order('id', { ascending: true });
+        // Position/total via count queries — cheaper than fetching rows, and
+        // survives the remount that happens on every question navigation.
+        let positionQuery = supabase
+          .from('questions')
+          .select('id', { count: 'exact', head: true })
+          .lte('id', currentId);
+        let totalQuery = supabase
+          .from('questions')
+          .select('id', { count: 'exact', head: true });
 
         if (exam !== 'all') {
           prevQuery = prevQuery.eq('exam_type', exam);
           nextQuery = nextQuery.eq('exam_type', exam);
+          positionQuery = positionQuery.eq('exam_type', exam);
+          totalQuery = totalQuery.eq('exam_type', exam);
         }
         if (cat !== 'all') {
           prevQuery = prevQuery.eq('category', cat);
           nextQuery = nextQuery.eq('category', cat);
+          positionQuery = positionQuery.eq('category', cat);
+          totalQuery = totalQuery.eq('category', cat);
         }
 
-        const [{ data: prevData }, { data: nextData }] = await Promise.all([
-          prevQuery.limit(1).maybeSingle(),
-          nextQuery.limit(1).maybeSingle(),
-        ]);
+        const [{ data: prevData }, { data: nextData }, { count: position }, { count: total }] =
+          await Promise.all([
+            prevQuery.limit(1).maybeSingle(),
+            nextQuery.limit(1).maybeSingle(),
+            positionQuery,
+            totalQuery,
+          ]);
 
         setIsFirst(!prevData);
         setIsLast(!nextData);
         setNavIds({ prev: prevData ? prevData.id : null, next: nextData ? nextData.id : null });
+        if (position != null) setQuestionNumber(position);
+        setTotalCount(total ?? null);
       }
     }
     setLoading(false);
@@ -147,9 +169,6 @@ export default function SingleQuestionPractice() {
   const handleNavigate = (direction: 'prev' | 'next') => {
     const targetId = direction === 'prev' ? navIds.prev : navIds.next;
     if (targetId) {
-      if (!starredMode) {
-        setQuestionNumber(n => direction === 'next' ? n + 1 : Math.max(1, n - 1));
-      }
       const params = starredMode
         ? `session=${sessionId}&starred=true`
         : `exam=${exam}&cat=${cat}&session=${sessionId}`;
@@ -182,7 +201,7 @@ export default function SingleQuestionPractice() {
       sessionLog={sessionLog}
       onLogUpdate={setSessionLog}
       questionNumber={questionNumber}
-      totalQuestions={starredMode ? starredIds.length || undefined : undefined}
+      totalQuestions={totalCount ?? undefined}
     />
   );
 }

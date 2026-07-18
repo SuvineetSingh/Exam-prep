@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { updateUserProfile } from '@/lib/supabase/queries/lobbyQueries';
 import type { LobbyUserProfile, ProfileFormData } from '@/lib/types';
@@ -27,6 +27,7 @@ export function ProfileTab({ userId, userProfile, onUpdate, authProvider }: Prof
   const [error, setError] = useState<string | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Password change state
   const [pwNew, setPwNew] = useState('');
@@ -214,12 +215,26 @@ export function ProfileTab({ userId, userProfile, onUpdate, authProvider }: Prof
 
             <div className="flex-1 min-w-0">
               <input
+                ref={fileInputRef}
                 type="file"
                 accept="image/*"
                 onChange={handleFileUpload}
                 disabled={saving || uploading}
-                className="block w-full text-sm text-neutral-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-brand-green hover:file:bg-green-100 disabled:opacity-50"
+                className="hidden"
               />
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={saving || uploading}
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-[10px] bg-white border border-neutral-200 shadow-sm text-sm font-semibold text-neutral-700 hover:bg-neutral-50 hover:border-neutral-300 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                  <polyline points="17 8 12 3 7 8"/>
+                  <line x1="12" y1="3" x2="12" y2="15"/>
+                </svg>
+                Choose Photo
+              </button>
               <p className="text-xs text-neutral-500 mt-2">
                 JPG, PNG or GIF. Max size 5MB.
               </p>

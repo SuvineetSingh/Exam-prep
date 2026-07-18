@@ -32,6 +32,7 @@ export interface QuestionViewProps {
   onNext?: () => void;
   isFirst?: boolean;
   isLast?: boolean;
+  nextLabel?: string;
 
   // Star toggle
   isStarred?: boolean;
@@ -45,6 +46,9 @@ export interface QuestionViewProps {
 
   // Right-side header controls (exit button, stats panel, question map, etc.)
   headerExtra?: React.ReactNode;
+
+  // When true, renders without the min-h-screen bg-page-bg outer wrapper (for use inside AppShell)
+  contained?: boolean;
 }
 
 export function QuestionView({
@@ -52,7 +56,7 @@ export function QuestionView({
   showSubmitButton,
   showExplanation,
   lockAfterSubmit,
-  fireSelectImmediately,
+  fireSelectImmediately: _fireSelectImmediately,
   selectedOption,
   onOptionSelect,
   isSubmitted,
@@ -63,11 +67,13 @@ export function QuestionView({
   onNext,
   isFirst,
   isLast,
+  nextLabel,
   isStarred,
   onToggleStar,
   timerSlot,
   statsSlot,
   headerExtra,
+  contained = false,
 }: QuestionViewProps) {
   const options      = getOptions(question).map((text, idx) => ({ key: String.fromCharCode(97 + idx), text }));
   const correctKey   = getCorrectKey(question);
@@ -118,34 +124,35 @@ export function QuestionView({
     if (isSubmitted && lockAfterSubmit) {
       if (isThisCorrect)  return 'bg-brand-green text-white';
       if (isThisSelected) return 'bg-brand-coral text-white';
-      return 'bg-brand-violet-light text-neutral-400';
+      return 'bg-brand-green-light text-neutral-400';
     }
 
     return isThisSelected
-      ? 'bg-brand-violet text-white'
-      : 'bg-brand-violet-light text-brand-violet';
+      ? 'bg-brand-green text-white'
+      : 'bg-brand-green-light text-brand-green';
   }
 
   const isOptionDisabled = (key: string) =>
     lockAfterSubmit && isSubmitted && key !== correctKey;
 
-  return (
-    <div className="min-h-screen bg-page-bg flex items-start justify-center md:py-10 md:px-4">
+  const card = (
       <div
-        className="w-full md:max-w-[820px] bg-white md:rounded-[20px] overflow-hidden"
-        style={{ boxShadow: '0 8px 48px rgba(111,86,229,0.15), 0 2px 6px rgba(111,86,229,0.07)' }}
+        className={`w-full bg-white overflow-hidden ${contained ? 'rounded-[16px]' : 'md:max-w-[820px] md:rounded-[20px]'}`}
+        style={{ boxShadow: '0 8px 48px rgba(88,204,2,0.12), 0 2px 6px rgba(88,204,2,0.06)' }}
       >
 
         {/* ── Header ───────────────────────────────────────────── */}
         <div
-          className="grid items-center px-5 md:px-7 border-b border-[#EAE5F8] bg-brand-violet-xlight"
+          className="grid items-center px-5 md:px-7 border-b border-[#D8EDBB] bg-brand-green-xlight"
           style={{ height: 56, gridTemplateColumns: '1fr auto 1fr' }}
         >
           {/* Col 1 — question counter */}
           <span className="text-sm md:text-[15px] font-extrabold text-neutral-900 tracking-tight whitespace-nowrap">
             {questionNumber != null ? (
-              <>Question <strong>{questionNumber}</strong>{' '}
-                <span className="font-medium text-neutral-400">of {totalQuestions}</span>
+              <>Question <strong>{questionNumber}</strong>
+                {totalQuestions != null && (
+                  <>{' '}<span className="font-medium text-neutral-400">of {totalQuestions}</span></>
+                )}
               </>
             ) : null}
           </span>
@@ -166,8 +173,8 @@ export function QuestionView({
                 onClick={onToggleStar}
                 title={isStarred ? 'Unstar this question' : 'Star for review'}
                 className={cn(
-                  'w-9 h-9 flex items-center justify-center rounded-[10px] bg-brand-violet-light transition-colors hover:bg-[#DDD8F5]',
-                  isStarred ? 'text-brand-amber' : 'text-brand-violet'
+                  'w-9 h-9 flex items-center justify-center rounded-[10px] bg-brand-green-light transition-colors hover:bg-brand-green-light',
+                  isStarred ? 'text-brand-amber' : 'text-brand-green'
                 )}
               >
                 <svg width="15" height="17" viewBox="0 0 15 17" fill="none">
@@ -190,12 +197,12 @@ export function QuestionView({
 
         {/* ── Progress bar ─────────────────────────────────────── */}
         {progress !== null && (
-          <div className="h-1.5 bg-brand-violet-light">
+          <div className="h-1.5 bg-brand-green-light">
             <div
               className="h-full rounded-r-[3px] transition-all duration-300 ease-out"
               style={{
                 width: `${progress}%`,
-                background: 'linear-gradient(90deg, #8B72F0, #6F56E5)',
+                background: 'linear-gradient(90deg, #70D900, #58CC02)',
               }}
             />
           </div>
@@ -203,7 +210,7 @@ export function QuestionView({
 
         {/* ── Stats slot (exam dot navigator) ──────────────────── */}
         {statsSlot && (
-          <div className="bg-[#FAFAFE] border-b border-[#EAE5F8] px-5 md:px-7 py-3">
+          <div className="bg-[#FAFAFE] border-b border-[#D8EDBB] px-5 md:px-7 py-3">
             {statsSlot}
           </div>
         )}
@@ -215,7 +222,7 @@ export function QuestionView({
           <div className="flex items-center gap-2 flex-wrap">
             <span className={examBadgeCls}>{question.exam_type}</span>
             {question.category && (
-              <div className="inline-flex items-center gap-1.5 bg-brand-violet-light rounded-[7px] px-3 py-1 text-[11px] font-bold text-brand-violet uppercase tracking-[0.06em]">
+              <div className="inline-flex items-center gap-1.5 bg-brand-green-light rounded-[7px] px-3 py-1 text-[11px] font-bold text-brand-green uppercase tracking-[0.06em]">
                 <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
                   <rect x="1" y="1" width="10" height="10" rx="2" stroke="#6F56E5" strokeWidth="1.3" />
                   <path d="M3.5 4h5M3.5 6.5h3.5M3.5 9h4.5" stroke="#6F56E5" strokeWidth="1.3" strokeLinecap="round" />
@@ -251,7 +258,7 @@ export function QuestionView({
 
                 {/* Checkmark circle on selected option before submit */}
                 {!isSubmitted && selectedOption === opt.key && (
-                  <span className="w-[26px] h-[26px] rounded-full bg-brand-violet flex items-center justify-center flex-shrink-0">
+                  <span className="w-[26px] h-[26px] rounded-full bg-brand-green flex items-center justify-center flex-shrink-0">
                     <svg width="12" height="9" viewBox="0 0 12 9" fill="none">
                       <path d="M1.5 4.5L4.5 7.5L10.5 1.5" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
@@ -278,7 +285,7 @@ export function QuestionView({
                 : 'bg-red-50 border-brand-coral/30'
             )}>
               <p className={cn('font-extrabold text-base mb-2', isCorrect ? 'text-green-700' : 'text-red-600')}>
-                {isCorrect ? '🎉 Correct!' : '😬 Not quite — keep going!'}
+                {isCorrect ? 'Correct!' : 'Not quite — keep going!'}
               </p>
               {question.explanation ? (
                 <p className="text-neutral-700 text-sm leading-relaxed">
@@ -293,7 +300,7 @@ export function QuestionView({
 
         {/* ── Footer ───────────────────────────────────────────── */}
         <div
-          className="flex items-center justify-between px-5 md:px-7 border-t border-[#EAE5F8] bg-brand-violet-xlight"
+          className="flex items-center justify-between px-5 md:px-7 border-t border-[#D8EDBB] bg-brand-green-xlight"
           style={{ minHeight: 62 }}
         >
           <button
@@ -310,7 +317,7 @@ export function QuestionView({
                 id="qv-submit-btn"
                 onClick={onSubmit}
                 disabled={!selectedOption}
-                className="btn-violet h-10 px-5 md:px-6 rounded-[11px] text-sm disabled:opacity-30 disabled:cursor-not-allowed"
+                className="btn-primary h-10 px-5 md:px-6 rounded-[11px] text-sm disabled:opacity-30 disabled:cursor-not-allowed"
               >
                 Check Answer
                 {selectedOption && (
@@ -321,20 +328,29 @@ export function QuestionView({
 
             <button
               onClick={onNext}
-              disabled={!onNext || isLast}
+              disabled={!onNext || (isLast && !nextLabel)}
               className={cn(
                 'h-10 px-4 md:px-6 rounded-[11px] text-sm font-bold transition-all active:scale-[0.97] disabled:opacity-30 disabled:cursor-not-allowed',
                 showSubmitButton && !isSubmitted
-                  ? 'bg-white text-brand-violet border-[1.5px] border-brand-violet hover:bg-brand-violet-light'
-                  : 'btn-violet'
+                  ? 'bg-white text-brand-green border-[1.5px] border-brand-green hover:bg-brand-green-light'
+                  : 'btn-primary'
               )}
             >
-              Next →
+              {nextLabel ?? 'Next →'}
             </button>
           </div>
         </div>
 
       </div>
+  );
+
+  if (contained) {
+    return card;
+  }
+
+  return (
+    <div className="min-h-screen bg-page-bg flex items-start justify-center md:py-10 md:px-4">
+      {card}
     </div>
   );
 }

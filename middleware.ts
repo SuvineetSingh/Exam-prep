@@ -14,8 +14,8 @@ export function middleware(request: NextRequest) {
 
   if (PROTECTED.some((r) => pathname.startsWith(r)) && !hasSession) {
     const url = request.nextUrl.clone();
-    url.pathname = '/login';
-    url.searchParams.set('redirectedFrom', pathname);
+    url.pathname = '/';
+    url.searchParams.delete('redirectedFrom');
     return NextResponse.redirect(url);
   }
 

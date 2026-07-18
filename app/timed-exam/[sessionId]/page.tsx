@@ -144,28 +144,35 @@ export default function ExamPage({ params }: { params: Promise<{ sessionId: stri
       const totalUnanswered = questions.length - totalAnswered;
       let correctCount = 0;
 
-      const answerRows = questions.map(q => {
-        const userChoice = userAnswers[q.id] || 'unattempted';
-        const correctKey = String(q.correct_option || q.correct_answer).trim().toLowerCase();
-        const isCorrect = userChoice === correctKey;
-        if (isCorrect) correctCount++;
-        return {
-          user_id: user.id,
-          question_id: q.id,
-          exam_session_id: sessionId,
-          selected_answer: userChoice,
-          is_correct: isCorrect,
-          mode: 'timed',
-          exam_type: examType,
-          time_spent: 0,
-        };
-      });
+      // Only attempted questions are persisted: user_answers.selected_answer is
+      // NOT NULL with a check constraint allowing only 'A'–'D', so unattempted
+      // rows can't be stored. Unanswered counts live on the exam_sessions row.
+      const answerRows = questions
+        .filter(q => userAnswers[q.id])
+        .map(q => {
+          const userChoice = userAnswers[q.id] ?? '';
+          const correctKey = String(q.correct_option || q.correct_answer).trim().toLowerCase();
+          const isCorrect = userChoice === correctKey;
+          if (isCorrect) correctCount++;
+          return {
+            user_id: user.id,
+            question_id: q.id,
+            exam_session_id: sessionId,
+            selected_answer: userChoice.toUpperCase(),
+            is_correct: isCorrect,
+            mode: 'timed',
+            exam_type: examType,
+            time_spent: 0,
+          };
+        });
 
       const actualCount = questions.length;
       const totalAllowedSeconds = actualCount * MINS_PER_QUESTION * 60;
       const timeSpent = totalAllowedSeconds - timeLeft;
 
-      const { error: sErr } = await supabase.from('exam_sessions').insert({
+      // Upsert (not insert) so a Retry after a partial failure doesn't hit a
+      // duplicate-key error on the session id.
+      const { error: sErr } = await supabase.from('exam_sessions').upsert({
         id: sessionId,
         user_id: user.id,
         exam_type: examType,
@@ -180,18 +187,29 @@ export default function ExamPage({ params }: { params: Promise<{ sessionId: stri
       });
       if (sErr) throw sErr;
 
-      const { error: aErr } = await supabase.from('user_answers').insert(answerRows);
-      if (aErr) throw aErr;
+      if (answerRows.length > 0) {
+        const { error: aErr } = await supabase
+          .from('user_answers')
+          .upsert(answerRows, { onConflict: 'exam_session_id,question_id' });
+        if (aErr) {
+          // Don't leave an orphaned session behind — it would show up in
+          // history with an empty review page.
+          await supabase.from('exam_sessions').delete().eq('id', sessionId);
+          throw aErr;
+        }
+      }
 
       // Award XP for timed exam (best-effort — don't block navigation)
       const isPerfect = correctCount === actualCount;
       try {
         const xpTxns: { source: 'answer_correct' | 'answer_wrong' | 'exam_complete' | 'perfect_bonus'; referenceId: string }[] = [
-          ...questions.map(q => ({
-            source: (userAnswers[q.id] === String(q.correct_option || q.correct_answer).trim().toLowerCase()
-              ? 'answer_correct' : 'answer_wrong') as 'answer_correct' | 'answer_wrong',
-            referenceId: String(q.id),
-          })),
+          ...questions
+            .filter(q => userAnswers[q.id])
+            .map(q => ({
+              source: (userAnswers[q.id] === String(q.correct_option || q.correct_answer).trim().toLowerCase()
+                ? 'answer_correct' : 'answer_wrong') as 'answer_correct' | 'answer_wrong',
+              referenceId: String(q.id),
+            })),
           { source: 'exam_complete' as const, referenceId: sessionId },
           ...(isPerfect ? [{ source: 'perfect_bonus' as const, referenceId: sessionId }] : []),
         ];

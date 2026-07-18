@@ -21,10 +21,10 @@ export function PracticeResultsUI({
 }: PracticeResultsUIProps) {
 
   const getMessage = (pct: number) => {
-    if (pct >= 90) return { emoji: '🏆', text: 'Outstanding!' };
-    if (pct >= 75) return { emoji: '🎉', text: 'Great job!' };
-    if (pct >= 50) return { emoji: '💪', text: 'Keep it up!' };
-    return { emoji: '📚', text: 'Keep studying!' };
+    if (pct >= 90) return { text: 'Outstanding!' };
+    if (pct >= 75) return { text: 'Great job!' };
+    if (pct >= 50) return { text: 'Keep it up!' };
+    return { text: 'Keep studying!' };
   };
 
   const scoreColor =
@@ -32,7 +32,7 @@ export function PracticeResultsUI({
     percentage >= 50 ? 'text-brand-amber' :
     'text-brand-coral';
 
-  const { emoji, text } = getMessage(percentage);
+  const { text } = getMessage(percentage);
 
   return (
     <div className="min-h-screen bg-neutral-100 flex items-center justify-center p-6">
@@ -45,7 +45,6 @@ export function PracticeResultsUI({
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 rounded-full text-xs font-extrabold uppercase tracking-widest mb-5">
               {examType} · Practice Session
             </div>
-            <p className="text-6xl mb-2">{emoji}</p>
             <h1 className={`text-7xl font-extrabold mb-1 ${scoreColor}`}>
               {percentage}<span className="text-3xl text-neutral-400 font-semibold">%</span>
             </h1>

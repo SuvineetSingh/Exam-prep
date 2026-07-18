@@ -93,7 +93,7 @@ export default function HistoryPage() {
         </div>
       ) : (
         <div className="card p-16 text-center border-2 border-dashed border-neutral-200 bg-transparent shadow-none">
-          <p className="text-3xl mb-3">📋</p>
+          <svg className="w-10 h-10 text-neutral-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
           <p className="text-neutral-500 font-bold text-sm mb-1">No sessions found</p>
           <p className="text-neutral-400 text-xs">Complete a practice or timed exam to see your history here.</p>
         </div>

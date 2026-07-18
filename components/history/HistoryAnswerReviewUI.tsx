@@ -68,7 +68,7 @@ function ReviewSummary({ summary }: { summary: HistoryAnswerReviewUIProps['summa
         <div className="flex items-center gap-3 print:hidden flex-wrap">
           {summary?.mode && (
             <span className={MODE_STYLE[summary.mode] ?? ''}>
-              {summary.mode === 'timed' ? '⏱ Timed' : '📝 Practice'}
+              {summary.mode === 'timed' ? 'Timed' : 'Practice'}
             </span>
           )}
           <button
@@ -313,7 +313,7 @@ export function HistoryAnswerReviewUI({ questions, summary }: HistoryAnswerRevie
           </div>
         ) : (
           <div className="text-center py-16 card border-2 border-dashed border-neutral-200">
-            <p className="text-4xl mb-3">🔍</p>
+            <svg className="w-10 h-10 text-neutral-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35" strokeLinecap="round" strokeLinejoin="round"/></svg>
             <p className="text-neutral-500 font-medium">No questions in this category.</p>
           </div>
         )}

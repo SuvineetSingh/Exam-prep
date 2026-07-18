@@ -88,7 +88,7 @@ function DailyGoalBar({ answered, goal }: { answered: number; goal: number }) {
         <div className="progress-fill" style={{ width: `${pct}%` }} />
       </div>
       <p className="text-[10px] text-neutral-400 mt-1 font-medium">
-        {pct >= 100 ? '🎉 Goal complete!' : `${goal - answered} more to hit your goal`}
+        {pct >= 100 ? 'Goal complete!' : `${goal - answered} more to hit your goal`}
       </p>
     </div>
   );
@@ -237,7 +237,7 @@ export function Sidebar({ user, dailyAnswered = 0, dailyGoal = 20 }: SidebarProp
                   href={`/lobby?room=${room.slug}`}
                   className={`sidebar-item ${isLobbyActive && pathname.includes(room.slug) ? 'sidebar-item-active' : ''}`}
                 >
-                  <span className="text-neutral-400 text-base w-5 text-center">{room.icon ?? '💬'}</span>
+                  <svg className="w-4 h-4 text-neutral-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
                   <span className="text-neutral-600">#{room.slug}</span>
                   <UnreadBadge count={unreadCounts.rooms[room.id] ?? 0} />
                 </Link>
@@ -347,13 +347,23 @@ export function Sidebar({ user, dailyAnswered = 0, dailyGoal = 20 }: SidebarProp
   );
 }
 
+/* ── Mobile tab icons ───────────────────────────────── */
+function TabIcon({ id }: { id: string }) {
+  if (id === 'home')     return <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>;
+  if (id === 'practice') return <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>;
+  if (id === 'exam')     return <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>;
+  if (id === 'history')  return <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>;
+  if (id === 'chat')     return <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>;
+  return null;
+}
+
 /* ── Mobile bottom tab bar ──────────────────────────── */
 const MOBILE_TABS = [
-  { href: '/dashboard', label: 'Home',     icon: '🏠' },
-  { href: '/practice',  label: 'Practice', icon: '⚡' },
-  { href: '/timed-exam',label: 'Exam',     icon: '⏱' },
-  { href: '/history',   label: 'History',  icon: '📈' },
-  { href: '/lobby',     label: 'Chat',     icon: '💬' },
+  { href: '/dashboard', label: 'Home',     id: 'home'     },
+  { href: '/practice',  label: 'Practice', id: 'practice' },
+  { href: '/timed-exam',label: 'Exam',     id: 'exam'     },
+  { href: '/history',   label: 'History',  id: 'history'  },
+  { href: '/lobby',     label: 'Chat',     id: 'chat'     },
 ];
 
 export function MobileTabBar() {
@@ -361,7 +371,7 @@ export function MobileTabBar() {
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-neutral-200 md:hidden">
       <div className="flex items-stretch">
-        {MOBILE_TABS.map(({ href, label, icon }) => {
+        {MOBILE_TABS.map(({ href, label, id }) => {
           const active = pathname === href || (href !== '/dashboard' && pathname.startsWith(href));
           return (
             <Link
@@ -370,7 +380,7 @@ export function MobileTabBar() {
               className={`flex-1 flex flex-col items-center justify-center gap-0.5 py-2.5 text-[10px] font-semibold
                           transition-colors ${active ? 'text-brand-green' : 'text-neutral-400'}`}
             >
-              <span className="text-xl leading-none">{icon}</span>
+              <TabIcon id={id} />
               <span>{label}</span>
             </Link>
           );
