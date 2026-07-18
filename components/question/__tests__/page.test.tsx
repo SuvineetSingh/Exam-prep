@@ -9,12 +9,20 @@ jest.mock('next/navigation');
 jest.mock('@/lib/supabase/queries/userStats', () => ({
   getAttemptedQuestionIds: jest.fn().mockResolvedValue(new Set()),
 }));
+jest.mock('@/hooks/usePurchasedCourses', () => ({
+  usePurchasedCourses: () => ({ purchasedCourses: [], coursesLoaded: true }),
+}));
+// AppShell pulls in the full sidebar (gamification, cart, lobby queries) —
+// out of scope for this page's unit tests.
+jest.mock('@/components/layout/AppShell', () => ({
+  AppShell: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+}));
 
 describe('QuestionsDashboard', () => {
   const mockPush = jest.fn();
   const mockSupabase = {
     auth: {
-      getSession: jest.fn(),
+      getUser: jest.fn(),
       onAuthStateChange: jest.fn(() => ({
         data: { subscription: { unsubscribe: jest.fn() } },
       })),
@@ -62,8 +70,8 @@ describe('QuestionsDashboard', () => {
     });
 
     // Default mock: User is logged in
-    mockSupabase.auth.getSession.mockResolvedValue({
-      data: { session: { user: { email: 'test@example.com', user_metadata: { full_name: 'Atharva Thube' } } } },
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: { id: 'user-1', email: 'test@example.com', user_metadata: { full_name: 'Atharva Thube' } } },
     });
 
     // select: chain continues for count/premium/quota queries; resolves directly for filter queries
@@ -85,8 +93,8 @@ describe('QuestionsDashboard', () => {
     mockSupabase.range.mockResolvedValue({ data: mockQuestions, count: 2, error: null });
   });
 
-  it('redirects to login if no session is found', async () => {
-    mockSupabase.auth.getSession.mockResolvedValue({ data: { session: null } });
+  it('redirects to login if no user is found', async () => {
+    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: null } });
     render(<QuestionsDashboard />);
 
     await waitFor(() => {
@@ -94,11 +102,10 @@ describe('QuestionsDashboard', () => {
     });
   });
 
-  it('renders the dashboard header and candidate name', async () => {
+  it('renders the dashboard header', async () => {
     render(<QuestionsDashboard />);
 
-    expect(await screen.findByRole('link', { name: /exam prep platform/i })).toBeInTheDocument();
-    expect(screen.getByText(/Questions Browser/i)).toBeInTheDocument();
+    expect(await screen.findByText(/Questions Browser/i)).toBeInTheDocument();
   });
 
   it('displays the list of questions fetched from database', async () => {
