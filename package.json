@@ -9,7 +9,7 @@
         "dev": "next dev",
         "build": "next build",
         "start": "next start",
-        "lint": "next lint",
+        "lint": "eslint .",
         "type-check": "tsc --noEmit",
         "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
         "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md}\"",

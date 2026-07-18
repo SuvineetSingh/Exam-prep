@@ -68,12 +68,12 @@ export function ExamSessionUI({
     <div>
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-4 text-[12px] font-semibold">
-          <span className="flex items-center gap-1.5 text-brand-violet">
-            <span className="w-2 h-2 rounded-full bg-brand-violet flex-shrink-0" />
+          <span className="flex items-center gap-1.5 text-brand-green">
+            <span className="w-2 h-2 rounded-full bg-brand-green flex-shrink-0" />
             {answeredCount} answered
           </span>
           <span className="flex items-center gap-1.5 text-neutral-400">
-            <span className="w-2 h-2 rounded-full bg-brand-violet-light flex-shrink-0" />
+            <span className="w-2 h-2 rounded-full bg-brand-green-light flex-shrink-0" />
             {unattemptedCount} remaining
           </span>
         </div>
@@ -90,10 +90,10 @@ export function ExamSessionUI({
               title={`Question ${idx + 1}`}
               className={`rounded-full flex-shrink-0 transition-all hover:scale-125 ${
                 isCurrent
-                  ? 'bg-brand-violet'
+                  ? 'bg-brand-green'
                   : isAnswered
-                  ? 'bg-brand-violet'
-                  : 'bg-brand-violet-light'
+                  ? 'bg-brand-green'
+                  : 'bg-brand-green-light'
               }`}
               style={{
                 width:  isCurrent ? 13 : 9,
@@ -112,7 +112,7 @@ export function ExamSessionUI({
       {/* Question map toggle (mobile / sidebar fallback) */}
       <button
         onClick={() => setIsSidebarOpen(true)}
-        className="flex items-center gap-1.5 px-3 py-1.5 bg-brand-violet-light hover:bg-[#DDD8F5] rounded-full text-xs font-bold text-brand-violet transition-colors"
+        className="flex items-center gap-1.5 px-3 py-1.5 bg-brand-green-light hover:bg-brand-green-light rounded-full text-xs font-bold text-brand-green transition-colors"
         title="Question map"
       >
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -120,7 +120,7 @@ export function ExamSessionUI({
         </svg>
         <span className="hidden sm:inline">Map</span>
         {answeredCount > 0 && (
-          <span className="w-4 h-4 bg-brand-violet text-white rounded-full text-[10px] flex items-center justify-center font-black">
+          <span className="w-4 h-4 bg-brand-green text-white rounded-full text-[10px] flex items-center justify-center font-black">
             {answeredCount}
           </span>
         )}
@@ -305,7 +305,8 @@ export function ExamSessionUI({
               : () => setCurrentIndex(currentIndex + 1)
           }
           isFirst={currentIndex === 0}
-          isLast={currentIndex === questions.length - 1}
+          isLast={false}
+          nextLabel={currentIndex === questions.length - 1 ? 'Finish Exam →' : undefined}
           timerSlot={timerSlot}
           statsSlot={statsSlot}
           headerExtra={headerExtra}

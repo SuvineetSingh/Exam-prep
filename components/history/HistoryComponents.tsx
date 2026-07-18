@@ -69,17 +69,17 @@ export function SummaryBar({ sessions }: { sessions: ExamSession[] }) {
   const totalQs = sessions.reduce((a, s) => a + (s.answered_count ?? 0), 0);
 
   const stats = [
-    { label: 'Sessions',     value: total,       icon: '📋' },
-    { label: 'Avg Score',    value: `${avg}%`,   icon: '📊' },
-    { label: 'Best Score',   value: `${best}%`,  icon: '🏆' },
-    { label: 'Qs Attempted', value: totalQs,     icon: '✏️' },
+    { label: 'Sessions',     value: total,       svg: <svg className="w-5 h-5 text-neutral-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg> },
+    { label: 'Avg Score',    value: `${avg}%`,   svg: <svg className="w-5 h-5 text-neutral-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg> },
+    { label: 'Best Score',   value: `${best}%`,  svg: <svg className="w-5 h-5 text-neutral-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> },
+    { label: 'Qs Attempted', value: totalQs,     svg: <svg className="w-5 h-5 text-neutral-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> },
   ];
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-8">
-      {stats.map(({ label, value, icon }) => (
+      {stats.map(({ label, value, svg }) => (
         <div key={label} className="card p-4 sm:p-5 flex items-center gap-3 sm:gap-4">
-          <div className="w-11 h-11 rounded-xl bg-neutral-100 flex items-center justify-center text-2xl flex-shrink-0">{icon}</div>
+          <div className="w-11 h-11 rounded-xl bg-neutral-100 flex items-center justify-center flex-shrink-0">{svg}</div>
           <div>
             <p className="text-xs font-bold text-neutral-400 uppercase tracking-wide">{label}</p>
             <p className="text-2xl font-black text-neutral-900">{value}</p>
@@ -116,7 +116,7 @@ export function SessionRow({ session, index }: { session: ExamSession; index: nu
 
         {session.mode && (
           <span className={`self-start sm:self-auto ${MODE_STYLE[session.mode]}`}>
-            {session.mode === 'timed' ? '⏱ Timed' : '📝 Practice'}
+            {session.mode === 'timed' ? 'Timed' : 'Practice'}
           </span>
         )}
 

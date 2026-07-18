@@ -66,7 +66,6 @@ describe('useUserStats', () => {
   });
 
   it('handles errors gracefully', async () => {
-    const consoleError = jest.spyOn(console, 'error').mockImplementation();
     (getUserStats as jest.Mock).mockRejectedValue(new Error('Database error'));
 
     const { result } = renderHook(() => useUserStats());
@@ -84,9 +83,7 @@ describe('useUserStats', () => {
       today_count: 0,
       this_week_improvement: 0,
     });
-    expect(consoleError).toHaveBeenCalled();
-
-    consoleError.mockRestore();
+    expect(result.current.error).toBe('Database error');
   });
 
   it('sets loading to false after successful fetch', async () => {

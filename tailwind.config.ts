@@ -17,12 +17,10 @@ const config: Config = {
           coral:  '#FF4B4B',
           blue:   '#1CB0F6',
           purple: '#CE82FF',
-          violet:         '#6F56E5',
-          'violet-dark':  '#5B45D0',
-          'violet-light': '#EDE9FC',
-          'violet-xlight':'#F8F6FE',
+          'green-light':  '#D7F5B1',
+          'green-xlight': '#F0FAE0',
         },
-        'page-bg': '#F3F0FC',
+        'page-bg': '#F7F7F7',
         paper: '#FAF9F6',
         // Neutral palette
         neutral: {

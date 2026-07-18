@@ -67,7 +67,11 @@ export default function FeedbackPage() {
       <AppShell user={user}>
         <div className="flex items-center justify-center min-h-[60vh]">
           <div className="max-w-sm w-full card p-12 text-center">
-            <div className="text-5xl mb-4">🎉</div>
+            <div className="w-14 h-14 bg-brand-green-light rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#6F56E5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20 6L9 17l-5-5"/>
+              </svg>
+            </div>
             <h2 className="text-2xl font-extrabold text-neutral-900 mb-2">Thank you!</h2>
             <p className="text-neutral-500 mb-8">Your feedback means a lot to us.</p>
             <Link href="/dashboard" className="btn-primary w-full justify-center py-4">

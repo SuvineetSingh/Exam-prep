@@ -20,11 +20,11 @@ export function AppShell({
   fullscreen = false,
 }: AppShellProps) {
   if (fullscreen) {
-    return <div className="min-h-screen bg-neutral-100">{children}</div>;
+    return <div className="min-h-screen bg-page-bg">{children}</div>;
   }
 
   return (
-    <div className="min-h-screen bg-neutral-100">
+    <div className="min-h-screen bg-page-bg">
       <Sidebar user={user} dailyAnswered={dailyAnswered} dailyGoal={dailyGoal} />
       <MobileTabBar />
       {/* Desktop: offset by sidebar width. Mobile: no offset, MobileTabBar is fixed at the bottom instead. */}

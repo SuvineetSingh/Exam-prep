@@ -21,6 +21,7 @@ export default function ExamSetupPage() {
   const [fetchingFilters, setFetchingFilters] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const [availableCount, setAvailableCount] = useState<number>(100);
   const [purchasedCourses, setPurchasedCourses] = useState<string[]>([]);
   const [coursesLoaded, setCoursesLoaded] = useState(false);
   const [usedCount, setUsedCount] = useState(0);
@@ -54,6 +55,20 @@ export default function ExamSetupPage() {
         });
     });
   }, [fetchExamTypes]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    const examType = config.examType;
+    if (!examType) return;
+    supabase
+      .from('questions')
+      .select('id', { count: 'exact', head: true })
+      .eq('exam_type', examType)
+      .then(({ count }) => {
+        const total = count ?? 20;
+        setAvailableCount(total);
+        setConfig((prev) => ({ ...prev, questionCount: Math.min(prev.questionCount, total) }));
+      });
+  }, [config.examType]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     const examType = config.examType;
@@ -144,6 +159,7 @@ export default function ExamSetupPage() {
             error={error}
             onStart={handleStartExam}
             timeLimit={timeLimit}
+            availableCount={availableCount}
           />
         </>
       )}

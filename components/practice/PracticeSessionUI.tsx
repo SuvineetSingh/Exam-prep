@@ -361,8 +361,33 @@ export function PracticeSessionUI({
     }
   }, [selectedOption, elapsed, question, setIsSubmitted, onLogUpdate, gamification]);
 
-  const handleNext = () => { setElapsed(0); setTimerActive(true); navigate('next'); };
-  const handlePrev = () => { setElapsed(0); setTimerActive(true); navigate('prev'); };
+  // If user selected an answer but navigated without clicking Check Answer, auto-log it
+  const autoLogCurrentAnswer = useCallback(() => {
+    if (!selectedOption || isSubmitted) return;
+    const correct = selectedOption === getCorrectKey(question);
+    const entry: QuestionLog = {
+      questionId:     String(question.id),
+      questionText:   question.question_text,
+      selectedAnswer: selectedOption,
+      isCorrect:      correct,
+      timeSpent:      elapsed,
+    };
+    onLogUpdate(prev => {
+      if (prev.find(e => e.questionId === String(question.id))) return prev;
+      return [...prev, entry];
+    });
+    const alreadyPending = pendingXpRef.current.some(t => t.referenceId === String(question.id));
+    if (!alreadyPending) {
+      const source: XPSource = correct ? 'answer_correct' : 'answer_wrong';
+      const xpAmount = correct ? XP_CORRECT : XP_WRONG;
+      gamification.applyXP(xpAmount);
+      gamification.addXPToast(xpAmount, `+${xpAmount} XP`);
+      pendingXpRef.current.push({ source, referenceId: String(question.id) });
+    }
+  }, [selectedOption, isSubmitted, elapsed, question, onLogUpdate, gamification]);
+
+  const handleNext = () => { autoLogCurrentAnswer(); setElapsed(0); setTimerActive(true); navigate('next'); };
+  const handlePrev = () => { autoLogCurrentAnswer(); setElapsed(0); setTimerActive(true); navigate('prev'); };
 
   const handleExitDiscard = () => {
     if (sessionId) {
@@ -489,10 +514,10 @@ export function PracticeSessionUI({
       {/* Exit button */}
       <button
         onClick={() => setShowExitPopup(true)}
-        className="w-8 h-8 rounded-full bg-brand-violet-light hover:bg-[#DDD8F5] flex items-center justify-center transition-colors"
+        className="w-8 h-8 rounded-full bg-brand-green-light hover:bg-brand-green-light flex items-center justify-center transition-colors"
         title="Exit practice"
       >
-        <svg className="w-4 h-4 text-brand-violet" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="w-4 h-4 text-brand-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
         </svg>
       </button>
@@ -500,12 +525,12 @@ export function PracticeSessionUI({
       {/* Session stats panel */}
       <button
         onClick={() => setPanelOpen(true)}
-        className="flex items-center gap-1.5 px-3 py-1.5 bg-brand-violet-light hover:bg-[#DDD8F5] rounded-full text-xs font-bold text-brand-violet transition-colors"
+        className="flex items-center gap-1.5 px-3 py-1.5 bg-brand-green-light hover:bg-brand-green-light rounded-full text-xs font-bold text-brand-green transition-colors"
         title="Session stats"
       >
-        📋
+        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
         {answeredCount > 0 && (
-          <span className="w-4 h-4 bg-brand-violet text-white rounded-full text-[10px] flex items-center justify-center font-black">
+          <span className="w-4 h-4 bg-brand-green text-white rounded-full text-[10px] flex items-center justify-center font-black">
             {answeredCount}
           </span>
         )}
@@ -514,9 +539,9 @@ export function PracticeSessionUI({
       {/* Save / end session */}
       <button
         onClick={() => answeredCount > 0 ? setShowSaveExitPopup(true) : setShowExitPopup(true)}
-        className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-btn text-xs font-bold border border-[#D6D0F0] bg-white text-neutral-600 hover:border-brand-violet hover:text-brand-violet hover:bg-brand-violet-light transition-all"
+        className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-btn text-xs font-bold border border-neutral-200 bg-white text-neutral-600 hover:border-brand-green hover:text-brand-green hover:bg-brand-green-light transition-all"
       >
-        {answeredCount > 0 ? '💾 Save & Exit' : '✕ End'}
+        {answeredCount > 0 ? 'Save & Exit' : 'End'}
       </button>
     </>
   );

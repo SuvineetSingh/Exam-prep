@@ -36,14 +36,16 @@ export default async function FullQuestionPage({
   if (allQuestions) {
     const currentIndex = allQuestions.findIndex(q => q.id === parseInt(id));
     // Question Bank list numbers questions by id descending — mirror that here
-    // so the same question shows the same number in both views.
+    // so the same question shows the same number in both views. Navigation
+    // must follow that same descending order: "Next" moves to the next list
+    // number (lower array index), "Previous" to the one before it.
     questionNumber = currentIndex >= 0 ? allQuestions.length - currentIndex : null;
-    if (currentIndex > 0) prevId = allQuestions[currentIndex - 1]?.id ?? null;
-    if (currentIndex < allQuestions.length - 1) nextId = allQuestions[currentIndex + 1]?.id ?? null;
+    if (currentIndex < allQuestions.length - 1) prevId = allQuestions[currentIndex + 1]?.id ?? null;
+    if (currentIndex > 0) nextId = allQuestions[currentIndex - 1]?.id ?? null;
   }
 
   return (
-    <AppShell user={user} fullscreen>
+    <AppShell user={user}>
       <QuestionViewClient
         question={question}
         prevId={prevId}

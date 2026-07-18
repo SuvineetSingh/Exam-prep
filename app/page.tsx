@@ -9,7 +9,6 @@ const COURSES = [
     exam_type: 'CMA',
     name: 'Certified Management Accountant',
     description: 'Financial planning, analysis, control, decision support, and professional ethics.',
-    icon: '📊',
     price: '$59',
     color: 'from-amber-400 to-orange-400',
     badge: 'Most Popular',
@@ -19,7 +18,6 @@ const COURSES = [
     exam_type: 'CFA',
     name: 'Chartered Financial Analyst',
     description: 'Portfolio management, equity analysis, fixed income, derivatives, and ethics.',
-    icon: '📈',
     price: '$49',
     color: 'from-violet-400 to-purple-500',
     badge: null,
@@ -29,7 +27,6 @@ const COURSES = [
     exam_type: 'FE',
     name: 'Fundamentals of Engineering',
     description: 'Mathematics, engineering sciences, and discipline-specific technical topics.',
-    icon: '⚙️',
     price: '$49',
     color: 'from-teal-400 to-cyan-500',
     badge: null,
@@ -39,17 +36,14 @@ const COURSES = [
 
 const FEATURES = [
   {
-    icon: '🎯',
     title: 'Adaptive Practice',
     body: 'Questions that surface your weak spots and target them until you\'re strong.',
   },
   {
-    icon: '⏱',
     title: 'Timed Exam Simulator',
     body: 'Full mock exams under real conditions — timer, question navigation, auto-submit.',
   },
   {
-    icon: '👥',
     title: 'Study Community',
     body: 'Live chat rooms full of professionals grinding the same exam as you. At 11 PM.',
   },
@@ -115,7 +109,7 @@ export default async function Home() {
             <div>
               <div className="inline-flex items-center gap-2 bg-green-100 border border-green-200 text-green-800
                               text-xs font-bold px-3 py-1.5 rounded-full mb-6 tracking-wide">
-                🎓 CMA · CFA · FE Exam Prep
+                CMA · CFA · FE Exam Prep
               </div>
               <h1 className="text-5xl sm:text-6xl font-extrabold text-neutral-900 tracking-tight leading-[1.05] mb-5">
                 Ace Your Exam.<br />
@@ -151,7 +145,7 @@ export default async function Home() {
                   {/* Progress bar */}
                   <div className="flex items-center justify-between mb-4">
                     <span className="text-xs font-bold text-neutral-500">Question 3 of 10</span>
-                    <span className="text-xs font-bold text-brand-green">🔥 3 streak</span>
+                    <span className="text-xs font-bold text-brand-green">3 day streak</span>
                   </div>
                   <div className="h-1.5 bg-neutral-100 rounded-full mb-5">
                     <div className="h-full bg-brand-green rounded-full" style={{ width: '30%' }} />
@@ -217,10 +211,10 @@ export default async function Home() {
               </p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {FEATURES.map(({ icon, title, body }) => (
+              {FEATURES.map(({ title, body }) => (
                 <div key={title} className="card-hover p-7 flex flex-col gap-4">
-                  <div className="w-12 h-12 bg-green-100 rounded-2xl flex items-center justify-center text-2xl">
-                    {icon}
+                  <div className="w-12 h-12 bg-green-100 rounded-2xl flex items-center justify-center">
+                    <svg className="w-6 h-6 text-brand-green" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
                   </div>
                   <div>
                     <h3 className="font-extrabold text-neutral-900 text-base mb-1">{title}</h3>
@@ -277,7 +271,7 @@ export default async function Home() {
             <div className="bg-white rounded-3xl shadow-card p-6 border border-neutral-100 space-y-4">
               {/* Streak */}
               <div className="flex items-center gap-3 p-4 bg-amber-50 rounded-2xl border border-amber-100">
-                <span className="text-3xl">🔥</span>
+                <svg className="w-7 h-7 text-amber-500 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M13.5 0.67s.74 2.65.74 4.8c0 2.06-1.35 3.73-3.41 3.73-2.07 0-3.63-1.67-3.63-3.73l.03-.36C5.21 7.51 4 10.62 4 14c0 4.42 3.58 8 8 8s8-3.58 8-8C20 8.61 17.41 3.8 13.5 0.67z"/></svg>
                 <div>
                   <p className="font-extrabold text-amber-800">14 Day Streak</p>
                   <p className="text-xs text-amber-600">You&apos;re on fire! Don&apos;t break it.</p>
@@ -288,7 +282,7 @@ export default async function Home() {
               {/* XP bar */}
               <div>
                 <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-xs font-bold text-neutral-600">⚡ Level 7 — 2,340 XP</span>
+                  <span className="text-xs font-bold text-neutral-600">Level 7 — 2,340 XP</span>
                   <span className="text-xs text-neutral-400">660 to Level 8</span>
                 </div>
                 <div className="progress-bar">
@@ -301,14 +295,14 @@ export default async function Home() {
                 <p className="text-xs font-bold text-neutral-500 uppercase tracking-wide mb-2">Recent Badges</p>
                 <div className="flex gap-2 flex-wrap">
                   {[
-                    { icon: '🎯', name: 'Sharp Shooter', color: 'bg-blue-100' },
-                    { icon: '🔥', name: 'On Fire', color: 'bg-amber-100' },
-                    { icon: '📚', name: 'Bookworm', color: 'bg-green-100' },
-                    { icon: '⚡', name: 'Speed Demon', color: 'bg-purple-100' },
+                    { name: 'Sharp Shooter', color: 'bg-blue-100', stroke: '#3B82F6' },
+                    { name: 'On Fire',        color: 'bg-amber-100', stroke: '#F59E0B' },
+                    { name: 'Bookworm',       color: 'bg-green-100', stroke: '#22C55E' },
+                    { name: 'Speed Demon',    color: 'bg-purple-100', stroke: '#A855F7' },
                   ].map(b => (
                     <div key={b.name} title={b.name}
-                      className={`w-10 h-10 ${b.color} rounded-xl flex items-center justify-center text-xl`}>
-                      {b.icon}
+                      className={`w-10 h-10 ${b.color} rounded-xl flex items-center justify-center`}>
+                      <svg className="w-5 h-5" fill="none" stroke={b.stroke} viewBox="0 0 24 24" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
                     </div>
                   ))}
                   <div className="w-10 h-10 bg-neutral-100 rounded-xl flex items-center justify-center text-neutral-400 text-xs font-bold">
@@ -340,8 +334,8 @@ export default async function Home() {
                     </span>
                   )}
                   <div className={`w-14 h-14 bg-gradient-to-br ${course.color} rounded-2xl flex items-center
-                                   justify-center text-3xl mb-5 shadow-sm`}>
-                    {course.icon}
+                                   justify-center mb-5 shadow-sm`}>
+                    <span className="text-white font-black text-sm tracking-tight">{course.exam_type}</span>
                   </div>
                   <p className="text-xs font-black uppercase tracking-widest text-neutral-400 mb-1">
                     {course.exam_type}

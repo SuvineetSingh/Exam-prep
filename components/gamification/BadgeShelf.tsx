@@ -56,7 +56,7 @@ function BadgePill({ badge, earned }: { badge: BadgeDefinition; earned: boolean 
           : 'bg-neutral-100 border-neutral-200 text-neutral-400 opacity-60'
       }`}
     >
-      <span>{badge.emoji}</span>
+      <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
       <span>{badge.name}</span>
     </Link>
   );
@@ -73,7 +73,9 @@ function BadgeCard({ badge, earned }: { badge: BadgeDefinition; earned: boolean 
           : 'border-neutral-100 bg-neutral-50 opacity-40 grayscale'
       }`}
     >
-      <span className="text-2xl">{badge.emoji}</span>
+      <div className={`w-8 h-8 rounded-full flex items-center justify-center ${earned ? 'bg-amber-200' : 'bg-neutral-200'}`}>
+        <svg className={`w-4 h-4 ${earned ? 'text-amber-700' : 'text-neutral-400'}`} fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+      </div>
       <p className="text-[10px] font-extrabold text-neutral-700 leading-tight">{badge.name}</p>
     </div>
   );

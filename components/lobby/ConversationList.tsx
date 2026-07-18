@@ -43,8 +43,9 @@ function EmptyState() {
   return (
     <div className="flex flex-col items-center justify-center flex-1 px-8 py-16 text-center">
       <div className="relative mb-6 select-none">
-        <div className="text-7xl">📭</div>
-        <div className="absolute -bottom-1 -right-3 text-3xl rotate-12">😶</div>
+        <div className="w-16 h-16 bg-neutral-100 rounded-2xl flex items-center justify-center mx-auto">
+          <svg className="w-8 h-8 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+        </div>
       </div>
       <h3 className="text-base font-semibold text-neutral-700 mb-2">
         Quieter than a library during finals
