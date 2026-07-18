@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { MessageBubble } from './MessageBubble';
 import { MessageInput } from './MessageInput';
+import { StudyPartnerPanel } from './StudyPartnerPanel';
+import { OnlineDot } from './OnlineDot';
 import { fetchUserProfile } from '@/lib/supabase/queries/lobbyQueries';
 import type { LobbyMessage, LobbyRoom, LobbyUserProfile } from '@/lib/types/lobby';
 
@@ -18,6 +20,10 @@ interface RoomChatProps {
   onBackToRooms?: () => void;
   /** Mobile: go back to conversation list */
   onBackToList?: () => void;
+  /** Bumped by LobbyView's friendships subscription; triggers partner-panel refetch */
+  friendshipsVersion?: number;
+  /** Whether the DM partner is currently online (green dot on the header avatar) */
+  partnerOnline?: boolean;
 }
 
 function getDateLabel(date: Date): string {
@@ -52,6 +58,8 @@ export function RoomChat({
   dmPartner,
   onBackToRooms,
   onBackToList,
+  friendshipsVersion,
+  partnerOnline,
 }: RoomChatProps) {
   const [dmProfile, setDmProfile] = useState<LobbyUserProfile | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -132,12 +140,17 @@ export function RoomChat({
           )}
           {isDM ? (
             <>
-              <div className="w-8 h-8 rounded-full bg-brand-green flex items-center justify-center text-white text-sm font-semibold flex-shrink-0">
-                {initial}
+              <div className="relative flex-shrink-0">
+                <div className="w-8 h-8 rounded-full bg-brand-green flex items-center justify-center text-white text-sm font-semibold">
+                  {initial}
+                </div>
+                <OnlineDot show={!!partnerOnline} />
               </div>
               <div>
                 <h2 className="text-sm font-semibold text-neutral-900">{dmProfile?.username || 'User'}</h2>
-                <p className="text-xs text-neutral-500">Direct Message</p>
+                <p className="text-xs text-neutral-500">
+                  {partnerOnline ? 'Online' : 'Direct Message'}
+                </p>
               </div>
             </>
           ) : (
@@ -151,6 +164,16 @@ export function RoomChat({
           )}
         </div>
       </div>
+
+      {/* Study partner invite/status (DMs only; renders nothing unless friends) */}
+      {isDM && dmPartner && (
+        <StudyPartnerPanel
+          currentUserId={currentUserId}
+          partnerId={dmPartner}
+          partnerUsername={dmProfile?.username || 'your friend'}
+          friendshipsVersion={friendshipsVersion}
+        />
+      )}
 
       {/* Messages */}
       <div ref={containerRef} className="flex-1 overflow-y-auto px-4 py-4">

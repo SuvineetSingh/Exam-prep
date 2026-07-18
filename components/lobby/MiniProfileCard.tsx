@@ -97,13 +97,14 @@ export function MiniProfileCard({ userId, currentUserId, onClose, onSendDM, posi
                   <p className="text-xs text-neutral-500 truncate">{profile.full_name}</p>
                 )}
               </div>
+              {/* No friend requests to bots — nobody is home to accept them */}
               {!profile.is_bot && (
-                <button
-                  onClick={handleFriendAction}
-                  disabled={friendLoading || friendButtonProps.disabled}
-                  title={friendButtonProps.label}
-                  className={`flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center transition-colors disabled:opacity-50 ${friendButtonProps.iconClass}`}
-                >
+              <button
+                onClick={handleFriendAction}
+                disabled={friendLoading || friendButtonProps.disabled}
+                title={friendButtonProps.label}
+                className={`flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center transition-colors disabled:opacity-50 ${friendButtonProps.iconClass}`}
+              >
                   {friendLoading ? (
                     <span className="w-3 h-3 border-2 border-current/30 border-t-current rounded-full animate-spin" />
                   ) : friendStatus === 'accepted' ? (
@@ -114,12 +115,12 @@ export function MiniProfileCard({ userId, currentUserId, onClose, onSendDM, posi
                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                  ) : (
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
-                    </svg>
-                  )}
-                </button>
+                ) : (
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
+                  </svg>
+                )}
+              </button>
               )}
             </div>
 

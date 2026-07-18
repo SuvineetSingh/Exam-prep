@@ -3,15 +3,17 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { fetchDMConversations } from '@/lib/supabase/queries/lobbyQueries';
-import { useLobbyPresence } from '@/hooks/useLobbyPresence';
+import { fetchDMConversations, fetchFriendshipStatus } from '@/lib/supabase/queries/lobbyQueries';
+import { logActivityEvent } from '@/lib/supabase/queries/activityQueries';
+import { useOnlineUserIds } from '@/hooks/useOnlineUserIds';
 import { useLobbyMessages } from '@/hooks/useLobbyMessages';
 import { useDMMessages } from '@/hooks/useDMMessages';
 import { useNotifications } from '@/hooks/useNotifications';
 import { RoomList } from './RoomList';
 import { RoomChat } from './RoomChat';
 import { ConversationList } from './ConversationList';
-import { OnlineUsersList } from './OnlineUsersList';
+import { FindPeople } from './FindPeople';
+import { ActivityFeed } from './ActivityFeed';
 import { MiniProfileCard } from './MiniProfileCard';
 import { IndustrySelector } from './IndustrySelector';
 import { NotificationToast } from './NotificationToast';
@@ -54,7 +56,8 @@ export function LobbyView({ rooms, currentUser, userProfile }: LobbyViewProps) {
   const dmPartnerIdRef = useRef(dmPartnerId);
   dmPartnerIdRef.current = dmPartnerId;
 
-  const onlineUsers = useLobbyPresence(activeRoom?.slug || '', currentUser);
+  // Lobby-wide presence — drives the green dots on avatars
+  const onlineUserIds = useOnlineUserIds(currentUser);
   const { messages: roomMessages, loading: roomLoading, sendMessage: sendRoomMessage } = useLobbyMessages(activeRoom?.id || null);
   const { messages: dmMessages, loading: dmLoading, sendDM } = useDMMessages(currentUser.id, dmPartnerId);
   const { unreadCounts, toasts, incrementUnread, clearUnread, addToast, removeToast } = useNotifications(currentUser.id);
@@ -92,6 +95,55 @@ export function LobbyView({ rooms, currentUser, userProfile }: LobbyViewProps) {
       channel.unsubscribe();
     };
   }, [currentUser.id]);
+
+  // ── Friendships updates: partner invite toasts + a version counter for the
+  // StudyPartnerPanel. The panel must NOT open its own friendships
+  // subscription: overlapping postgres_changes bindings on the same
+  // table+event from one socket collide in Realtime and one goes silent —
+  // this listener is the single friendships subscription for the page. ──
+  const [friendshipsVersion, setFriendshipsVersion] = useState(0);
+  useEffect(() => {
+    const supabase = createClient();
+    const handleInvite = async (payload: { new: Record<string, unknown> }) => {
+      setFriendshipsVersion((v) => v + 1);
+      const row = payload.new as {
+        partner_status: string | null;
+        partner_invited_by: string | null;
+      };
+      if (row.partner_status !== 'pending' || !row.partner_invited_by) return;
+      if (row.partner_invited_by === currentUser.id) return;
+
+      const { data: inviter } = await supabase
+        .from('user_profiles')
+        .select('username, avatar_url')
+        .eq('id', row.partner_invited_by)
+        .single();
+      addToast({
+        type: 'dm',
+        senderId: row.partner_invited_by,
+        senderName: inviter?.username || 'Someone',
+        senderAvatar: inviter?.avatar_url || undefined,
+        message: 'invited you to be study partners! 🤝',
+        dmPartnerId: row.partner_invited_by,
+      });
+    };
+
+    const channel = supabase
+      .channel(`partner-invites:${currentUser.id}`)
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'friendships', filter: `addressee_id=eq.${currentUser.id}` },
+        handleInvite
+      )
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'friendships', filter: `requester_id=eq.${currentUser.id}` },
+        handleInvite
+      )
+      .subscribe();
+
+    return () => { channel.unsubscribe(); };
+  }, [currentUser.id, addToast]);
 
   // ── Global DM listener: catches DMs from ANY sender, not just the active partner ──
   useEffect(() => {
@@ -137,14 +189,38 @@ export function LobbyView({ rooms, currentUser, userProfile }: LobbyViewProps) {
     return () => { channel.unsubscribe(); };
   }, [currentUser.id, incrementUnread, addToast]);
 
+  // Passive discovery signal for the activity feed. Fires for the default
+  // room on mount and on every room switch; repeated joins are collapsed at
+  // feed read time, not here.
+  useEffect(() => {
+    if (!activeRoom) return;
+    logActivityEvent(currentUser.id, 'room_joined', {
+      room_id: activeRoom.id,
+      room_slug: activeRoom.slug,
+      room_name: activeRoom.name,
+    });
+  }, [activeRoom, currentUser.id]);
+
   const handleSendMessage = useCallback(
     (content: string): Promise<boolean> => {
       if (chatMode === 'dm') {
-        return sendDM(content);
+        // No prior history with this partner = a brand-new conversation.
+        // Log it with the room the user was in for lobby→DM funnel analysis.
+        const isFirstMessage = dmMessages.length === 0;
+        return sendDM(content).then((ok) => {
+          if (ok && isFirstMessage && dmPartnerId) {
+            logActivityEvent(currentUser.id, 'dm_started', {
+              partner_id: dmPartnerId,
+              room_id: activeRoom?.id ?? null,
+              room_slug: activeRoom?.slug ?? null,
+            });
+          }
+          return ok;
+        });
       }
       return sendRoomMessage(content, currentUser.id);
     },
-    [chatMode, sendDM, sendRoomMessage, currentUser.id]
+    [chatMode, sendDM, sendRoomMessage, currentUser.id, dmMessages.length, dmPartnerId, activeRoom]
   );
 
   const handleClickUser = useCallback((userId: string, position?: { top: number; left: number }) => {
@@ -160,6 +236,23 @@ export function LobbyView({ rooms, currentUser, userProfile }: LobbyViewProps) {
     setMobileTab('chat');
     setChatView('active');
   }, []);
+
+  // One-tap Message action: friends go straight into the DM; everyone else
+  // gets the profile card, where Add Friend is the primary action (the
+  // friends-only DM gate stays intact).
+  const handleMessageUser = useCallback(
+    async (userId: string, position?: { top: number; left: number }) => {
+      if (userId === currentUser.id) return;
+      const status = await fetchFriendshipStatus(currentUser.id, userId);
+      if (status === 'accepted') {
+        handleStartDM(userId);
+      } else {
+        setProfileCardUserId(userId);
+        setProfileCardPosition(position);
+      }
+    },
+    [currentUser.id, handleStartDM]
+  );
 
   const handleRoomSelect = useCallback((room: LobbyRoom) => {
     setActiveRoom(room);
@@ -182,7 +275,10 @@ export function LobbyView({ rooms, currentUser, userProfile }: LobbyViewProps) {
     removeToast(toast.id);
   }, [rooms, handleRoomSelect, handleStartDM, removeToast]);
 
-  // Deep-link support: `/lobby?room=<slug>` or `/lobby?dm=<userId>` (e.g. from the sidebar)
+  // Deep-link support: `/lobby?room=<slug>` or `/lobby?dm=<userId>` (e.g. from
+  // the sidebar). Depends on searchParams — the sidebar DM links navigate to
+  // this same page, which only changes the query string without remounting,
+  // so a mount-only effect would ignore every click after the first load.
   const searchParams = useSearchParams();
   useEffect(() => {
     const dmParam = searchParams.get('dm');
@@ -194,7 +290,7 @@ export function LobbyView({ rooms, currentUser, userProfile }: LobbyViewProps) {
       if (room) handleRoomSelect(room);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [searchParams]);
 
   // Detect new room messages and trigger notifications
   useEffect(() => {
@@ -296,7 +392,7 @@ export function LobbyView({ rooms, currentUser, userProfile }: LobbyViewProps) {
 
         {/* Left: Rooms sidebar */}
         <aside
-          className={`border-r border-neutral-200 overflow-y-auto bg-white ${
+          className={`border-r border-neutral-200 overflow-hidden bg-white ${
             mobileTab === 'rooms' ? 'block' : 'hidden md:block'
           }`}
         >
@@ -310,6 +406,7 @@ export function LobbyView({ rooms, currentUser, userProfile }: LobbyViewProps) {
             activeDmPartnerId={chatMode === 'dm' ? dmPartnerId : null}
             onSelectDM={handleStartDM}
             dmUnreadCounts={unreadCounts.dms}
+            onlineUserIds={onlineUserIds}
           />
         </aside>
 
@@ -342,21 +439,29 @@ export function LobbyView({ rooms, currentUser, userProfile }: LobbyViewProps) {
               dmPartner={chatMode === 'dm' ? dmPartnerId : null}
               onBackToRooms={chatMode === 'dm' ? () => setChatMode('room') : undefined}
               onBackToList={showActiveChat ? handleBackToList : undefined}
+              friendshipsVersion={friendshipsVersion}
+              partnerOnline={chatMode === 'dm' && !!dmPartnerId && onlineUserIds.has(dmPartnerId)}
             />
           </div>
         </main>
 
-        {/* Right: People sidebar */}
+        {/* Right: Find People + Recent Activity */}
         <aside
-          className={`border-l border-neutral-200 overflow-y-auto bg-white ${
-            mobileTab === 'people' ? 'block' : 'hidden md:block'
+          className={`border-l border-neutral-200 overflow-hidden bg-white flex-col ${
+            mobileTab === 'people' ? 'flex' : 'hidden md:flex'
           }`}
         >
-          <OnlineUsersList
-            users={onlineUsers}
-            currentUserId={currentUser.id}
-            onClickUser={handleClickUser}
-          />
+          <div className="flex-shrink-0">
+            <FindPeople currentUserId={currentUser.id} onlineUserIds={onlineUserIds} />
+          </div>
+          <div className="flex-1 min-h-0 overflow-y-auto">
+            <ActivityFeed
+              currentUserId={currentUser.id}
+              onClickUser={handleClickUser}
+              onMessageUser={handleMessageUser}
+              onlineUserIds={onlineUserIds}
+            />
+          </div>
         </aside>
       </div>
 

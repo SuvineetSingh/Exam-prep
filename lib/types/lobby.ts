@@ -18,6 +18,8 @@ export interface LobbyUserProfile {
   exam_type: string | null;
   bio: string | null;
   current_room_id: string | null;
+  country_code: string | null;
+  show_in_activity_feed: boolean;
   is_bot: boolean;
   is_premium: boolean;
   last_seen_at: string;

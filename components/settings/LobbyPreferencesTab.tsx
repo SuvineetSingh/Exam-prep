@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { updateUserProfile } from '@/lib/supabase/queries/lobbyQueries';
 import type { LobbyUserProfile } from '@/lib/types';
 import { INDUSTRIES } from '@/lib/utils/lobbyConstants';
+import { COUNTRY_OPTIONS, countryFlag } from '@/lib/utils/countries';
 import { SuccessMessage } from './SuccessMessage';
 
 interface LobbyPreferencesTabProps {
@@ -14,6 +15,8 @@ interface LobbyPreferencesTabProps {
 
 export function LobbyPreferencesTab({ userId, userProfile, onUpdate }: LobbyPreferencesTabProps) {
   const [selected, setSelected] = useState<string | null>(null);
+  const [country, setCountry] = useState<string>('');
+  const [showInFeed, setShowInFeed] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -22,6 +25,8 @@ export function LobbyPreferencesTab({ userId, userProfile, onUpdate }: LobbyPref
     if (userProfile?.industry) {
       setSelected(userProfile.industry);
     }
+    setCountry(userProfile?.country_code ?? '');
+    setShowInFeed(userProfile?.show_in_activity_feed ?? true);
   }, [userProfile]);
 
   const handleSave = async () => {
@@ -34,7 +39,11 @@ export function LobbyPreferencesTab({ userId, userProfile, onUpdate }: LobbyPref
     setError(null);
 
     try {
-      await updateUserProfile(userId, { industry: selected });
+      await updateUserProfile(userId, {
+        industry: selected,
+        country_code: country || null,
+        show_in_activity_feed: showInFeed,
+      });
       setShowSuccess(true);
       onUpdate();
     } catch (err) {
@@ -75,6 +84,56 @@ export function LobbyPreferencesTab({ userId, userProfile, onUpdate }: LobbyPref
             {industry}
           </button>
         ))}
+      </div>
+
+      <div className="mb-6">
+        <label htmlFor="country" className="block text-sm font-semibold text-neutral-700 mb-2">
+          Country {country && <span className="ml-1">{countryFlag(country)}</span>}
+        </label>
+        <p className="text-sm text-neutral-600 mb-3">
+          Shown as a flag next to your name in the lobby activity feed.
+        </p>
+        <select
+          id="country"
+          value={country}
+          onChange={(e) => setCountry(e.target.value)}
+          disabled={saving}
+          className="input disabled:opacity-50"
+        >
+          <option value="">Prefer not to say</option>
+          {COUNTRY_OPTIONS.map(({ code, name }) => (
+            <option key={code} value={code}>
+              {countryFlag(code)} {name}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div className="mb-6 flex items-start justify-between gap-4 p-4 rounded-xl border-2 border-neutral-200">
+        <div>
+          <p className="font-semibold text-neutral-700">Show my activity in the feed</p>
+          <p className="text-sm text-neutral-600">
+            Let other members see when you complete quizzes or join rooms. Turning this off hides
+            you from the lobby activity feed.
+          </p>
+        </div>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={showInFeed}
+          aria-label="Show my activity in the feed"
+          onClick={() => setShowInFeed((v) => !v)}
+          disabled={saving}
+          className={`relative shrink-0 w-12 h-7 rounded-full transition-colors disabled:opacity-50 ${
+            showInFeed ? 'bg-brand-green' : 'bg-neutral-300'
+          }`}
+        >
+          <span
+            className={`absolute top-1 w-5 h-5 rounded-full bg-white shadow transition-all ${
+              showInFeed ? 'left-6' : 'left-1'
+            }`}
+          />
+        </button>
       </div>
 
       {error && (

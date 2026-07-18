@@ -120,6 +120,17 @@ export async function getUserStats(): Promise<UserStats | null> {
     return ZERO_STATS;
   }
 
+  return computeStatsFromAnswers(data);
+}
+
+/**
+ * Pure stats computation from user_answers rows — shared by getUserStats
+ * (own stats, browser client) and /api/partner-stats (partner's stats,
+ * service client after partnership verification).
+ */
+export function computeStatsFromAnswers(
+  data: { is_correct: boolean; mode: string; created_at: string }[]
+): UserStats {
   const totalAnswered = data.length;
   const practiceAnswered = data.filter(a => a.mode === 'practice').length;
   const timedAnswered = data.filter(a => a.mode === 'timed').length;

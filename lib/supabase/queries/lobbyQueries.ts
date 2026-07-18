@@ -211,8 +211,25 @@ export async function fetchFriendshipStatus(
   return data.requester_id === currentUserId ? 'pending_sent' : 'pending_received';
 }
 
+const FRIEND_REQUESTS_PER_HOUR = 10;
+
 export async function sendFriendRequest(requesterId: string, addresseeId: string) {
   const supabase = createClient();
+
+  // Cooldown so the lobby→DM shortcut can't be used as a spam vector.
+  // Client-enforced (a direct API caller can bypass it); real enforcement
+  // needs a DB trigger or a route handler — acceptable gap pre-scale since
+  // the friends-only DM gate itself throttles cold outreach.
+  const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+  const { count } = await supabase
+    .from('friendships')
+    .select('id', { count: 'exact', head: true })
+    .eq('requester_id', requesterId)
+    .gte('created_at', oneHourAgo);
+  if ((count ?? 0) >= FRIEND_REQUESTS_PER_HOUR) {
+    throw new Error('Too many friend requests — please try again in a bit.');
+  }
+
   const { error } = await supabase
     .from('friendships')
     .insert({ requester_id: requesterId, addressee_id: addresseeId });
