@@ -389,6 +389,18 @@ export function PracticeSessionUI({
   const handleNext = () => { autoLogCurrentAnswer(); setElapsed(0); setTimerActive(true); navigate('next'); };
   const handlePrev = () => { autoLogCurrentAnswer(); setElapsed(0); setTimerActive(true); navigate('prev'); };
 
+  // Last question has no "next" to navigate to — offer to save & end instead
+  // of leaving the primary action button permanently disabled.
+  const handleFinish = () => {
+    autoLogCurrentAnswer();
+    setTimerActive(false);
+    if (sessionLog.length > 0 || selectedOption) {
+      setShowSaveExitPopup(true);
+    } else {
+      setShowExitPopup(true);
+    }
+  };
+
   const handleExitDiscard = () => {
     if (sessionId) {
       try { sessionStorage.removeItem(`practice_log_${sessionId}`); } catch {}
@@ -606,9 +618,10 @@ export function PracticeSessionUI({
         questionNumber={questionNumber}
         totalQuestions={totalQuestions}
         onPrev={handlePrev}
-        onNext={handleNext}
+        onNext={isLast ? handleFinish : handleNext}
         isFirst={isFirst}
         isLast={isLast}
+        nextLabel={isLast ? 'Finish →' : undefined}
         isStarred={starred}
         onToggleStar={handleToggleStar}
         timerSlot={timerSlot}
