@@ -22,6 +22,7 @@ export interface LobbyUserProfile {
   bio: string | null;
   current_room_id: string | null;
   country_code: string | null;
+  study_time: string | null;
   show_in_activity_feed: boolean;
   onboarding_completed: boolean;
   is_bot: boolean;

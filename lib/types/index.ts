@@ -44,6 +44,9 @@ export interface ProfileFormData {
   avatar_url: string | null;
   exam_type: string | null;
   bio: string | null;
+  country_code: string | null;
+  industry: string | null;
+  study_time: string | null;
 }
 
 // Course subscription

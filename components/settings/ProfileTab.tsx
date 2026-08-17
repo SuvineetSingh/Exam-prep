@@ -5,6 +5,8 @@ import { createClient } from '@/lib/supabase/client';
 import { updateUserProfile } from '@/lib/supabase/queries/lobbyQueries';
 import type { LobbyUserProfile, ProfileFormData } from '@/lib/types';
 import { EXAM_TYPES } from '@/lib/utils/constants';
+import { COUNTRY_OPTIONS, countryFlag } from '@/lib/utils/countries';
+import { INDUSTRIES, STUDY_TIMES } from '@/lib/utils/lobbyConstants';
 import { OnboardingTour } from '@/components/onboarding/OnboardingTour';
 import { SuccessMessage } from './SuccessMessage';
 
@@ -22,6 +24,9 @@ export function ProfileTab({ userId, userProfile, onUpdate, authProvider }: Prof
     avatar_url: null,
     exam_type: null,
     bio: null,
+    country_code: null,
+    industry: null,
+    study_time: null,
   });
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -46,6 +51,9 @@ export function ProfileTab({ userId, userProfile, onUpdate, authProvider }: Prof
         avatar_url: userProfile.avatar_url,
         exam_type: userProfile.exam_type,
         bio: userProfile.bio,
+        country_code: userProfile.country_code,
+        industry: userProfile.industry,
+        study_time: userProfile.study_time,
       });
       if (userProfile.avatar_url) {
         setPreviewUrl(userProfile.avatar_url);
@@ -109,6 +117,10 @@ export function ProfileTab({ userId, userProfile, onUpdate, authProvider }: Prof
       setError('Username must be at least 3 characters');
       return false;
     }
+    if (!formData.country_code) {
+      setError('Country is required');
+      return false;
+    }
     return true;
   };
 
@@ -161,6 +173,9 @@ export function ProfileTab({ userId, userProfile, onUpdate, authProvider }: Prof
         avatar_url: userProfile.avatar_url,
         exam_type: userProfile.exam_type,
         bio: userProfile.bio,
+        country_code: userProfile.country_code,
+        industry: userProfile.industry,
+        study_time: userProfile.study_time,
       });
     }
     setError(null);
@@ -250,21 +265,83 @@ export function ProfileTab({ userId, userProfile, onUpdate, authProvider }: Prof
           </div>
         </div>
 
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-semibold text-neutral-700 mb-1 ml-1">
+              Exam Type
+            </label>
+            <select
+              value={formData.exam_type || ''}
+              onChange={(e) => handleChange('exam_type', e.target.value || null)}
+              className="input py-4 cursor-pointer"
+              disabled={saving}
+            >
+              <option value="">Select exam type</option>
+              {Object.values(EXAM_TYPES).map(type => (
+                <option key={type} value={type}>{type}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-neutral-700 mb-1 ml-1">
+              Industry
+            </label>
+            <select
+              value={formData.industry || ''}
+              onChange={(e) => handleChange('industry', e.target.value || null)}
+              className="input py-4 cursor-pointer"
+              disabled={saving}
+            >
+              <option value="">Select industry</option>
+              {INDUSTRIES.map(industry => (
+                <option key={industry} value={industry}>{industry}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
         <div>
           <label className="block text-sm font-semibold text-neutral-700 mb-1 ml-1">
-            Exam Type
+            Country *
           </label>
           <select
-            value={formData.exam_type || ''}
-            onChange={(e) => handleChange('exam_type', e.target.value || null)}
+            value={formData.country_code || ''}
+            onChange={(e) => handleChange('country_code', e.target.value || null)}
             className="input py-4 cursor-pointer"
             disabled={saving}
           >
-            <option value="">Select exam type</option>
-            {Object.values(EXAM_TYPES).map(type => (
-              <option key={type} value={type}>{type}</option>
+            <option value="">Select your country</option>
+            {COUNTRY_OPTIONS.map(({ code, name }) => (
+              <option key={code} value={code}>{countryFlag(code)} {name}</option>
             ))}
           </select>
+          <p className="text-xs text-neutral-500 mt-1 ml-1">
+            Used to match you with people and rooms from your country.
+          </p>
+        </div>
+
+        <div>
+          <label className="block text-sm font-semibold text-neutral-700 mb-1 ml-1">
+            When do you usually study?
+          </label>
+          <div className="grid grid-cols-3 gap-2">
+            {STUDY_TIMES.map(({ value, label }) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => handleChange('study_time', formData.study_time === value ? null : value)}
+                disabled={saving}
+                className={`py-3 rounded-[10px] border-2 text-sm font-semibold transition-colors disabled:opacity-50 ${
+                  formData.study_time === value
+                    ? 'border-brand-green bg-green-50 text-brand-green-dark'
+                    : 'border-neutral-200 text-neutral-600 hover:border-neutral-300'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
         </div>
 
         <div>

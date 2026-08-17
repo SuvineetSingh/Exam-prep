@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client';
 import { sendFriendRequest, fetchFriendshipStatus } from '@/lib/supabase/queries/lobbyQueries';
 import { COUNTRY_OPTIONS, countryFlag } from '@/lib/utils/countries';
 import { EXAM_TYPES } from '@/lib/utils/constants';
+import { STUDY_TIMES } from '@/lib/utils/lobbyConstants';
 import { OnlineDot } from './OnlineDot';
 
 interface SearchResult {
@@ -13,6 +14,7 @@ interface SearchResult {
   exam_type: string | null;
   full_name: string | null;
   country_code: string | null;
+  study_time: string | null;
 }
 
 interface FindPeopleProps {
@@ -32,6 +34,7 @@ export function FindPeople({ currentUserId, onlineUserIds }: FindPeopleProps) {
   const [requestSent, setRequestSent] = useState<Set<string>>(new Set());
   const [countryFilter, setCountryFilter] = useState('');
   const [examTypeFilter, setExamTypeFilter] = useState('');
+  const [studyTimeFilter, setStudyTimeFilter] = useState('');
 
   // Live suggestions while typing: debounced, first 5 usernames only.
   // Best-effort (no error surface) — the Go flow handles error messaging.
@@ -54,6 +57,7 @@ export function FindPeople({ currentUserId, onlineUserIds }: FindPeopleProps) {
         .eq('is_bot', false);
       if (countryFilter) query = query.eq('country_code', countryFilter);
       if (examTypeFilter) query = query.eq('exam_type', examTypeFilter);
+      if (studyTimeFilter) query = query.eq('study_time', studyTimeFilter);
       const { data } = await query.limit(5);
       if (!cancelled) setLiveResults((data as { id: string; username: string }[]) ?? []);
     }, 250);
@@ -61,7 +65,7 @@ export function FindPeople({ currentUserId, onlineUserIds }: FindPeopleProps) {
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [searchQuery, searchedTerm, currentUserId, countryFilter, examTypeFilter]);
+  }, [searchQuery, searchedTerm, currentUserId, countryFilter, examTypeFilter, studyTimeFilter]);
 
   const handleSearch = useCallback(async (overrideTerm?: string) => {
     const term = (overrideTerm ?? searchQuery).trim();
@@ -83,12 +87,13 @@ export function FindPeople({ currentUserId, onlineUserIds }: FindPeopleProps) {
 
     let query = supabase
       .from('user_profiles')
-      .select('id, username, exam_type, full_name, country_code')
+      .select('id, username, exam_type, full_name, country_code, study_time')
       .ilike('username', `%${term}%`)
       .neq('id', currentUserId)
       .eq('is_bot', false); // bots can't receive friend requests
     if (countryFilter) query = query.eq('country_code', countryFilter);
     if (examTypeFilter) query = query.eq('exam_type', examTypeFilter);
+    if (studyTimeFilter) query = query.eq('study_time', studyTimeFilter);
     const { data, error } = await query.limit(10);
     if (error) {
       setSearchError('Search failed — please try again.');
@@ -99,7 +104,7 @@ export function FindPeople({ currentUserId, onlineUserIds }: FindPeopleProps) {
     setLiveResults([]); // suggestions are redundant once full results show
     setSearchedTerm(term);
     setSearching(false);
-  }, [searchQuery, currentUserId, countryFilter, examTypeFilter]);
+  }, [searchQuery, currentUserId, countryFilter, examTypeFilter, studyTimeFilter]);
 
   const handleAddFriend = useCallback(async (targetId: string) => {
     const status = await fetchFriendshipStatus(currentUserId, targetId);
@@ -117,11 +122,11 @@ export function FindPeople({ currentUserId, onlineUserIds }: FindPeopleProps) {
         Find People
       </h3>
 
-      <div className="px-1 mb-2 flex gap-2">
+      <div className="px-1 mb-2 grid grid-cols-2 gap-2">
         <select
           value={countryFilter}
           onChange={(e) => setCountryFilter(e.target.value)}
-          className="flex-1 min-w-0 text-xs bg-neutral-100 border border-neutral-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-brand-green focus:border-brand-green"
+          className="min-w-0 text-xs bg-neutral-100 border border-neutral-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-brand-green focus:border-brand-green"
         >
           <option value="">All Countries</option>
           {COUNTRY_OPTIONS.map(({ code, name }) => (
@@ -133,11 +138,21 @@ export function FindPeople({ currentUserId, onlineUserIds }: FindPeopleProps) {
         <select
           value={examTypeFilter}
           onChange={(e) => setExamTypeFilter(e.target.value)}
-          className="flex-1 min-w-0 text-xs bg-neutral-100 border border-neutral-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-brand-green focus:border-brand-green"
+          className="min-w-0 text-xs bg-neutral-100 border border-neutral-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-brand-green focus:border-brand-green"
         >
           <option value="">All Exams</option>
           {Object.values(EXAM_TYPES).map((type) => (
             <option key={type} value={type}>{type}</option>
+          ))}
+        </select>
+        <select
+          value={studyTimeFilter}
+          onChange={(e) => setStudyTimeFilter(e.target.value)}
+          className="col-span-2 min-w-0 text-xs bg-neutral-100 border border-neutral-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-brand-green focus:border-brand-green"
+        >
+          <option value="">Any Study Time</option>
+          {STUDY_TIMES.map(({ value, label }) => (
+            <option key={value} value={value}>{label}</option>
           ))}
         </select>
       </div>
@@ -197,10 +212,12 @@ export function FindPeople({ currentUserId, onlineUserIds }: FindPeopleProps) {
               </div>
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-medium text-neutral-900 truncate">{result.username}</p>
-                {(result.exam_type || result.country_code) && (
-                  <p className="text-xs text-neutral-500">
+                {(result.exam_type || result.country_code || result.study_time) && (
+                  <p className="text-xs text-neutral-500 truncate">
                     {result.country_code && <span className="mr-1">{countryFlag(result.country_code)}</span>}
-                    {result.exam_type}
+                    {[result.exam_type, result.study_time && STUDY_TIMES.find(t => t.value === result.study_time)?.label]
+                      .filter(Boolean)
+                      .join(' · ')}
                   </p>
                 )}
               </div>
