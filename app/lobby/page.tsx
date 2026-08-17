@@ -66,7 +66,6 @@ export default function LobbyPage() {
           <LobbyView
             rooms={rooms}
             currentUser={currentUser}
-            userProfile={userProfile}
           />
         </Suspense>
       </div>

@@ -16,9 +16,8 @@ import { ConversationList } from './ConversationList';
 import { FindPeople } from './FindPeople';
 import { ActivityFeed } from './ActivityFeed';
 import { MiniProfileCard } from './MiniProfileCard';
-import { IndustrySelector } from './IndustrySelector';
 import { NotificationToast } from './NotificationToast';
-import type { LobbyRoom, LobbyUserProfile, LobbyMessage, NotificationToast as NotificationToastType } from '@/lib/types/lobby';
+import type { LobbyRoom, LobbyMessage, NotificationToast as NotificationToastType } from '@/lib/types/lobby';
 
 type DMConversation = {
   partner_id: string;
@@ -36,13 +35,11 @@ interface LobbyViewProps {
     exam_type?: string;
     avatar_url?: string;
   };
-  userProfile: LobbyUserProfile | null;
 }
 
-export function LobbyView({ rooms: initialRooms, currentUser, userProfile }: LobbyViewProps) {
+export function LobbyView({ rooms: initialRooms, currentUser }: LobbyViewProps) {
   const [rooms, setRooms] = useState<LobbyRoom[]>(initialRooms);
   const [activeRoom, setActiveRoom] = useState<LobbyRoom | null>(initialRooms[0] || null);
-  const [showIndustrySelector, setShowIndustrySelector] = useState(!userProfile?.industry);
   const [profileCardUserId, setProfileCardUserId] = useState<string | null>(null);
   const [profileCardPosition, setProfileCardPosition] = useState<{ top: number; left: number } | undefined>(undefined);
   const [chatMode, setChatMode] = useState<'room' | 'dm'>('room');
@@ -410,15 +407,6 @@ export function LobbyView({ rooms: initialRooms, currentUser, userProfile }: Lob
       clearUnread('dm', dmPartnerId);
     }
   }, [chatMode, dmPartnerId, clearUnread]);
-
-  if (showIndustrySelector) {
-    return (
-      <IndustrySelector
-        userId={currentUser.id}
-        onSelected={() => setShowIndustrySelector(false)}
-      />
-    );
-  }
 
   // On mobile, show ConversationList when chat tab is in 'list' view
   const showConversationList = mobileTab === 'chat' && chatView === 'list';
