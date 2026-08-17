@@ -1,9 +1,12 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import type { LobbyRoom } from '@/lib/types/lobby';
 import { UnreadBadge } from './UnreadBadge';
 import { OnlineDot } from './OnlineDot';
+import { CreateRoomModal } from './CreateRoomModal';
+import { RoomInvitesList } from './RoomInvitesList';
 import { usePinnedRooms } from '@/hooks/usePinnedRooms';
 
 type DMConversation = {
@@ -26,6 +29,10 @@ interface RoomListProps {
   onSelectDM?: (partnerId: string) => void;
   dmUnreadCounts?: { [partnerId: string]: number };
   onlineUserIds?: Set<string>;
+  isPremium?: boolean;
+  onRoomCreated?: (room: LobbyRoom) => void;
+  roomInvitesVersion?: number;
+  onInviteAccepted?: (roomId: string) => void;
 }
 
 const MAX_PINS = 5;
@@ -87,7 +94,12 @@ function RoomRow({
         isActive ? 'bg-green-50 text-brand-green-dark' : 'text-neutral-700 hover:bg-neutral-100'
       }`}
     >
-      <svg className="w-5 h-5 text-neutral-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+      {room.avatar_url ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={room.avatar_url} alt="" className="w-5 h-5 rounded-full object-cover flex-shrink-0" />
+      ) : (
+        <svg className="w-5 h-5 text-neutral-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+      )}
       <div className="flex-1 min-w-0">
         <p className={`text-sm font-medium truncate ${isActive ? 'text-brand-green-dark' : 'text-neutral-900'}`}>
           {room.name}
@@ -199,9 +211,14 @@ export function RoomList({
   onSelectDM,
   dmUnreadCounts,
   onlineUserIds,
+  isPremium = false,
+  onRoomCreated,
+  roomInvitesVersion,
+  onInviteAccepted,
 }: RoomListProps) {
   const { pinnedIds, togglePin } = usePinnedRooms(currentUserId);
   const [showPrefs, setShowPrefs] = useState(false);
+  const [showCreate, setShowCreate] = useState(false);
   const [query, setQuery] = useState('');
 
   const q = query.trim().toLowerCase();
@@ -239,6 +256,17 @@ export function RoomList({
         />
       )}
 
+      {showCreate && (
+        <CreateRoomModal
+          userId={currentUserId}
+          onClose={() => setShowCreate(false)}
+          onCreated={(room) => {
+            setShowCreate(false);
+            onRoomCreated?.(room);
+          }}
+        />
+      )}
+
       {/* Column split 50/50: Chats on top, Rooms below, each scrolling on its own */}
       <div className="h-full flex flex-col">
         {/* ── Top half: Chats (DMs) ── */}
@@ -266,6 +294,14 @@ export function RoomList({
           </div>
         </div>
 
+        {onInviteAccepted && (
+          <RoomInvitesList
+            userId={currentUserId}
+            version={roomInvitesVersion ?? 0}
+            onAccepted={onInviteAccepted}
+          />
+        )}
+
         {/* ── Bottom half: Rooms ── */}
         <div className="flex-1 min-h-0 flex flex-col border-t border-neutral-200 p-3 pt-2">
           <div className="flex-shrink-0 flex items-center justify-between px-3 mb-2">
@@ -279,17 +315,41 @@ export function RoomList({
                 </span>
               ) : 'Rooms'}
             </h2>
-            <button
-              onClick={() => setShowPrefs(true)}
-              title="Customize pinned rooms"
-              className="p-1 rounded-md hover:bg-neutral-200 text-neutral-400 hover:text-neutral-600 transition-colors"
-            >
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                  d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                <circle cx="12" cy="12" r="3" />
-              </svg>
-            </button>
+            <div className="flex items-center gap-1">
+              {isPremium ? (
+                <button
+                  onClick={() => setShowCreate(true)}
+                  title="Create a room"
+                  className="p-1 rounded-md hover:bg-neutral-200 text-neutral-400 hover:text-neutral-600 transition-colors"
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                </button>
+              ) : (
+                <Link
+                  href="/courses"
+                  title="Creating rooms is a Pro feature"
+                  className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-brand-amber/10 text-brand-amber hover:bg-brand-amber/20 transition-colors"
+                >
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                  Pro
+                </Link>
+              )}
+              <button
+                onClick={() => setShowPrefs(true)}
+                title="Customize pinned rooms"
+                className="p-1 rounded-md hover:bg-neutral-200 text-neutral-400 hover:text-neutral-600 transition-colors"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                    d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+              </button>
+            </div>
           </div>
 
           {/* Search input */}

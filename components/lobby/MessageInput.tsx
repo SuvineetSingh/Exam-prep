@@ -2,14 +2,18 @@
 
 import { useState, useRef } from 'react';
 import { LOBBY_CONFIG } from '@/lib/utils/lobbyConstants';
+import { AttachmentButton } from './AttachmentButton';
 
 interface MessageInputProps {
   onSend: (content: string) => Promise<boolean>;
   placeholder?: string;
   disabled?: boolean;
+  /** Only set for room chat (not DMs) — shows the attachment button. */
+  attachmentRoomId?: string;
+  currentUserId?: string;
 }
 
-export function MessageInput({ onSend, placeholder = 'Type a message...', disabled }: MessageInputProps) {
+export function MessageInput({ onSend, placeholder = 'Type a message...', disabled, attachmentRoomId, currentUserId }: MessageInputProps) {
   const [value, setValue] = useState('');
   const [sendError, setSendError] = useState(false);
   const [sending, setSending] = useState(false);
@@ -38,6 +42,9 @@ export function MessageInput({ onSend, placeholder = 'Type a message...', disabl
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-1 p-4 border-t border-neutral-200 bg-white">
       <div className="flex items-center gap-2">
+        {attachmentRoomId && currentUserId && (
+          <AttachmentButton roomId={attachmentRoomId} senderId={currentUserId} disabled={disabled} />
+        )}
         <input
           ref={inputRef}
           type="text"

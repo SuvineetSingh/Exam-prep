@@ -5,6 +5,8 @@ import { MessageBubble } from './MessageBubble';
 import { MessageInput } from './MessageInput';
 import { StudyPartnerPanel } from './StudyPartnerPanel';
 import { OnlineDot } from './OnlineDot';
+import { RoomMembersPanel } from './RoomMembersPanel';
+import { RoomSearchBar } from './RoomSearchBar';
 import { fetchUserProfile } from '@/lib/supabase/queries/lobbyQueries';
 import type { LobbyMessage, LobbyRoom, LobbyUserProfile } from '@/lib/types/lobby';
 
@@ -62,6 +64,8 @@ export function RoomChat({
   partnerOnline,
 }: RoomChatProps) {
   const [dmProfile, setDmProfile] = useState<LobbyUserProfile | null>(null);
+  const [showMembers, setShowMembers] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -156,14 +160,48 @@ export function RoomChat({
           ) : (
             <>
               <span className="text-lg">{room?.icon}</span>
-              <div>
+              <div className="flex-1 min-w-0">
                 <h2 className="text-sm font-semibold text-neutral-900">{room?.name}</h2>
                 <p className="text-xs text-neutral-500">{room?.description}</p>
               </div>
+              {room && (
+                <button
+                  onClick={() => setShowSearch(true)}
+                  className="p-1.5 rounded-lg hover:bg-neutral-100 text-neutral-400 hover:text-neutral-600 transition-colors flex-shrink-0"
+                  title="Search messages"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </button>
+              )}
+              {room?.is_user_created && (
+                <button
+                  onClick={() => setShowMembers(true)}
+                  className="p-1.5 rounded-lg hover:bg-neutral-100 text-neutral-400 hover:text-neutral-600 transition-colors flex-shrink-0"
+                  title="Members"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-4a4 4 0 10-4-4 4 4 0 004 4zm6 4a4 4 0 10-4-4" />
+                  </svg>
+                </button>
+              )}
             </>
           )}
         </div>
       </div>
+
+      {showMembers && room && (
+        <RoomMembersPanel
+          roomId={room.id}
+          currentUserId={currentUserId}
+          onClose={() => setShowMembers(false)}
+        />
+      )}
+
+      {showSearch && room && (
+        <RoomSearchBar roomId={room.id} onClose={() => setShowSearch(false)} />
+      )}
 
       {/* Study partner invite/status (DMs only; renders nothing unless friends) */}
       {isDM && dmPartner && (
@@ -189,7 +227,11 @@ export function RoomChat({
         <div ref={messagesEndRef} />
       </div>
 
-      <MessageInput onSend={onSendMessage} />
+      <MessageInput
+        onSend={onSendMessage}
+        attachmentRoomId={!isDM && room ? room.id : undefined}
+        currentUserId={currentUserId}
+      />
     </div>
   );
 }

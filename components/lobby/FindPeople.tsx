@@ -3,6 +3,8 @@
 import { useState, useCallback, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { sendFriendRequest, fetchFriendshipStatus } from '@/lib/supabase/queries/lobbyQueries';
+import { COUNTRY_OPTIONS, countryFlag } from '@/lib/utils/countries';
+import { EXAM_TYPES } from '@/lib/utils/constants';
 import { OnlineDot } from './OnlineDot';
 
 interface SearchResult {
@@ -10,6 +12,7 @@ interface SearchResult {
   username: string;
   exam_type: string | null;
   full_name: string | null;
+  country_code: string | null;
 }
 
 interface FindPeopleProps {
@@ -27,6 +30,8 @@ export function FindPeople({ currentUserId, onlineUserIds }: FindPeopleProps) {
   // state must not fire from mere typing.
   const [searchedTerm, setSearchedTerm] = useState<string | null>(null);
   const [requestSent, setRequestSent] = useState<Set<string>>(new Set());
+  const [countryFilter, setCountryFilter] = useState('');
+  const [examTypeFilter, setExamTypeFilter] = useState('');
 
   // Live suggestions while typing: debounced, first 5 usernames only.
   // Best-effort (no error surface) — the Go flow handles error messaging.
@@ -41,20 +46,22 @@ export function FindPeople({ currentUserId, onlineUserIds }: FindPeopleProps) {
     let cancelled = false;
     const timer = setTimeout(async () => {
       const supabase = createClient();
-      const { data } = await supabase
+      let query = supabase
         .from('user_profiles')
         .select('id, username')
         .ilike('username', `%${term}%`)
         .neq('id', currentUserId)
-        .eq('is_bot', false)
-        .limit(5);
+        .eq('is_bot', false);
+      if (countryFilter) query = query.eq('country_code', countryFilter);
+      if (examTypeFilter) query = query.eq('exam_type', examTypeFilter);
+      const { data } = await query.limit(5);
       if (!cancelled) setLiveResults((data as { id: string; username: string }[]) ?? []);
     }, 250);
     return () => {
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [searchQuery, searchedTerm, currentUserId]);
+  }, [searchQuery, searchedTerm, currentUserId, countryFilter, examTypeFilter]);
 
   const handleSearch = useCallback(async (overrideTerm?: string) => {
     const term = (overrideTerm ?? searchQuery).trim();
@@ -74,13 +81,15 @@ export function FindPeople({ currentUserId, onlineUserIds }: FindPeopleProps) {
       return;
     }
 
-    const { data, error } = await supabase
+    let query = supabase
       .from('user_profiles')
-      .select('id, username, exam_type, full_name')
+      .select('id, username, exam_type, full_name, country_code')
       .ilike('username', `%${term}%`)
       .neq('id', currentUserId)
-      .eq('is_bot', false) // bots can't receive friend requests
-      .limit(10);
+      .eq('is_bot', false); // bots can't receive friend requests
+    if (countryFilter) query = query.eq('country_code', countryFilter);
+    if (examTypeFilter) query = query.eq('exam_type', examTypeFilter);
+    const { data, error } = await query.limit(10);
     if (error) {
       setSearchError('Search failed — please try again.');
       setSearchResults([]);
@@ -90,7 +99,7 @@ export function FindPeople({ currentUserId, onlineUserIds }: FindPeopleProps) {
     setLiveResults([]); // suggestions are redundant once full results show
     setSearchedTerm(term);
     setSearching(false);
-  }, [searchQuery, currentUserId]);
+  }, [searchQuery, currentUserId, countryFilter, examTypeFilter]);
 
   const handleAddFriend = useCallback(async (targetId: string) => {
     const status = await fetchFriendshipStatus(currentUserId, targetId);
@@ -107,6 +116,31 @@ export function FindPeople({ currentUserId, onlineUserIds }: FindPeopleProps) {
       <h3 className="px-1 mb-2 text-xs font-bold text-neutral-400 uppercase tracking-wider">
         Find People
       </h3>
+
+      <div className="px-1 mb-2 flex gap-2">
+        <select
+          value={countryFilter}
+          onChange={(e) => setCountryFilter(e.target.value)}
+          className="flex-1 min-w-0 text-xs bg-neutral-100 border border-neutral-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-brand-green focus:border-brand-green"
+        >
+          <option value="">All Countries</option>
+          {COUNTRY_OPTIONS.map(({ code, name }) => (
+            <option key={code} value={code}>
+              {countryFlag(code)} {name}
+            </option>
+          ))}
+        </select>
+        <select
+          value={examTypeFilter}
+          onChange={(e) => setExamTypeFilter(e.target.value)}
+          className="flex-1 min-w-0 text-xs bg-neutral-100 border border-neutral-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-brand-green focus:border-brand-green"
+        >
+          <option value="">All Exams</option>
+          {Object.values(EXAM_TYPES).map((type) => (
+            <option key={type} value={type}>{type}</option>
+          ))}
+        </select>
+      </div>
 
       <div className="relative px-1 mb-2 flex gap-2">
         <div className="relative flex-1">
@@ -163,7 +197,12 @@ export function FindPeople({ currentUserId, onlineUserIds }: FindPeopleProps) {
               </div>
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-medium text-neutral-900 truncate">{result.username}</p>
-                {result.exam_type && <p className="text-xs text-neutral-500">{result.exam_type}</p>}
+                {(result.exam_type || result.country_code) && (
+                  <p className="text-xs text-neutral-500">
+                    {result.country_code && <span className="mr-1">{countryFlag(result.country_code)}</span>}
+                    {result.exam_type}
+                  </p>
+                )}
               </div>
               <button
                 onClick={() => handleAddFriend(result.id)}

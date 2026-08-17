@@ -9,6 +9,7 @@ import {
   type FriendshipStatus,
 } from '@/lib/supabase/queries/lobbyQueries';
 import type { LobbyUserProfile } from '@/lib/types/lobby';
+import { countryFlag, countryName } from '@/lib/utils/countries';
 
 interface MiniProfileCardProps {
   userId: string;
@@ -135,6 +136,14 @@ export function MiniProfileCard({ userId, currentUserId, onClose, onSendDM, posi
                 <div className="flex items-center gap-2 text-xs text-neutral-600">
                   <span className="font-medium">Industry:</span>
                   <span className="bg-purple-50 text-purple-700 px-2 py-0.5 rounded">{profile.industry}</span>
+                </div>
+              )}
+              {profile.country_code && (
+                <div className="flex items-center gap-2 text-xs text-neutral-600">
+                  <span className="font-medium">Location:</span>
+                  <span className="bg-blue-50 text-blue-700 px-2 py-0.5 rounded">
+                    {countryFlag(profile.country_code)} {countryName(profile.country_code)}
+                  </span>
                 </div>
               )}
               {profile.bio && (

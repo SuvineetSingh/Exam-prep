@@ -5,5 +5,5 @@ login creds:
 Paid:
 admin@gmail.com
 
-Free-
+Free
 test2@gmail.com

@@ -3,7 +3,8 @@
 import { useEffect, useState, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { fetchRooms, fetchUserProfile } from '@/lib/supabase/queries/lobbyQueries';
+import { fetchUserProfile } from '@/lib/supabase/queries/lobbyQueries';
+import { fetchUserRooms } from '@/lib/supabase/queries/roomQueries';
 import { Sidebar, MobileTabBar } from '@/components/layout/Sidebar';
 import { LobbyView } from '@/components/lobby/LobbyView';
 import type { User } from '@supabase/supabase-js';
@@ -29,7 +30,7 @@ export default function LobbyPage() {
       setUser(user);
 
       const [roomsData, profileData] = await Promise.all([
-        fetchRooms(),
+        fetchUserRooms(),
         fetchUserProfile(user.id),
       ]);
 

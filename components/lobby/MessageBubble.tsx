@@ -1,6 +1,7 @@
 'use client';
 
 import type { LobbyMessage } from '@/lib/types/lobby';
+import { MessageAttachment } from './MessageAttachment';
 
 interface MessageBubbleProps {
   message: LobbyMessage;
@@ -45,15 +46,18 @@ export function MessageBubble({ message, isOwnMessage, onClickUser }: MessageBub
         </div>
 
         {/* Message content */}
-        <div
-          className={`px-4 py-2 rounded-2xl text-sm leading-relaxed ${
-            isOwnMessage
-              ? 'bg-brand-green text-white rounded-br-sm'
-              : 'bg-neutral-200 text-neutral-900 rounded-bl-sm'
-          }`}
-        >
-          {message.content}
-        </div>
+        {message.content && (
+          <div
+            className={`px-4 py-2 rounded-2xl text-sm leading-relaxed ${
+              isOwnMessage
+                ? 'bg-brand-green text-white rounded-br-sm'
+                : 'bg-neutral-200 text-neutral-900 rounded-bl-sm'
+            }`}
+          >
+            {message.content}
+          </div>
+        )}
+        <MessageAttachment message={message} />
       </div>
     </div>
   );
