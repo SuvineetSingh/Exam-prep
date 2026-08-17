@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { fetchDMConversations, fetchFriendshipStatus } from '@/lib/supabase/queries/lobbyQueries';
+import { fetchUserRooms } from '@/lib/supabase/queries/roomQueries';
 import { logActivityEvent } from '@/lib/supabase/queries/activityQueries';
 import { useOnlineUserIds } from '@/hooks/useOnlineUserIds';
 import { useLobbyMessages } from '@/hooks/useLobbyMessages';
@@ -38,8 +39,9 @@ interface LobbyViewProps {
   userProfile: LobbyUserProfile | null;
 }
 
-export function LobbyView({ rooms, currentUser, userProfile }: LobbyViewProps) {
-  const [activeRoom, setActiveRoom] = useState<LobbyRoom | null>(rooms[0] || null);
+export function LobbyView({ rooms: initialRooms, currentUser, userProfile }: LobbyViewProps) {
+  const [rooms, setRooms] = useState<LobbyRoom[]>(initialRooms);
+  const [activeRoom, setActiveRoom] = useState<LobbyRoom | null>(initialRooms[0] || null);
   const [showIndustrySelector, setShowIndustrySelector] = useState(!userProfile?.industry);
   const [profileCardUserId, setProfileCardUserId] = useState<string | null>(null);
   const [profileCardPosition, setProfileCardPosition] = useState<{ top: number; left: number } | undefined>(undefined);
@@ -49,6 +51,7 @@ export function LobbyView({ rooms, currentUser, userProfile }: LobbyViewProps) {
   // 'list' = conversation history view, 'active' = open chat view
   const [chatView, setChatView] = useState<'list' | 'active'>('list');
   const [dmConversations, setDmConversations] = useState<DMConversation[]>([]);
+  const [isPremium, setIsPremium] = useState(false);
 
   // Refs so stable async closures can read latest values
   const chatModeRef = useRef(chatMode);
@@ -65,6 +68,15 @@ export function LobbyView({ rooms, currentUser, userProfile }: LobbyViewProps) {
   // Track previous message states to detect new messages
   const prevRoomMessagesRef = useRef<LobbyMessage[]>([]);
   const prevDmMessagesRef = useRef<LobbyMessage[]>([]);
+
+  // Same call Sidebar.tsx/Settings already make — course_subscriptions is the
+  // authoritative Pro signal, not the (currently unreliable) is_premium flag.
+  useEffect(() => {
+    fetch('/api/me/pro')
+      .then((r) => r.json())
+      .then(({ isPro }: { isPro: boolean }) => setIsPremium(isPro))
+      .catch(() => setIsPremium(false));
+  }, [currentUser.id]);
 
   // ── Keep the desktop "Direct Messages" list (in RoomList) up to date ──
   useEffect(() => {
@@ -139,6 +151,38 @@ export function LobbyView({ rooms, currentUser, userProfile }: LobbyViewProps) {
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'friendships', filter: `requester_id=eq.${currentUser.id}` },
         handleInvite
+      )
+      .subscribe();
+
+    return () => { channel.unsubscribe(); };
+  }, [currentUser.id, addToast]);
+
+  // ── Room invites: single subscription for this page, same rule as the
+  // friendships listener above — RoomInvitesList takes a version counter
+  // instead of subscribing itself. ──
+  const [roomInvitesVersion, setRoomInvitesVersion] = useState(0);
+  useEffect(() => {
+    const supabase = createClient();
+    const channel = supabase
+      .channel(`room-invites:${currentUser.id}`)
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'room_invites', filter: `invitee_id=eq.${currentUser.id}` },
+        async (payload) => {
+          setRoomInvitesVersion((v) => v + 1);
+          const row = payload.new as { room_id: string; inviter_id: string };
+          const [{ data: room }, { data: inviter }] = await Promise.all([
+            supabase.from('lobby_rooms').select('name').eq('id', row.room_id).single(),
+            supabase.from('user_profiles').select('username, avatar_url').eq('id', row.inviter_id).single(),
+          ]);
+          addToast({
+            type: 'room_invite',
+            senderId: row.inviter_id,
+            senderName: inviter?.username || 'Someone',
+            senderAvatar: inviter?.avatar_url || undefined,
+            message: `invited you to join "${room?.name || 'a room'}"`,
+          });
+        }
       )
       .subscribe();
 
@@ -260,6 +304,18 @@ export function LobbyView({ rooms, currentUser, userProfile }: LobbyViewProps) {
     setMobileTab('chat');
     setChatView('active');
   }, []);
+
+  const handleRoomCreated = useCallback((room: LobbyRoom) => {
+    setRooms((prev) => [...prev, room]);
+    handleRoomSelect(room);
+  }, [handleRoomSelect]);
+
+  const handleInviteAccepted = useCallback(async (roomId: string) => {
+    const updated = await fetchUserRooms();
+    setRooms(updated);
+    const room = updated.find((r) => r.id === roomId);
+    if (room) handleRoomSelect(room);
+  }, [handleRoomSelect]);
 
   const handleBackToList = useCallback(() => {
     setChatView('list');
@@ -407,6 +463,10 @@ export function LobbyView({ rooms, currentUser, userProfile }: LobbyViewProps) {
             onSelectDM={handleStartDM}
             dmUnreadCounts={unreadCounts.dms}
             onlineUserIds={onlineUserIds}
+            isPremium={isPremium}
+            onRoomCreated={handleRoomCreated}
+            roomInvitesVersion={roomInvitesVersion}
+            onInviteAccepted={handleInviteAccepted}
           />
         </aside>
 

@@ -6,6 +6,6 @@ Paid:
 admin@gmail.com
 Admin@123
 
-Free-
+Free
 test2@gmail.com
 Admin@123

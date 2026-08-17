@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client';
 import { updateUserProfile } from '@/lib/supabase/queries/lobbyQueries';
 import type { LobbyUserProfile, ProfileFormData } from '@/lib/types';
 import { EXAM_TYPES } from '@/lib/utils/constants';
+import { OnboardingTour } from '@/components/onboarding/OnboardingTour';
 import { SuccessMessage } from './SuccessMessage';
 
 interface ProfileTabProps {
@@ -27,6 +28,7 @@ export function ProfileTab({ userId, userProfile, onUpdate, authProvider }: Prof
   const [error, setError] = useState<string | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [showTour, setShowTour] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Password change state
@@ -289,7 +291,15 @@ export function ProfileTab({ userId, userProfile, onUpdate, authProvider }: Prof
           </div>
         )}
 
-        <div className="flex justify-end gap-3 pt-4 flex-wrap">
+        <div className="flex items-center justify-between gap-3 pt-4 flex-wrap">
+          <button
+            type="button"
+            onClick={() => setShowTour(true)}
+            className="text-sm font-bold text-brand-green hover:underline"
+          >
+            Replay the app tour
+          </button>
+          <div className="flex gap-3 flex-wrap">
           <button
             type="button"
             onClick={handleCancel}
@@ -313,6 +323,7 @@ export function ProfileTab({ userId, userProfile, onUpdate, authProvider }: Prof
               'Save Changes'
             )}
           </button>
+          </div>
         </div>
       </div>
 
@@ -321,6 +332,8 @@ export function ProfileTab({ userId, userProfile, onUpdate, authProvider }: Prof
         isVisible={showSuccess}
         onClose={() => setShowSuccess(false)}
       />
+
+      {showTour && <OnboardingTour userId={userId} onComplete={() => setShowTour(false)} />}
 
       {authProvider !== 'google' && (
         <div className="mt-8 pt-8 border-t border-neutral-100">

@@ -82,3 +82,7 @@ This catches what eyeballing screenshots can't: `colors.primary.600` in `tailwin
 - Empty-state variants (e.g. `/history` with zero sessions, `/questions` with a filter combination returning no results) were not captured — only populated states.
 - `/reset-password` only captured in its no-token/default state.
 - Mobile pass was scoped to AppShell-wrapped pages and the two main auth forms per the audit plan, not every single route — fullscreen immersive routes (`/practice/{id}`, `/timed-exam/{sessionId}`) and result/review sub-pages were skipped at mobile width as lower priority.
+
+## Post-audit note (2026-08-16, code read only — not a re-run of the Playwright methodology above)
+
+`components/lobby/MiniProfileCard.tsx` uses `bg-blue-50 text-blue-700` for a country badge (added alongside the country/exam-type filters in `FindPeople.tsx`), matching a pre-existing `bg-purple-50 text-purple-700` industry badge in the same file. Both are stock Tailwind palette classes, which `ui-pattern-library.md` §4 explicitly says not to introduce in touched components — worth mapping to `brand-*`/`neutral-*` (or a new token if a semantic "info" accent is actually wanted) next time this file is touched, not urgent enough to block on.

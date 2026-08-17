@@ -173,19 +173,24 @@ npm run dev   # http://localhost:3000
 **Guards & edge cases:** stats degrade to zeros on missing data (never throw); streak computed backward day-by-day in UTC.
 **Status:** ✅ verified 2026-07-05 — dashboard stats, XP bar (updates after practice), badge shelf, recent tests, quick actions, and `/badges` gallery (10 earned / 10 locked) all render correctly. `conversation_reads` 404 fires here too (bug #3).
 
-## Flow 9: Lobby (real-time chat)
+## Flow 9: Lobby (real-time chat + social/discovery)
 
 **Steps:**
 1. `/lobby` → loads rooms (grouped by exam type), user profile, marks user online → sidebar (desktop) / tab bar (mobile).
 2. Click room → message history + Supabase Realtime subscription → type + send → insert into `lobby_messages` (`message_type: 'room'`); messages stream live.
-3. Click a user → DM conversation (paired sender/recipient filter, `message_type: 'dm'`), own realtime subscription.
+3. Click a user → DM conversation (paired sender/recipient filter, `message_type: 'dm'`), own realtime subscription. **DMs are friends-only** — the Message shortcut/DM entry point only appears once a friend request has been accepted; there is no separate thread table, DMs are just pair-filtered `lobby_messages` rows.
 4. Presence: online = `last_seen_at` within threshold; updated on login and message send.
-5. Bots: `POST /api/lobby/bots` (Vercel cron) posts scripted messages from `user_profiles` where `is_bot=true` per `bot_script` JSON.
+5. **Find People** panel: search by username, with **country** and **exam type** filter dropdowns (both live-suggestion and full-search queries respect them) → send friend request (`sendFriendRequest`/`fetchFriendshipStatus` in `lobbyQueries.ts`). Bots are excluded from search and can't receive requests.
+6. **Mini profile card**: clicking a user (from Find People, Activity Feed, or a room) opens a positioned popover (`MiniProfileCard`) with bio, industry, and — if set — a country badge (flag + name via `lib/utils/countries.ts`); has a "Message" shortcut gated by friendship status.
+7. **Activity Feed**: sidebar panel of recent events (question answered, exam completed, DM started, etc.) via `useActivityFeed`, cursor-paginated. `quiz_completed` events come from a Postgres trigger on `exam_sessions`; `dm_started` is logged client-side when a DM is opened from the lobby. Bots also emit feed events but are **view-only** — no friend requests to or from a bot row, no Message shortcut, no auto-accept.
+8. **Study partners**: once friends, either side can invite the other to be a study partner (`inviteStudyPartner`/`respondToPartnerInvite`) — this extends the `friendships` row with partner-status columns, there's no separate partnerships table. Once paired, `StudyPartnerPanel` shows both users' stats side by side and lets either propose/accept/decline a study session (`proposeStudySession`/`updateStudySessionStatus`).
+9. Bots: `POST /api/lobby/bots` (Vercel cron) posts scripted messages from `user_profiles` where `is_bot=true` per `bot_script` JSON, and can emit the same activity-feed events real users do.
+10. Rooms list also includes **user-created rooms** the caller belongs to, alongside the curated set — see Flow 13 for creation/membership/invites.
 
-**Key files:** `app/lobby/page.tsx`, `components/lobby/*`, `hooks/{useLobbyPresence,useLobbyMessages,useDMMessages}.ts`, `lib/supabase/queries/lobbyQueries.ts`, `app/api/lobby/bots/route.ts`
-**Data:** `lobby_rooms` (keyed by `slug`), `lobby_messages`, `user_profiles`
-**Guards & edge cases:** realtime reconnect after tab sleep; malformed `bot_script` has no schema validation.
-**Status:** ✅ verified 2026-07-05 — rooms list, room search, message history, real-time send/render, DM list, online users, bot profiles all work. Unread tracking dead (bug #3); "CPA Accounting" room needs rename (bug #6).
+**Key files:** `app/lobby/page.tsx`, `components/lobby/*` (`LobbyView`, `FindPeople`, `ActivityFeed`, `MiniProfileCard`, `StudyPartnerPanel`, `RoomChat`, `ConversationList`), `hooks/{useLobbyPresence,useLobbyMessages,useDMMessages,useActivityFeed}.ts`, `lib/supabase/queries/{lobbyQueries,partnerQueries,activityQueries}.ts`, `lib/utils/countries.ts`, `app/api/lobby/bots/route.ts`
+**Data:** `lobby_rooms` (keyed by `slug`), `lobby_messages`, `user_profiles` (incl. `country_code`, `onboarding_completed`), `friendships` (incl. partner-status columns), activity events table (via `activityQueries.ts`)
+**Guards & edge cases:** realtime reconnect after tab sleep; malformed `bot_script` has no schema validation; `StudyPartnerPanel` must not open its own `friendships` realtime subscription — a second `postgres_changes` binding on the same table+event collides with `LobbyView`'s and one silently drops events (see `friendshipsVersion` prop, bumped by `LobbyView` instead).
+**Status:** ✅ verified 2026-07-05 for the base chat flow (rooms list, room search, message history, real-time send/render, DM list, online users, bot profiles). ⚠️ Find People country/exam filters, activity feed, study partnerships, and friend-gated DMs were added in a later PR and have **not** been re-verified end-to-end with Playwright since — code-reviewed only as of 2026-08-16. `conversation_reads` (bug #3) now exists in the live DB as of 2026-07-14, but unread-tracking behavior itself hasn't been re-confirmed working. "CPA Accounting" room still needs rename (bug #6).
 
 ## Flow 10: Settings
 
@@ -194,11 +199,12 @@ npm run dev   # http://localhost:3000
 2. Change password section: new password (8+, confirmation match) → `updateUser({ password })`.
 3. **Preferences** tab: lobby exam type + toggles → save.
 4. Pro status shown via `GET /api/me/pro`.
+5. "Replay the app tour" link re-opens the onboarding tour modal on demand (see Flow 12) — doesn't touch `onboarding_completed` unless the user finishes/skips it again.
 
-**Key files:** `app/settings/page.tsx`, `app/api/me/pro/route.ts`
+**Key files:** `app/settings/page.tsx`, `components/settings/ProfileTab.tsx`, `app/api/me/pro/route.ts`
 **Data:** `user_profiles`, Supabase Storage (avatars)
 **Guards & edge cases:** changes must reflect in lobby/dashboard immediately after save.
-**Status:** ✅ verified 2026-07-06 — profile save persists (bio round-trip confirmed), password validation (mismatch + same-password errors surface correctly), lobby preference save persists (Finance → Accounting confirmed after reload). Avatar upload not exercised (file picker).
+**Status:** ✅ verified 2026-07-06 — profile save persists (bio round-trip confirmed), password validation (mismatch + same-password errors surface correctly), lobby preference save persists (Finance → Accounting confirmed after reload). Avatar upload not exercised (file picker). "Replay the app tour" link added later, not yet Playwright-verified (2026-08-16).
 
 ## Flow 11: Feedback
 
@@ -208,3 +214,31 @@ npm run dev   # http://localhost:3000
 **Key files:** `app/feedback/page.tsx`
 **Data:** `user_feedback`
 **Status:** ✅ verified 2026-07-06 — 4-star rating + text submission succeeds; "🎉 Thank you!" confirmation state renders correctly.
+
+## Flow 12: Onboarding tour
+
+**Steps:**
+1. On any page rendered through `AppShell`, once the user's profile loads, if `user_profiles.onboarding_completed` is `false` a 5-step modal (`OnboardingTour`) auto-opens: Practice Questions → Timed Exams → Lobby Chat → Gamification → Settings.
+2. "Next" advances; the X button skips. Either path on the last step calls `updateUserProfile(userId, { onboarding_completed: true })` then closes — so skipping also marks it done (it won't reappear on next login).
+3. Can be replayed anytime via **Sidebar → "Take the Tour"** or **Settings → Profile tab → "Replay the app tour"**; both just force-open the same modal without touching the flag on open (only on finish/skip).
+
+**Key files:** `components/onboarding/OnboardingTour.tsx`, `components/layout/AppShell.tsx`, `components/layout/Sidebar.tsx`, `components/settings/ProfileTab.tsx`
+**Data:** `user_profiles.onboarding_completed` (added in `supabase/migrations/015_onboarding_flag.sql`; existing users were backfilled to `true` at migration time so the tour only auto-shows for accounts created after the migration ran — see the migration file's own comment before assuming it's safe to re-run)
+**Guards & edge cases:** `AppShell` fetches the profile itself (`fetchUserProfile`) purely to decide whether to auto-show the tour — a slow/failed fetch just means the tour doesn't pop that load, it isn't blocking.
+**Status:** 🆕 not yet Playwright-verified (added 2026-08-16) — type-check and lint pass clean, no manual/browser pass done yet.
+
+## Flow 13: User-created rooms (Discord-style)
+
+**Steps:**
+1. `/lobby` → Rooms panel header shows a "+ Create Room" icon for Pro users, or a "Pro" upsell badge linking to `/courses` for free users (Pro status re-checked via `GET /api/me/pro`, not the `user_profiles.is_premium` flag — see Guards below).
+2. Pro user → `CreateRoomModal`: name, optional description, optional avatar upload (reuses the `user-avatars` Storage bucket under a `room-avatars/` prefix) → `createRoom()` inserts a `lobby_rooms` row (`is_user_created: true`, `owner_id`) + a `room_members` row (`role: 'owner'`) → the new room auto-opens.
+3. Rooms are **private/invite-only**: an admin (owner or co-admin) opens the room header's "Members" icon → `RoomMembersPanel` → "Invite someone" → `InviteUserModal` (username search, independent of the friend system — a non-friend can be invited) → `inviteToRoom()` inserts a `room_invites` row.
+4. Invitee sees a "Room Invites" card in the sidebar (above Rooms) with Accept/Decline, driven by a single `room_invites` realtime subscription in `LobbyView` (same one-subscription-per-table rule already used for `friendships`) plus a toast on new invite. Accept → `respondToRoomInvite()` updates the invite then inserts a `room_members` row; the room then appears in the sidebar's Rooms list.
+5. From `RoomMembersPanel`, the owner can promote a member to co-admin or demote back (`promoteToCoAdmin`/`demoteToMember`); owner or co-admin can remove a member; anyone can leave.
+6. Room header also has a search icon (`RoomSearchBar`, `ilike` over that room's `lobby_messages.content`) and an attach-file icon (`AttachmentButton`) next to the message input — image/video/audio/PDF/document upload to a private `room-attachments` Storage bucket, rendered per-type in `MessageBubble` via `MessageAttachment` (always via a 1-hour signed URL, never a public URL).
+7. Curated rooms (the original admin-seeded set) are unaffected — no `room_members` row is ever created for them, they stay open to any authenticated user. Message/attachment access for both room "flavors" shares the same RLS check (`can_access_room()`, built on `is_room_member()`).
+
+**Key files:** `components/lobby/{CreateRoomModal,RoomMembersPanel,InviteUserModal,RoomInvitesList,RoomSearchBar,AttachmentButton,MessageAttachment}.tsx`, `lib/supabase/queries/roomQueries.ts`, `components/lobby/{RoomList,RoomChat,LobbyView}.tsx`
+**Data:** `lobby_rooms` (`owner_id`, `avatar_url`, `is_user_created`), `room_members`, `room_invites`, `lobby_messages` (`attachment_path/type/name/size`), Storage buckets `user-avatars` (room avatars) and `room-attachments` (private, signed-URL only)
+**Guards & edge cases:** Pro-gated at the RLS layer against `course_subscriptions` existence, deliberately not `user_profiles.is_premium` — that flag turned out to be unpopulated/unreliable (Stripe isn't wired up in this environment yet, so nothing was ever setting it), see the comment in `supabase/migrations/016_user_created_rooms.sql`. Private-room visibility is enforced by RLS end-to-end (`lobby_rooms`, `lobby_messages`, and the storage bucket all independently gated), not just hidden client-side — confirmed directly against a non-member account via a raw RPC call, not just the UI. A pending invitee can see the room's *name* (a dedicated RLS carve-out, `021_room_invite_visibility.sql`) but not its messages until they accept.
+**Status:** ✅ verified 2026-08-17 — room creation (Pro-gated, free tier correctly shown the upsell instead), invite → accept → promote-to-co-admin, in-room search, and image/document attachment upload (both in a user-created room and a curated room) all confirmed end-to-end via Playwright across two real accounts (`admin@gmail.com` as owner, `test2@gmail.com` as invited member). This pass also caught and fixed three real bugs along the way: RLS infinite recursion on `room_members`, FKs pointing at `auth.users` instead of `user_profiles` (breaking PostgREST embeds), and a genuine private-room visibility leak from a pre-existing legacy policy — see migrations `018`–`021` for details.

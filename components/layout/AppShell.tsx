@@ -1,6 +1,9 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { Sidebar, MobileTabBar } from './Sidebar';
+import { OnboardingTour } from '@/components/onboarding/OnboardingTour';
+import { fetchUserProfile } from '@/lib/supabase/queries/lobbyQueries';
 import type { User } from '@supabase/supabase-js';
 
 interface AppShellProps {
@@ -19,8 +22,23 @@ export function AppShell({
   dailyGoal,
   fullscreen = false,
 }: AppShellProps) {
+  const [showTour, setShowTour] = useState(false);
+
+  useEffect(() => {
+    fetchUserProfile(user.id).then((profile) => {
+      if (profile && !profile.onboarding_completed) setShowTour(true);
+    });
+  }, [user.id]);
+
+  const tour = showTour && <OnboardingTour userId={user.id} onComplete={() => setShowTour(false)} />;
+
   if (fullscreen) {
-    return <div className="min-h-screen bg-page-bg">{children}</div>;
+    return (
+      <div className="min-h-screen bg-page-bg">
+        {children}
+        {tour}
+      </div>
+    );
   }
 
   return (
@@ -33,6 +51,7 @@ export function AppShell({
           {children}
         </div>
       </main>
+      {tour}
     </div>
   );
 }
