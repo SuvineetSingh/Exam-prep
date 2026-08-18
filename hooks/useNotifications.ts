@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { fetchUnreadCounts } from '@/lib/supabase/queries/lobbyQueries';
 import type { NotificationToast, UnreadCounts } from '@/lib/types/lobby';
 
 const MAX_TOASTS = 3;
@@ -27,9 +28,12 @@ export function useNotifications(userId: string) {
           map[`${row.conversation_type}:${row.conversation_id}`] = row.last_read_at;
         }
         lastReadAtRef.current = map;
-        // Unread counts start at 0 — messages after last_read_at will
-        // be counted by Realtime listeners as they arrive.
       });
+
+    // Seed counts with existing unread history — without this, rooms/DMs
+    // with unread messages from before this page load show no badge until
+    // a new message arrives over Realtime while the page is open.
+    fetchUnreadCounts(userId).then(setUnreadCounts).catch(() => {});
   }, [userId]);
 
   // Persist a "read" timestamp to Supabase
@@ -47,6 +51,10 @@ export function useNotifications(userId: string) {
         },
         { onConflict: 'user_id,conversation_id,conversation_type' }
       );
+      // Sidebar's badge is a separate useNotifications-less fetch with no
+      // shared state — nudge it to refetch so it doesn't stay stale while
+      // the user reads rooms/DMs without leaving /lobby.
+      window.dispatchEvent(new Event('lobby-unread-read'));
     },
     [userId]
   );

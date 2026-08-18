@@ -125,8 +125,16 @@ export function Sidebar({ user, dailyAnswered = 0, dailyGoal = 20 }: SidebarProp
   }, [user.id]);
 
   useEffect(() => {
-    fetchUnreadCounts(user.id).then(setUnreadCounts).catch(() => {});
-  }, [user.id]);
+    const refresh = () => fetchUnreadCounts(user.id).then(setUnreadCounts).catch(() => {});
+    // Re-fetch on every navigation so reads made in /lobby (which persist to
+    // conversation_reads but don't share state with this component) clear
+    // the badge, and new messages elsewhere pick it back up. Also listen for
+    // the 'lobby-unread-read' event so it refreshes even without a route
+    // change, e.g. clicking through rooms/DMs while staying on /lobby.
+    refresh();
+    window.addEventListener('lobby-unread-read', refresh);
+    return () => window.removeEventListener('lobby-unread-read', refresh);
+  }, [user.id, pathname]);
 
   const handleLogout = async () => {
     const supabase = createClient();
