@@ -64,10 +64,10 @@ function DMRow({
         <OnlineDot show={online} />
       </span>
       <div className="flex-1 min-w-0">
-        <p className={`text-sm font-medium truncate ${isActive ? 'text-brand-green-dark' : 'text-neutral-900'}`}>
+        <p className={`text-sm truncate ${unread > 0 ? 'font-bold' : 'font-medium'} ${isActive ? 'text-brand-green-dark' : 'text-neutral-900'}`}>
           {dm.partner_username}
         </p>
-        <p className="text-xs text-neutral-500 truncate">{dm.last_message}</p>
+        <p className={`text-xs truncate ${unread > 0 ? 'text-neutral-700 font-medium' : 'text-neutral-500'}`}>{dm.last_message}</p>
       </div>
       <UnreadBadge count={unread} />
     </button>
@@ -101,7 +101,7 @@ function RoomRow({
         <svg className="w-5 h-5 text-neutral-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
       )}
       <div className="flex-1 min-w-0">
-        <p className={`text-sm font-medium truncate ${isActive ? 'text-brand-green-dark' : 'text-neutral-900'}`}>
+        <p className={`text-sm truncate ${unread > 0 ? 'font-bold' : 'font-medium'} ${isActive ? 'text-brand-green-dark' : 'text-neutral-900'}`}>
           {room.name}
         </p>
         <p className="text-xs text-neutral-500 truncate">{room.industry}</p>
@@ -221,15 +221,18 @@ export function RoomList({
   const [showCreate, setShowCreate] = useState(false);
   const [query, setQuery] = useState('');
 
+  const byUnreadFirst = (a: LobbyRoom, b: LobbyRoom) =>
+    (unreadCounts?.[b.id] || 0) - (unreadCounts?.[a.id] || 0);
+
   const q = query.trim().toLowerCase();
   const filtered = q
-    ? rooms.filter(r => r.name.toLowerCase().includes(q) || r.industry.toLowerCase().includes(q))
+    ? rooms.filter(r => r.name.toLowerCase().includes(q) || r.industry.toLowerCase().includes(q)).sort(byUnreadFirst)
     : null;
 
   const pinnedOrdered = pinnedIds
     .map(id => rooms.find(r => r.id === id))
     .filter(Boolean) as LobbyRoom[];
-  const unpinned = rooms.filter(r => !pinnedIds.includes(r.id));
+  const unpinned = rooms.filter(r => !pinnedIds.includes(r.id)).sort(byUnreadFirst);
   const hasPins = pinnedOrdered.length > 0;
 
   function renderRoom(room: LobbyRoom) {
@@ -392,7 +395,7 @@ export function RoomList({
                     </h2>
                   </>
                 )}
-                {(hasPins ? unpinned : rooms).map(renderRoom)}
+                {(hasPins ? unpinned : [...rooms].sort(byUnreadFirst)).map(renderRoom)}
               </>
             )}
           </div>
