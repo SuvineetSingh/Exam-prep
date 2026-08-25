@@ -20,14 +20,14 @@ export async function isQuestionStarred(userId: string, questionId: number): Pro
   return !!data;
 }
 
-export async function starQuestion(userId: string, questionId: number, examType: string): Promise<void> {
+async function starQuestion(userId: string, questionId: number, examType: string): Promise<void> {
   const supabase = createClient();
   await supabase
     .from('starred_questions')
     .insert({ user_id: userId, question_id: questionId, exam_type: examType });
 }
 
-export async function unstarQuestion(userId: string, questionId: number): Promise<void> {
+async function unstarQuestion(userId: string, questionId: number): Promise<void> {
   const supabase = createClient();
   await supabase
     .from('starred_questions')

@@ -32,15 +32,6 @@ export interface LobbyUserProfile {
   updated_at: string;
 }
 
-export interface OnlineUser {
-  id: string;
-  username: string;
-  exam_type?: string;
-  avatar_url?: string;
-  is_bot?: boolean;
-  online_at: string;
-}
-
 export interface LobbyMessage {
   id: string;
   room_id: string | null;

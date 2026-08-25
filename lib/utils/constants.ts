@@ -44,36 +44,9 @@ export const EXAM_TYPES = {
 
 export type ExamType = (typeof EXAM_TYPES)[keyof typeof EXAM_TYPES];
 
-// Subscription plans
-export const SUBSCRIPTION_PLANS = {
-  FREE: 'free',
-  BASIC: 'basic',
-  PREMIUM: 'premium',
-} as const;
+export type DifficultyLevel = 'easy' | 'medium' | 'hard';
 
-export type SubscriptionPlan =
-  (typeof SUBSCRIPTION_PLANS)[keyof typeof SUBSCRIPTION_PLANS];
-
-// Question difficulty levels
-export const DIFFICULTY_LEVELS = {
-  EASY: 'easy',
-  MEDIUM: 'medium',
-  HARD: 'hard',
-} as const;
-
-export type DifficultyLevel =
-  (typeof DIFFICULTY_LEVELS)[keyof typeof DIFFICULTY_LEVELS];
-
-// Question types
-export const QUESTION_TYPES = {
-  MULTIPLE_CHOICE: 'multiple_choice',
-  TRUE_FALSE: 'true_false',
-  ESSAY: 'essay',
-  CALCULATION: 'calculation',
-} as const;
-
-export type QuestionType =
-  (typeof QUESTION_TYPES)[keyof typeof QUESTION_TYPES];
+export type QuestionType = 'multiple_choice' | 'true_false' | 'essay' | 'calculation';
 
 // App configuration
 export const APP_CONFIG = {
@@ -81,26 +54,5 @@ export const APP_CONFIG = {
   DESCRIPTION: 'Web-based question bank platform for CMA, CFA, and FE exam preparation',
   URL: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
   API_URL: process.env.NEXT_PUBLIC_API_URL || '/api',
-} as const;
-
-// Pagination defaults
-export const PAGINATION = {
-  DEFAULT_PAGE_SIZE: 20,
-} as const;
-
-// Local storage keys
-export const STORAGE_KEYS = {
-  THEME: 'exam-prep-theme',
-  RECENT_EXAMS: 'exam-prep-recent-exams',
-  PREFERENCES: 'exam-prep-preferences',
-} as const;
-
-// Environment detection
-export const ENV = {
-  IS_PRODUCTION: process.env.NODE_ENV === 'production',
-  IS_DEVELOPMENT: process.env.NODE_ENV === 'development',
-  IS_TEST: process.env.NODE_ENV === 'test',
-  IS_BROWSER: typeof window !== 'undefined',
-  IS_SERVER: typeof window === 'undefined',
 } as const;
 

@@ -1,11 +1,6 @@
 import type { ExamType, DifficultyLevel, QuestionType } from '../utils/constants';
 
-export type {
-  LobbyRoom,
-  LobbyUserProfile,
-  OnlineUser,
-  LobbyMessage,
-} from './lobby';
+export type { LobbyUserProfile } from './lobby';
 
 export interface Question {
   id: string;
@@ -28,13 +23,6 @@ export interface Question {
   updated_at: string;
 }
 
-// API Response types
-export interface ApiResponse<T> {
-  data: T | null;
-  error: string | null;
-  message?: string;
-}
-
 // Settings types
 export type SettingsTab = 'profile' | 'preferences';
 
@@ -51,14 +39,6 @@ export interface ProfileFormData {
 
 // Course subscription
 export type CourseName = 'CMA' | 'CFA' | 'FE';
-
-export interface CourseSubscription {
-  id: string;
-  user_id: string;
-  course: CourseName;
-  stripe_session_id: string | null;
-  purchased_at: string;
-}
 
 // User stats for dashboard
 export interface UserStats {

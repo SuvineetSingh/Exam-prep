@@ -1,16 +1,5 @@
 import { createClient } from '@/lib/supabase/client';
-import type { LobbyRoom, LobbyMessage, LobbyUserProfile } from '@/lib/types/lobby';
-
-export async function fetchRooms(): Promise<LobbyRoom[]> {
-  const supabase = createClient();
-  const { data, error } = await supabase
-    .from('lobby_rooms')
-    .select('*')
-    .order('sort_order', { ascending: true });
-
-  if (error) throw error;
-  return data as LobbyRoom[];
-}
+import type { LobbyMessage, LobbyUserProfile } from '@/lib/types/lobby';
 
 export async function fetchRoomMessages(roomId: string, limit = 100): Promise<LobbyMessage[]> {
   const supabase = createClient();
@@ -26,17 +15,6 @@ export async function fetchRoomMessages(roomId: string, limit = 100): Promise<Lo
   return data as LobbyMessage[];
 }
 
-export async function sendRoomMessage(roomId: string, senderId: string, content: string) {
-  const supabase = createClient();
-  const { error } = await supabase.from('lobby_messages').insert({
-    room_id: roomId,
-    sender_id: senderId,
-    content,
-    message_type: 'room',
-  });
-  if (error) throw error;
-}
-
 export async function fetchDMMessages(userId: string, partnerId: string, limit = 100): Promise<LobbyMessage[]> {
   const supabase = createClient();
   const { data, error } = await supabase
@@ -49,17 +27,6 @@ export async function fetchDMMessages(userId: string, partnerId: string, limit =
 
   if (error) throw error;
   return data as LobbyMessage[];
-}
-
-export async function sendDM(senderId: string, recipientId: string, content: string) {
-  const supabase = createClient();
-  const { error } = await supabase.from('lobby_messages').insert({
-    sender_id: senderId,
-    recipient_id: recipientId,
-    content,
-    message_type: 'dm',
-  });
-  if (error) throw error;
 }
 
 export async function fetchDMConversations(userId: string) {

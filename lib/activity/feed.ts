@@ -12,7 +12,7 @@ export interface ActivityEventRow {
   created_at: string;
 }
 
-export interface FeedUser {
+interface FeedUser {
   username: string;
   full_name: string | null;
   avatar_url: string | null;
