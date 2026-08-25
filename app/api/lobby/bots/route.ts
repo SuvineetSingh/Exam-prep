@@ -1,5 +1,5 @@
-import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { NextRequest, NextResponse } from 'next/server';
+import { createServiceClient } from '@/lib/supabase/service';
 import { randomUUID } from 'crypto';
 
 const COURSES = ['CMA', 'CFA', 'FE'];
@@ -9,16 +9,15 @@ const MIN_EVENT_GAP_MS = 15 * 60 * 1000;
 const MAX_EVENT_GAP_MS = 45 * 60 * 1000;
 
 // This route uses the secret key to bypass RLS for bot message insertion.
-// Triggered by Vercel Cron or manual POST request.
-export async function POST() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const secretKey = process.env.SUPABASE_SECRET_KEY;
-
-  if (!supabaseUrl || !secretKey) {
-    return NextResponse.json({ error: 'Missing Supabase service config' }, { status: 500 });
+// Triggered by Vercel Cron (which sends this header automatically once
+// CRON_SECRET is set) or another scheduler configured to send it manually.
+export async function POST(request: NextRequest) {
+  const cronSecret = process.env.CRON_SECRET;
+  if (!cronSecret || request.headers.get('authorization') !== `Bearer ${cronSecret}`) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const supabase = createClient(supabaseUrl, secretKey);
+  const supabase = createServiceClient();
 
   // 1. Fetch all bot profiles (scripted or not — unscripted bots still emit
   // feed events and accept friend requests)
