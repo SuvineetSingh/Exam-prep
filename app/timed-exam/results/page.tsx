@@ -3,10 +3,12 @@
 import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import { useRequireAuth } from '@/hooks/useRequireAuth';
 import { ExamResultsUI } from '@/components/timed-exam/ExamResultsUI';
 
 function ResultsContent() {
   const searchParams = useSearchParams();
+  const { user, loading: authLoading } = useRequireAuth();
   const [data, setData] = useState<any>(null);
   const sessionId = searchParams.get('session');
 
@@ -35,10 +37,10 @@ function ResultsContent() {
         });
       }
     };
-    if (sessionId) fetchResult();
-  }, [sessionId]);
+    if (sessionId && user) fetchResult();
+  }, [sessionId, user]);
 
-  if (!data) return <div className="min-h-screen flex items-center justify-center font-bold">LOADING RESULTS...</div>;
+  if (authLoading || !data) return <div className="min-h-screen flex items-center justify-center font-bold">LOADING RESULTS...</div>;
 
   return (
     <ExamResultsUI
