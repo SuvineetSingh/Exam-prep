@@ -58,10 +58,13 @@ export function MessageInput({ onSend, placeholder = 'Type a message...', disabl
         />
         <button
           type="submit"
+          aria-label="Send message"
           disabled={!value.trim() || disabled || sending}
-          className="px-4 py-2.5 bg-brand-green text-white rounded-full text-sm font-medium hover:bg-brand-green-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex-shrink-0 w-10 h-10 flex items-center justify-center bg-brand-green text-white rounded-full hover:bg-brand-green-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {sending ? '...' : 'Send'}
+          <svg className="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
+            <path d="M3.105 2.289a.75.75 0 00-.826.95l1.414 4.925A1.5 1.5 0 005.135 9.25h6.115a.75.75 0 010 1.5H5.135a1.5 1.5 0 00-1.442 1.086l-1.414 4.926a.75.75 0 00.826.95 28.896 28.896 0 0015.293-7.154.75.75 0 000-1.115A28.897 28.897 0 003.105 2.289z" />
+          </svg>
         </button>
       </div>
       {sendError && (

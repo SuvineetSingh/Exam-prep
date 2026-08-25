@@ -2,10 +2,12 @@
 
 import { useEffect, useState, use } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { useRequireAuth } from '@/hooks/useRequireAuth';
 import { AnswerReviewUI } from '@/components/timed-exam/AnswerReviewUI';
 
 export default function ReviewPage({ params }: { params: Promise<{ sessionId: string }> }) {
   const { sessionId } = use(params);
+  const { user, loading: authLoading } = useRequireAuth();
   const [reviewData, setReviewData] = useState<any[]>([]);
   const [summary, setSummary] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -13,7 +15,7 @@ export default function ReviewPage({ params }: { params: Promise<{ sessionId: st
   useEffect(() => {
     const fetchFullReview = async () => {
       const supabase = createClient();
-      
+
       // 1. Fetch Session Summary
       const { data: session, error: sErr } = await supabase
         .from('exam_sessions')
@@ -68,10 +70,10 @@ export default function ReviewPage({ params }: { params: Promise<{ sessionId: st
       setLoading(false);
     };
 
-    if (sessionId) fetchFullReview();
-  }, [sessionId]);
+    if (sessionId && user) fetchFullReview();
+  }, [sessionId, user]);
 
-  if (loading) return (
+  if (authLoading || loading) return (
     <div className="min-h-screen flex items-center justify-center bg-neutral-100 font-black text-brand-green uppercase tracking-widest">
       Loading Review Data...
     </div>

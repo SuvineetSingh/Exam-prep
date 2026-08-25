@@ -6,7 +6,6 @@ import { createClient } from '@/lib/supabase/client';
 import Link from 'next/link';
 import { ExamSetupForm } from '@/components/timed-exam/ExamSetupForm';
 import { PaywallBanner, RunningLowBanner, FREE_QUESTION_LIMIT, FREE_QUESTION_WARNING } from '@/components/subscription/PaywallBanner';
-import { v4 as uuidv4 } from 'uuid';
 
 export default function ExamSetupPage() {
   const router = useRouter();
@@ -99,7 +98,7 @@ export default function ExamSetupPage() {
     setError(null);
     setLoading(true);
 
-    const sessionId = uuidv4();
+    const sessionId = crypto.randomUUID();
     
     router.push(
       `/timed-exam/${sessionId}?type=${config.examType}&count=${config.questionCount}`

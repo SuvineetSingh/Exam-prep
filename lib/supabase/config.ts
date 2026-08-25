@@ -20,11 +20,3 @@ export function getSupabaseConfig(): SupabaseConfig {
 
   return { url, publishableKey };
 }
-
-/** Check if Supabase environment variables are configured (non-throwing) */
-export function isSupabaseConfigValid(): boolean {
-  return !!(
-    process.env.NEXT_PUBLIC_SUPABASE_URL &&
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
-  );
-}

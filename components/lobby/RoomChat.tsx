@@ -1,5 +1,6 @@
 'use client';
 
+import { Lato, Noto_Sans_Display } from 'next/font/google';
 import { useEffect, useRef, useState } from 'react';
 import { MessageBubble } from './MessageBubble';
 import { MessageInput } from './MessageInput';
@@ -9,6 +10,20 @@ import { RoomMembersPanel } from './RoomMembersPanel';
 import { RoomSearchBar } from './RoomSearchBar';
 import { fetchUserProfile } from '@/lib/supabase/queries/lobbyQueries';
 import type { LobbyMessage, LobbyRoom, LobbyUserProfile } from '@/lib/types/lobby';
+
+const lato = Lato({
+  subsets: ['latin'],
+  weight: ['300', '400', '700', '900'],
+  style: ['normal', 'italic'],
+  variable: '--font-lato',
+  display: 'swap',
+});
+
+const notoSansDisplay = Noto_Sans_Display({
+  subsets: ['latin'],
+  variable: '--font-noto-display',
+  display: 'swap',
+});
 
 interface RoomChatProps {
   room: LobbyRoom | null;
@@ -127,7 +142,7 @@ export function RoomChat({
   });
 
   return (
-    <div className="flex flex-col h-full">
+    <div className={`${lato.variable} ${notoSansDisplay.variable} font-chat flex flex-col h-full`}>
       {/* Header */}
       <div className="px-4 py-3 border-b border-neutral-200 bg-white">
         <div className="flex items-center gap-2">
