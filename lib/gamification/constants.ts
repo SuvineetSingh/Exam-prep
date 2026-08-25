@@ -3,10 +3,10 @@ export const XP_WRONG = 2;
 export const XP_EXAM_COMPLETE = 50;
 export const XP_PERFECT_BONUS = 100;
 
-export const MAX_LEVEL = 50;
+const MAX_LEVEL = 50;
 
 // Cumulative XP required to reach each level (index = level - 1)
-export const LEVEL_THRESHOLDS: number[] = Array.from({ length: MAX_LEVEL }, (_, i) =>
+const LEVEL_THRESHOLDS: number[] = Array.from({ length: MAX_LEVEL }, (_, i) =>
   i === 0 ? 0 : Math.round(100 * Math.pow(i + 1, 1.8))
 );
 

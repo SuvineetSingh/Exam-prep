@@ -182,7 +182,7 @@ export async function searchRoomMessages(roomId: string, term: string): Promise<
   return data as LobbyMessage[];
 }
 
-export type AttachmentType = 'image' | 'video' | 'audio' | 'pdf' | 'document';
+type AttachmentType = 'image' | 'video' | 'audio' | 'pdf' | 'document';
 
 function attachmentTypeFromMime(mime: string): AttachmentType {
   if (mime.startsWith('image/')) return 'image';

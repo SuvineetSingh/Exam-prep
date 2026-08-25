@@ -19,14 +19,14 @@ export interface ExamSession {
 export type FilterMode = 'all' | 'practice' | 'timed';
 export type FilterExam = 'all' | 'CMA' | 'CFA' | 'FE';
 
-export function formatTime(seconds: number | null): string {
+function formatTime(seconds: number | null): string {
   if (seconds == null) return '—';
   const m = Math.floor(seconds / 60);
   const s = seconds % 60;
   return m > 0 ? `${m}m ${s}s` : `${s}s`;
 }
 
-export function formatDate(iso: string): { date: string; time: string } {
+function formatDate(iso: string): { date: string; time: string } {
   const d = new Date(iso);
   return {
     date: d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
