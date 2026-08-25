@@ -4,7 +4,6 @@ import { useEffect, useState, useCallback } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { v4 as uuidv4 } from 'uuid';
 import { PracticeSetupForm } from '@/components/practice/PracticeSetupForm';
 import { PaywallBanner, RunningLowBanner, FREE_QUESTION_LIMIT, FREE_QUESTION_WARNING } from '@/components/subscription/PaywallBanner';
 import { usePurchasedCourses } from '@/hooks/usePurchasedCourses';
@@ -80,7 +79,7 @@ export default function PracticeSetup() {
     }
 
     setLoading(true);
-    const sessionId = uuidv4();
+    const sessionId = crypto.randomUUID();
 
     if (starredMode && userId) {
       const ids = await fetchStarredIds(userId);
