@@ -20,7 +20,7 @@ export default async function CheckoutPage() {
 
   return (
     <AppShell user={user}>
-      <div className="mb-8">
+      <div className="max-w-2xl mx-auto mb-8">
         <h1 className="text-3xl font-extrabold text-neutral-900 tracking-tight mb-1">Checkout</h1>
         <p className="text-neutral-500 text-sm">Review your order before paying.</p>
       </div>

@@ -38,7 +38,7 @@ export function RoomInvitesList({ userId, version, onAccepted }: RoomInvitesList
 
   return (
     <div className="flex-shrink-0 px-3 pt-3 space-y-1.5">
-      <h2 className="text-xs font-semibold text-neutral-400 uppercase tracking-wider px-3 mb-1">
+      <h2 className="text-xs font-semibold text-neutral-900 uppercase tracking-wider px-3 mb-1">
         Room Invites
       </h2>
       {invites.map((invite) => (

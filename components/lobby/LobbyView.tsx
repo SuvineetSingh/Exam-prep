@@ -111,6 +111,9 @@ export function LobbyView({ rooms: initialRooms, currentUser }: LobbyViewProps) 
   // table+event from one socket collide in Realtime and one goes silent —
   // this listener is the single friendships subscription for the page. ──
   const [friendshipsVersion, setFriendshipsVersion] = useState(0);
+  // Find Friends only claims half the sidebar once it has results to show —
+  // otherwise Recent Activity gets the space.
+  const [findPeopleHasResults, setFindPeopleHasResults] = useState(false);
   useEffect(() => {
     const supabase = createClient();
     const handleInvite = async (payload: { new: Record<string, unknown> }) => {
@@ -499,10 +502,14 @@ export function LobbyView({ rooms: initialRooms, currentUser }: LobbyViewProps) 
             mobileTab === 'people' ? 'flex' : 'hidden md:flex'
           }`}
         >
-          <div className="flex-shrink-0">
-            <FindPeople currentUserId={currentUser.id} onlineUserIds={onlineUserIds} />
+          <div className={`min-h-0 overflow-hidden ${findPeopleHasResults ? 'flex-1 basis-0' : 'flex-none'}`}>
+            <FindPeople
+              currentUserId={currentUser.id}
+              onlineUserIds={onlineUserIds}
+              onResultsChange={setFindPeopleHasResults}
+            />
           </div>
-          <div className="flex-1 min-h-0 overflow-y-auto">
+          <div className="flex-1 min-h-0 basis-0 overflow-hidden">
             <ActivityFeed
               currentUserId={currentUser.id}
               onClickUser={handleClickUser}

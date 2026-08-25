@@ -13,9 +13,10 @@ import {
  * Activity feed data: initial page (and pagination) via /api/activity-feed,
  * live updates via a Realtime INSERT subscription on activity_events.
  */
-export function useActivityFeed(currentUserId: string, limit = 30) {
+export function useActivityFeed(currentUserId: string, limit = 10) {
   const [events, setEvents] = useState<FeedEvent[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [partnerIds, setPartnerIds] = useState<Set<string>>(new Set());
 
@@ -109,7 +110,8 @@ export function useActivityFeed(currentUserId: string, limit = 30) {
   }, [partnerIds]);
 
   const loadMore = useCallback(async () => {
-    if (!nextCursor) return;
+    if (!nextCursor || loadingMore) return;
+    setLoadingMore(true);
     try {
       const res = await fetch(
         `/api/activity-feed?limit=${limit}&cursor=${encodeURIComponent(nextCursor)}`
@@ -120,8 +122,10 @@ export function useActivityFeed(currentUserId: string, limit = 30) {
       setNextCursor(body.nextCursor);
     } catch {
       // best-effort; the user can retry
+    } finally {
+      setLoadingMore(false);
     }
-  }, [nextCursor, limit]);
+  }, [nextCursor, limit, loadingMore]);
 
-  return { events, loading, nextCursor, loadMore };
+  return { events, loading, loadingMore, nextCursor, loadMore };
 }

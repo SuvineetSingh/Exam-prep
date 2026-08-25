@@ -5,6 +5,7 @@ import { useUserStats } from '@/hooks/useUserStats';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
 import { useGamification } from '@/hooks/useGamification';
 import { AppShell } from '@/components/layout/AppShell';
+import { StatsBanners } from '@/components/dashboard/StatsBanners';
 import { SessionRow, type ExamSession } from '@/components/history/HistoryComponents';
 import { XPProgressBar } from '@/components/gamification/XPProgressBar';
 import { BadgeShelf } from '@/components/gamification/BadgeShelf';
@@ -19,12 +20,6 @@ function getGreeting() {
   if (h < 12) return 'Good morning';
   if (h < 17) return 'Good afternoon';
   return 'Good evening';
-}
-
-function scoreColor(pct: number) {
-  if (pct >= 75) return 'text-green-600';
-  if (pct >= 50) return 'text-amber-600';
-  return 'text-red-500';
 }
 
 /* ── Daily Goal Progress Card ─────────────────────── */
@@ -186,7 +181,6 @@ export default function DashboardPage() {
     user.email?.split('@')[0] ||
     'there';
 
-  const accuracyRate = stats?.accuracy_rate ?? 0;
   const streak = stats?.study_streak ?? 0;
 
   return (
@@ -216,6 +210,11 @@ export default function DashboardPage() {
         )}
       </div>
 
+      {/* ── Stats banners ── */}
+      <div className="mb-6">
+        <StatsBanners stats={stats} />
+      </div>
+
       {/* ── Premium banner ── */}
       {isPremium === false && (
         <div className="mb-6">
@@ -229,20 +228,7 @@ export default function DashboardPage() {
       </div>
 
       {/* ── Stats grid ── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <StatCard
-          icon={<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>}
-          label="Questions Answered"
-          value={(stats?.total_answered ?? 0).toLocaleString()}
-          sub={`+${stats?.today_count ?? 0} today`}
-        />
-        <StatCard
-          icon={<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>}
-          label="Accuracy Rate"
-          value={`${accuracyRate}%`}
-          sub="Overall performance"
-          color={scoreColor(accuracyRate)}
-        />
+      <div className="grid grid-cols-2 gap-4 mb-6">
         <StatCard
           icon={<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>}
           label="Practice Mode"

@@ -30,6 +30,8 @@ const TEST_USERS = [
     exam_type: 'CMA',
     industry: 'Finance',
     bio: 'CMA candidate, 3rd attempt. Let\'s go.',
+    country_code: 'US',
+    study_time: 'morning',
     is_premium: true,   // Pro
   },
   {
@@ -40,6 +42,8 @@ const TEST_USERS = [
     exam_type: 'CFA',
     industry: 'Investment Banking',
     bio: 'Level II CFA. Grinding every day.',
+    country_code: 'GB',
+    study_time: 'afternoon',
     is_premium: false,  // Basic
   },
   {
@@ -50,6 +54,8 @@ const TEST_USERS = [
     exam_type: 'FE',
     industry: 'Engineering',
     bio: 'Civil engineer prepping for FE exam.',
+    country_code: 'CA',
+    study_time: 'night',
     is_premium: true,   // Pro
   },
   {
@@ -60,6 +66,8 @@ const TEST_USERS = [
     exam_type: 'CMA',
     industry: 'Accounting',
     bio: 'Big 4 staff accountant, CMA or bust.',
+    country_code: 'AU',
+    study_time: 'morning',
     is_premium: false,  // Basic
   },
   {
@@ -70,6 +78,8 @@ const TEST_USERS = [
     exam_type: 'CFA',
     industry: 'Asset Management',
     bio: 'Level I CFA. Study group welcome!',
+    country_code: 'IN',
+    study_time: 'afternoon',
     is_premium: true,   // Pro
   },
 ];
@@ -129,6 +139,8 @@ async function seedUsers() {
         exam_type: user.exam_type,
         industry: user.industry,
         bio: user.bio,
+        country_code: user.country_code,
+        study_time: user.study_time,
         last_seen_at: new Date().toISOString(),
       }, { onConflict: 'id' });
 
