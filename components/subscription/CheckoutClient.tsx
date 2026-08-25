@@ -67,26 +67,26 @@ export function CheckoutClient({ courses, purchasedCourses }: CheckoutClientProp
   }
 
   return (
-    <div className="max-w-lg">
-      <div className="card divide-y divide-neutral-100 mb-4">
+    <div className="max-w-2xl mx-auto">
+      <div className="card divide-y divide-neutral-100 mb-5">
         {items.map((code) => {
           const meta = courses.find((c) => c.exam_type === code);
           return (
-            <div key={code} className="flex items-center gap-4 p-5">
-              <div className="w-10 h-10 bg-brand-green-light rounded-xl flex items-center justify-center">
+            <div key={code} className="flex items-center gap-5 p-6">
+              <div className="w-12 h-12 bg-brand-green-light rounded-xl flex items-center justify-center flex-shrink-0">
                 <span className="text-xs font-black text-brand-green">{meta?.exam_type ?? code}</span>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-bold text-neutral-900 text-sm truncate">{meta?.name ?? code}</p>
-                <p className="text-xs text-neutral-400">Pro Access — one-time payment</p>
+                <p className="font-bold text-neutral-900 truncate">{meta?.name ?? code}</p>
+                <p className="text-sm text-neutral-400 mt-0.5">Pro Access — one-time payment</p>
               </div>
-              <p className="font-bold text-neutral-900">{COURSE_PRICE_DISPLAY[code] ?? '$49'}</p>
+              <p className="font-bold text-neutral-900 text-lg">{COURSE_PRICE_DISPLAY[code] ?? '$49'}</p>
               <button
                 onClick={() => cart.removeItem(code)}
                 title="Remove from cart"
-                className="text-neutral-300 hover:text-brand-coral transition-colors"
+                className="text-neutral-300 hover:text-brand-coral transition-colors flex-shrink-0"
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
@@ -95,13 +95,13 @@ export function CheckoutClient({ courses, purchasedCourses }: CheckoutClientProp
         })}
       </div>
 
-      <div className="card p-5 mb-4 flex items-center justify-between">
+      <div className="card p-6 mb-5 flex items-center justify-between">
         <span className="font-bold text-neutral-700">Total</span>
         <span className="text-2xl font-extrabold text-neutral-900">${(total / 100).toFixed(2)}</span>
       </div>
 
       {error && (
-        <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm font-medium mb-4">
+        <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm font-medium mb-5">
           {error}
         </div>
       )}
@@ -123,6 +123,11 @@ export function CheckoutClient({ courses, purchasedCourses }: CheckoutClientProp
       <Link href="/courses" className="btn-ghost block w-full text-center py-3 mt-2">
         ← Continue browsing
       </Link>
+      <div className="flex justify-center mt-2">
+        <Link href="/courses" className="btn-primary py-3">
+          Add more courses
+        </Link>
+      </div>
     </div>
   );
 }

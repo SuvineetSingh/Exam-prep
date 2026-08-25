@@ -1,6 +1,8 @@
 'use client';
 
+import { useRef } from 'react';
 import { useActivityFeed } from '@/hooks/useActivityFeed';
+import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import { formatEventText } from '@/lib/activity/feed';
 import { countryFlag } from '@/lib/utils/countries';
 import { OnlineDot } from './OnlineDot';
@@ -30,7 +32,9 @@ function formatRelativeTime(dateStr: string): string {
 }
 
 export function ActivityFeed({ currentUserId, onClickUser, onMessageUser, onlineUserIds }: ActivityFeedProps) {
-  const { events, loading, nextCursor, loadMore } = useActivityFeed(currentUserId);
+  const { events, loading, loadingMore, nextCursor, loadMore } = useActivityFeed(currentUserId);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  useInfiniteScroll(scrollRef, loadMore, !!nextCursor, loadingMore);
 
   const cardPositionFor = (row: HTMLElement) => {
     const rect = row.getBoundingClientRect();
@@ -38,8 +42,8 @@ export function ActivityFeed({ currentUserId, onClickUser, onMessageUser, online
   };
 
   return (
-    <div className="p-3 border-t border-neutral-200">
-      <h3 className="px-1 mb-2 text-xs font-bold text-neutral-400 uppercase tracking-wider">
+    <div className="h-full flex flex-col border-t border-neutral-200">
+      <h3 className="flex-shrink-0 px-4 pt-3 pb-2 text-xs font-bold text-neutral-900 uppercase tracking-wider">
         Recent Activity
       </h3>
 
@@ -52,7 +56,7 @@ export function ActivityFeed({ currentUserId, onClickUser, onMessageUser, online
           Be the first to start studying today
         </p>
       ) : (
-        <div className="space-y-0.5">
+        <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto px-3 pb-3 space-y-0.5">
           {events.map((event) => {
             const isCurrentUser = event.user_id === currentUserId;
             const initial = event.user.username[0]?.toUpperCase() || '?';
@@ -129,16 +133,12 @@ export function ActivityFeed({ currentUserId, onClickUser, onMessageUser, online
               </div>
             );
           })}
+          {loadingMore && (
+            <div className="flex justify-center py-3">
+              <div className="w-4 h-4 border-2 border-brand-green border-t-transparent rounded-full animate-spin" />
+            </div>
+          )}
         </div>
-      )}
-
-      {nextCursor && !loading && (
-        <button
-          onClick={loadMore}
-          className="w-full mt-2 py-1.5 text-xs font-bold text-brand-green hover:bg-neutral-100 rounded-lg transition-colors"
-        >
-          Show more
-        </button>
       )}
     </div>
   );

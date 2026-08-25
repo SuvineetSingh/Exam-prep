@@ -1,12 +1,15 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { sendFriendRequest, fetchFriendshipStatus } from '@/lib/supabase/queries/lobbyQueries';
 import { COUNTRY_OPTIONS, countryFlag } from '@/lib/utils/countries';
 import { EXAM_TYPES } from '@/lib/utils/constants';
 import { STUDY_TIMES } from '@/lib/utils/lobbyConstants';
+import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import { OnlineDot } from './OnlineDot';
+
+const PAGE_SIZE = 10;
 
 interface SearchResult {
   id: string;
@@ -17,24 +20,42 @@ interface SearchResult {
   study_time: string | null;
 }
 
+interface ActiveSearch {
+  term: string;
+  country: string;
+  exam: string;
+  study: string;
+}
+
 interface FindPeopleProps {
   currentUserId: string;
   onlineUserIds?: Set<string>;
+  onResultsChange?: (hasResults: boolean) => void;
 }
 
-export function FindPeople({ currentUserId, onlineUserIds }: FindPeopleProps) {
+export function FindPeople({ currentUserId, onlineUserIds, onResultsChange }: FindPeopleProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [liveResults, setLiveResults] = useState<{ id: string; username: string }[]>([]);
   const [searching, setSearching] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMoreResults, setHasMoreResults] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
   // Which term the last full (Go) search ran for — the "no users found" empty
   // state must not fire from mere typing.
   const [searchedTerm, setSearchedTerm] = useState<string | null>(null);
+  // Filters (+ term) the currently-displayed results page came from — pagination
+  // keeps using these even if the user tweaks a filter without clicking Go again.
+  const [activeSearch, setActiveSearch] = useState<ActiveSearch | null>(null);
   const [requestSent, setRequestSent] = useState<Set<string>>(new Set());
   const [countryFilter, setCountryFilter] = useState('');
   const [examTypeFilter, setExamTypeFilter] = useState('');
   const [studyTimeFilter, setStudyTimeFilter] = useState('');
+  const resultsRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    onResultsChange?.(searchResults.length > 0);
+  }, [searchResults.length, onResultsChange]);
 
   // Live suggestions while typing: debounced, first 5 usernames only.
   // Best-effort (no error surface) — the Go flow handles error messaging.
@@ -67,9 +88,25 @@ export function FindPeople({ currentUserId, onlineUserIds }: FindPeopleProps) {
     };
   }, [searchQuery, searchedTerm, currentUserId, countryFilter, examTypeFilter, studyTimeFilter]);
 
+  const fetchResultsPage = useCallback(async (params: ActiveSearch, offset: number) => {
+    const supabase = createClient();
+    let query = supabase
+      .from('user_profiles')
+      .select('id, username, exam_type, full_name, country_code, study_time')
+      .neq('id', currentUserId)
+      .eq('is_bot', false); // bots can't receive friend requests
+    if (params.term.length >= 2) query = query.ilike('username', `%${params.term}%`);
+    if (params.country) query = query.eq('country_code', params.country);
+    if (params.exam) query = query.eq('exam_type', params.exam);
+    if (params.study) query = query.eq('study_time', params.study);
+    return query.range(offset, offset + PAGE_SIZE - 1);
+  }, [currentUserId]);
+
   const handleSearch = useCallback(async (overrideTerm?: string) => {
     const term = (overrideTerm ?? searchQuery).trim();
-    if (term.length < 2) return;
+    // Empty term = browse by filters only. A 1-char term is too short to
+    // narrow anything, so that's still rejected.
+    if (term.length === 1) return;
     setSearching(true);
     setSearchError(null);
     const supabase = createClient();
@@ -85,26 +122,36 @@ export function FindPeople({ currentUserId, onlineUserIds }: FindPeopleProps) {
       return;
     }
 
-    let query = supabase
-      .from('user_profiles')
-      .select('id, username, exam_type, full_name, country_code, study_time')
-      .ilike('username', `%${term}%`)
-      .neq('id', currentUserId)
-      .eq('is_bot', false); // bots can't receive friend requests
-    if (countryFilter) query = query.eq('country_code', countryFilter);
-    if (examTypeFilter) query = query.eq('exam_type', examTypeFilter);
-    if (studyTimeFilter) query = query.eq('study_time', studyTimeFilter);
-    const { data, error } = await query.limit(10);
+    const params: ActiveSearch = { term, country: countryFilter, exam: examTypeFilter, study: studyTimeFilter };
+    const { data, error } = await fetchResultsPage(params, 0);
     if (error) {
       setSearchError('Search failed — please try again.');
       setSearchResults([]);
+      setHasMoreResults(false);
     } else {
-      setSearchResults((data as SearchResult[]) ?? []);
+      const page = (data as SearchResult[]) ?? [];
+      setSearchResults(page);
+      setHasMoreResults(page.length === PAGE_SIZE);
+      setActiveSearch(params);
     }
     setLiveResults([]); // suggestions are redundant once full results show
     setSearchedTerm(term);
     setSearching(false);
-  }, [searchQuery, currentUserId, countryFilter, examTypeFilter, studyTimeFilter]);
+  }, [searchQuery, countryFilter, examTypeFilter, studyTimeFilter, fetchResultsPage]);
+
+  const loadMoreResults = useCallback(async () => {
+    if (!activeSearch || loadingMore) return;
+    setLoadingMore(true);
+    const { data, error } = await fetchResultsPage(activeSearch, searchResults.length);
+    if (!error) {
+      const page = (data as SearchResult[]) ?? [];
+      setSearchResults(prev => [...prev, ...page]);
+      setHasMoreResults(page.length === PAGE_SIZE);
+    }
+    setLoadingMore(false);
+  }, [activeSearch, loadingMore, searchResults.length, fetchResultsPage]);
+
+  useInfiniteScroll(resultsRef, loadMoreResults, hasMoreResults, loadingMore || searching);
 
   const handleAddFriend = useCallback(async (targetId: string) => {
     const status = await fetchFriendshipStatus(currentUserId, targetId);
@@ -117,9 +164,10 @@ export function FindPeople({ currentUserId, onlineUserIds }: FindPeopleProps) {
   }, [currentUserId]);
 
   return (
-    <div className="p-3">
-      <h3 className="px-1 mb-2 text-xs font-bold text-neutral-400 uppercase tracking-wider">
-        Find People
+    <div className="h-full flex flex-col">
+      <div className="flex-shrink-0 p-3 pb-0">
+      <h3 className="px-1 mb-2 text-xs font-bold text-neutral-900 uppercase tracking-wider">
+        Find Friends
       </h3>
 
       <div className="px-1 mb-2 grid grid-cols-2 gap-2">
@@ -173,10 +221,17 @@ export function FindPeople({ currentUserId, onlineUserIds }: FindPeopleProps) {
         </div>
         <button
           onClick={() => handleSearch()}
-          disabled={searching || searchQuery.trim().length < 2}
-          className="px-3 py-1.5 bg-brand-green text-white text-xs font-bold rounded-lg disabled:opacity-40 hover:bg-brand-green-dark transition-colors"
+          disabled={searching || searchQuery.trim().length === 1}
+          aria-label="Search"
+          className="flex items-center justify-center px-3 py-1.5 bg-brand-green text-white rounded-lg disabled:opacity-40 hover:bg-brand-green-dark transition-colors"
         >
-          {searching ? '…' : 'Go'}
+          {searching ? (
+            <div className="w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+          ) : (
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          )}
         </button>
       </div>
 
@@ -197,8 +252,9 @@ export function FindPeople({ currentUserId, onlineUserIds }: FindPeopleProps) {
           ))}
         </div>
       )}
+      </div>
 
-      <div className="space-y-1">
+      <div ref={resultsRef} className="flex-1 min-h-0 overflow-y-auto px-3 pb-3 space-y-1">
         {searchResults.map((result) => {
           const initial = result.username?.[0]?.toUpperCase() || '?';
           const sent = requestSent.has(result.id);
@@ -241,8 +297,15 @@ export function FindPeople({ currentUserId, onlineUserIds }: FindPeopleProps) {
           searchQuery.trim() === searchedTerm &&
           searchResults.length === 0 &&
           !searching && (
-            <p className="text-xs text-neutral-400 px-3 py-4 text-center">No users found for "{searchedTerm}"</p>
+            <p className="text-xs text-neutral-400 px-3 py-4 text-center">
+              {searchedTerm ? `No users found for "${searchedTerm}"` : 'No users found'}
+            </p>
           )}
+        {loadingMore && (
+          <div className="flex justify-center py-3">
+            <div className="w-4 h-4 border-2 border-brand-green border-t-transparent rounded-full animate-spin" />
+          </div>
+        )}
       </div>
     </div>
   );

@@ -274,7 +274,7 @@ export function RoomList({
       <div className="h-full flex flex-col">
         {/* ── Top half: Chats (DMs) ── */}
         <div className="flex-1 min-h-0 flex flex-col p-3 pb-2">
-          <h2 className="flex-shrink-0 text-xs font-semibold text-neutral-400 uppercase tracking-wider px-3 mb-2">
+          <h2 className="flex-shrink-0 text-xs font-semibold text-neutral-900 uppercase tracking-wider px-3 mb-2">
             Chats
           </h2>
           <div className="flex-1 overflow-y-auto space-y-1">
@@ -308,7 +308,7 @@ export function RoomList({
         {/* ── Bottom half: Rooms ── */}
         <div className="flex-1 min-h-0 flex flex-col border-t border-neutral-200 p-3 pt-2">
           <div className="flex-shrink-0 flex items-center justify-between px-3 mb-2">
-            <h2 className="text-xs font-semibold text-neutral-400 uppercase tracking-wider">
+            <h2 className="text-xs font-semibold text-neutral-900 uppercase tracking-wider">
               {hasPins ? (
                 <span className="flex items-center gap-1">
                   <svg className="w-3 h-3 text-amber-400" viewBox="0 0 24 24" fill="currentColor">
@@ -390,7 +390,7 @@ export function RoomList({
                   <>
                     {pinnedOrdered.map(renderRoom)}
                     <div className="my-2 border-t border-neutral-200" />
-                    <h2 className="text-xs font-semibold text-neutral-400 uppercase tracking-wider px-3 mb-2">
+                    <h2 className="text-xs font-semibold text-neutral-900 uppercase tracking-wider px-3 mb-2">
                       All Rooms
                     </h2>
                   </>
