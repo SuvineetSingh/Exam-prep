@@ -22,37 +22,37 @@ interface BadgeCheckContext {
   earnedKeys: Set<string>;
 }
 
+const BADGE_CONDITIONS: Record<string, (ctx: BadgeCheckContext) => boolean> = {
+  first_login: ctx => ctx.totalAnswered >= 1,
+  first_answer: ctx => ctx.totalAnswered >= 1,
+  ten_answers: ctx => ctx.totalAnswered >= 10,
+  fifty_answers: ctx => ctx.totalAnswered >= 50,
+  century: ctx => ctx.totalAnswered >= 100,
+  five_hundred: ctx => ctx.totalAnswered >= 500,
+  thousand: ctx => ctx.totalAnswered >= 1000,
+
+  first_test: ctx => ctx.totalExams >= 1,
+  five_tests: ctx => ctx.totalExams >= 5,
+  ten_tests: ctx => ctx.totalExams >= 10,
+  twenty_five_tests: ctx => ctx.totalExams >= 25,
+
+  perfect_practice: ctx => !!ctx.practiceSessionPerfect,
+  perfect_timed: ctx => !!ctx.timedExamPerfect,
+
+  streak_3: ctx => ctx.streak >= 3,
+  streak_7: ctx => ctx.streak >= 7,
+  streak_30: ctx => ctx.streak >= 30,
+  streak_365: ctx => ctx.streak >= 365,
+
+  cma_badge: ctx => (ctx.correctByExamType['CMA'] ?? 0) >= 1,
+  cfa_badge: ctx => (ctx.correctByExamType['CFA'] ?? 0) >= 1,
+  fe_badge: ctx => (ctx.correctByExamType['FE'] ?? 0) >= 1,
+};
+
 export async function checkAndAwardBadges(ctx: BadgeCheckContext): Promise<BadgeDefinition[]> {
-  const candidates: BadgeDefinition[] = [];
-
-  const check = (key: string) => !ctx.earnedKeys.has(key);
-
-  if (check('first_login') && ctx.totalAnswered >= 1)          candidates.push(BADGE_DEFINITIONS.find(b => b.key === 'first_login')!);
-  if (check('first_answer') && ctx.totalAnswered >= 1)         candidates.push(BADGE_DEFINITIONS.find(b => b.key === 'first_answer')!);
-  if (check('ten_answers') && ctx.totalAnswered >= 10)         candidates.push(BADGE_DEFINITIONS.find(b => b.key === 'ten_answers')!);
-  if (check('fifty_answers') && ctx.totalAnswered >= 50)       candidates.push(BADGE_DEFINITIONS.find(b => b.key === 'fifty_answers')!);
-  if (check('century') && ctx.totalAnswered >= 100)            candidates.push(BADGE_DEFINITIONS.find(b => b.key === 'century')!);
-  if (check('five_hundred') && ctx.totalAnswered >= 500)       candidates.push(BADGE_DEFINITIONS.find(b => b.key === 'five_hundred')!);
-  if (check('thousand') && ctx.totalAnswered >= 1000)          candidates.push(BADGE_DEFINITIONS.find(b => b.key === 'thousand')!);
-
-  if (check('first_test') && ctx.totalExams >= 1)              candidates.push(BADGE_DEFINITIONS.find(b => b.key === 'first_test')!);
-  if (check('five_tests') && ctx.totalExams >= 5)              candidates.push(BADGE_DEFINITIONS.find(b => b.key === 'five_tests')!);
-  if (check('ten_tests') && ctx.totalExams >= 10)              candidates.push(BADGE_DEFINITIONS.find(b => b.key === 'ten_tests')!);
-  if (check('twenty_five_tests') && ctx.totalExams >= 25)      candidates.push(BADGE_DEFINITIONS.find(b => b.key === 'twenty_five_tests')!);
-
-  if (check('perfect_practice') && ctx.practiceSessionPerfect) candidates.push(BADGE_DEFINITIONS.find(b => b.key === 'perfect_practice')!);
-  if (check('perfect_timed') && ctx.timedExamPerfect)          candidates.push(BADGE_DEFINITIONS.find(b => b.key === 'perfect_timed')!);
-
-  if (check('streak_3') && ctx.streak >= 3)                   candidates.push(BADGE_DEFINITIONS.find(b => b.key === 'streak_3')!);
-  if (check('streak_7') && ctx.streak >= 7)                   candidates.push(BADGE_DEFINITIONS.find(b => b.key === 'streak_7')!);
-  if (check('streak_30') && ctx.streak >= 30)                 candidates.push(BADGE_DEFINITIONS.find(b => b.key === 'streak_30')!);
-  if (check('streak_365') && ctx.streak >= 365)               candidates.push(BADGE_DEFINITIONS.find(b => b.key === 'streak_365')!);
-
-  if (check('cma_badge') && (ctx.correctByExamType['CMA'] ?? 0) >= 1) candidates.push(BADGE_DEFINITIONS.find(b => b.key === 'cma_badge')!);
-  if (check('cfa_badge') && (ctx.correctByExamType['CFA'] ?? 0) >= 1) candidates.push(BADGE_DEFINITIONS.find(b => b.key === 'cfa_badge')!);
-  if (check('fe_badge') && (ctx.correctByExamType['FE'] ?? 0) >= 1)   candidates.push(BADGE_DEFINITIONS.find(b => b.key === 'fe_badge')!);
-
-  const valid = candidates.filter(Boolean);
+  const valid = BADGE_DEFINITIONS.filter(
+    b => !ctx.earnedKeys.has(b.key) && BADGE_CONDITIONS[b.key]?.(ctx)
+  );
   if (valid.length === 0) return [];
 
   const supabase = createClient();
