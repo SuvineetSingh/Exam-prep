@@ -30,6 +30,9 @@ yarn-error.log*
 .env*.local
 .env
 
+# personal learning notes (not project docs)
+/notes
+
 # vercel
 .vercel
 

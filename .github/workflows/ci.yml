@@ -1,0 +1,54 @@
+name: CI
+
+# Run on every PR targeting main (this is the actual gate), and on main
+# itself after a merge lands (a safety net + gives main a visible pass/fail
+# history). Deliberately NOT on every push to a feature branch — that would
+# burn CI minutes on WIP commits before there's even a PR to gate.
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+# If you push a new commit to a PR while an earlier run is still going,
+# cancel the stale one instead of letting both finish. Same PR = same group,
+# so the newer run supersedes the older one.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# Default GITHUB_TOKEN permissions are broader than this workflow needs.
+# It only reads code and reports a check result, so it only gets read access.
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm' # caches node_modules between runs, keyed on package-lock.json
+
+      - run: npm ci # strict install from the lockfile — never `npm install` in CI
+
+      # Cheapest/fastest checks first: if lint fails, you find out in
+      # seconds instead of waiting for the build to fail two minutes later.
+      - run: npm run lint
+      - run: npm run type-check
+      - run: npm test
+
+      # next build statically prerenders a server-side HTML shell for every
+      # page — including 'use client' ones — which runs their top-level code
+      # once. Several pages call createClient() at that top level, which
+      # throws immediately if these are unset. Real values are never needed
+      # here: the build never actually calls Supabase, it just constructs a
+      # client object, so a correctly-shaped placeholder satisfies the check
+      # without touching a real project or a secret.
+      - run: npm run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: sb_publishable_placeholder_ci_only
