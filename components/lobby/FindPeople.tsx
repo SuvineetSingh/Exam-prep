@@ -7,6 +7,7 @@ import { COUNTRY_OPTIONS, countryFlag } from '@/lib/utils/countries';
 import { EXAM_TYPES } from '@/lib/utils/constants';
 import { STUDY_TIMES } from '@/lib/utils/lobbyConstants';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
+import { TagChipInput } from '@/components/ui/TagChipInput';
 import { OnlineDot } from './OnlineDot';
 
 const PAGE_SIZE = 10;
@@ -18,6 +19,9 @@ interface SearchResult {
   full_name: string | null;
   country_code: string | null;
   study_time: string | null;
+  user_tags?: { tag: string; position: number }[];
+  match_count?: number;
+  matched_tags?: string[];
 }
 
 interface ActiveSearch {
@@ -25,6 +29,7 @@ interface ActiveSearch {
   country: string;
   exam: string;
   study: string;
+  tags: string[];
 }
 
 interface FindPeopleProps {
@@ -51,6 +56,7 @@ export function FindPeople({ currentUserId, onlineUserIds, onResultsChange }: Fi
   const [countryFilter, setCountryFilter] = useState('');
   const [examTypeFilter, setExamTypeFilter] = useState('');
   const [studyTimeFilter, setStudyTimeFilter] = useState('');
+  const [tagFilters, setTagFilters] = useState<string[]>([]);
   const resultsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -90,9 +96,25 @@ export function FindPeople({ currentUserId, onlineUserIds, onResultsChange }: Fi
 
   const fetchResultsPage = useCallback(async (params: ActiveSearch, offset: number) => {
     const supabase = createClient();
+
+    // Ranked mode: at least one tag filter is set, so results are ordered by
+    // tag-overlap count via a DB function rather than the plain query below
+    // — PostgREST's builder can't express "order by count(*) from a join".
+    if (params.tags.length > 0) {
+      return supabase.rpc('search_people_by_tags', {
+        p_filter_tags: params.tags,
+        p_term: params.term,
+        p_country: params.country,
+        p_exam: params.exam,
+        p_study: params.study,
+        p_limit: PAGE_SIZE,
+        p_offset: offset,
+      });
+    }
+
     let query = supabase
       .from('user_profiles')
-      .select('id, username, exam_type, full_name, country_code, study_time')
+      .select('id, username, exam_type, full_name, country_code, study_time, user_tags(tag, position)')
       .neq('id', currentUserId)
       .eq('is_bot', false); // bots can't receive friend requests
     if (params.term.length >= 2) query = query.ilike('username', `%${params.term}%`);
@@ -122,7 +144,7 @@ export function FindPeople({ currentUserId, onlineUserIds, onResultsChange }: Fi
       return;
     }
 
-    const params: ActiveSearch = { term, country: countryFilter, exam: examTypeFilter, study: studyTimeFilter };
+    const params: ActiveSearch = { term, country: countryFilter, exam: examTypeFilter, study: studyTimeFilter, tags: tagFilters };
     const { data, error } = await fetchResultsPage(params, 0);
     if (error) {
       setSearchError('Search failed — please try again.');
@@ -137,7 +159,19 @@ export function FindPeople({ currentUserId, onlineUserIds, onResultsChange }: Fi
     setLiveResults([]); // suggestions are redundant once full results show
     setSearchedTerm(term);
     setSearching(false);
-  }, [searchQuery, countryFilter, examTypeFilter, studyTimeFilter, fetchResultsPage]);
+  }, [searchQuery, countryFilter, examTypeFilter, studyTimeFilter, tagFilters, fetchResultsPage]);
+
+  // Clearing the last tag filter chip is a mode switch (ranked-by-tags →
+  // plain browsing), not a minor tweak — unlike the other filters, leaving
+  // the displayed results frozen here would show rows still labeled "X/Y
+  // matched: ..." for a tag that's no longer in the filter at all. Only
+  // re-searches when tags go from populated to empty; any other filter
+  // change still waits for an explicit Search click, same as before.
+  useEffect(() => {
+    if (tagFilters.length === 0 && activeSearch && activeSearch.tags.length > 0) {
+      handleSearch();
+    }
+  }, [tagFilters, activeSearch, handleSearch]);
 
   const loadMoreResults = useCallback(async () => {
     if (!activeSearch || loadingMore) return;
@@ -205,6 +239,10 @@ export function FindPeople({ currentUserId, onlineUserIds, onResultsChange }: Fi
         </select>
       </div>
 
+      <div className="px-1 mb-2">
+        <TagChipInput value={tagFilters} onChange={setTagFilters} disabled={searching} />
+      </div>
+
       <div className="relative px-1 mb-2 flex gap-2">
         <div className="relative flex-1">
           <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-neutral-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -258,6 +296,7 @@ export function FindPeople({ currentUserId, onlineUserIds, onResultsChange }: Fi
         {searchResults.map((result) => {
           const initial = result.username?.[0]?.toUpperCase() || '?';
           const sent = requestSent.has(result.id);
+          const sortedTags = [...(result.user_tags ?? [])].sort((a, b) => a.position - b.position);
           return (
             <div key={result.id} className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-neutral-100">
               <div className="relative flex-shrink-0">
@@ -275,6 +314,34 @@ export function FindPeople({ currentUserId, onlineUserIds, onResultsChange }: Fi
                       .filter(Boolean)
                       .join(' · ')}
                   </p>
+                )}
+                {result.matched_tags ? (
+                  <div className="flex flex-wrap items-center gap-1 mt-1">
+                    <span className="text-[10px] font-semibold text-brand-green-dark">
+                      {result.match_count}/{activeSearch?.tags.length ?? result.matched_tags.length} matched:
+                    </span>
+                    {result.matched_tags.map((tag) => (
+                      <span
+                        key={tag}
+                        className="px-2 py-0.5 rounded-full bg-green-50 text-brand-green-dark text-[10px] font-semibold"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  sortedTags.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      <span className="px-2 py-0.5 rounded-full bg-green-50 text-brand-green-dark text-[10px] font-semibold truncate max-w-[5rem]">
+                        {sortedTags[0]!.tag}
+                      </span>
+                      {sortedTags.length > 1 && (
+                        <span className="text-[10px] text-neutral-400 self-center">
+                          +{sortedTags.length - 1}
+                        </span>
+                      )}
+                    </div>
+                  )
                 )}
               </div>
               <button

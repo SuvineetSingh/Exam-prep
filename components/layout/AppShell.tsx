@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { Sidebar, MobileTabBar } from './Sidebar';
 import { OnboardingTour } from '@/components/onboarding/OnboardingTour';
 import { fetchUserProfile } from '@/lib/supabase/queries/lobbyQueries';
+import { fetchUserTags } from '@/lib/supabase/queries/tagQueries';
 import type { User } from '@supabase/supabase-js';
 
 interface AppShellProps {
@@ -22,15 +23,19 @@ export function AppShell({
   dailyGoal,
   fullscreen = false,
 }: AppShellProps) {
-  const [showTour, setShowTour] = useState(false);
+  const [tourMode, setTourMode] = useState<'full' | 'tags' | null>(null);
 
   useEffect(() => {
-    fetchUserProfile(user.id).then((profile) => {
-      if (profile && !profile.onboarding_completed) setShowTour(true);
+    Promise.all([fetchUserProfile(user.id), fetchUserTags(user.id)]).then(([profile, tags]) => {
+      if (!profile) return;
+      if (!profile.onboarding_completed) setTourMode('full');
+      else if (tags.length < 5) setTourMode('tags');
     });
   }, [user.id]);
 
-  const tour = showTour && <OnboardingTour userId={user.id} onComplete={() => setShowTour(false)} />;
+  const tour = tourMode && (
+    <OnboardingTour userId={user.id} tagsOnly={tourMode === 'tags'} onComplete={() => setTourMode(null)} />
+  );
 
   if (fullscreen) {
     return (

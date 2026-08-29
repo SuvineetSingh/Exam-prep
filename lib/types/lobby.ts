@@ -66,6 +66,11 @@ export interface NotificationToast {
   timestamp: Date;
 }
 
+export interface UserTag {
+  tag: string;
+  position: number;
+}
+
 export interface UnreadCounts {
   rooms: { [roomId: string]: number };
   dms: { [userId: string]: number };
