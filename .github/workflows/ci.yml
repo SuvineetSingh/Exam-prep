@@ -40,4 +40,15 @@ jobs:
       - run: npm run lint
       - run: npm run type-check
       - run: npm test
+
+      # next build statically prerenders a server-side HTML shell for every
+      # page — including 'use client' ones — which runs their top-level code
+      # once. Several pages call createClient() at that top level, which
+      # throws immediately if these are unset. Real values are never needed
+      # here: the build never actually calls Supabase, it just constructs a
+      # client object, so a correctly-shaped placeholder satisfies the check
+      # without touching a real project or a secret.
       - run: npm run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: sb_publishable_placeholder_ci_only
