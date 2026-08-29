@@ -2,12 +2,13 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { updateUserProfile } from '@/lib/supabase/queries/lobbyQueries';
+import { fetchUserTags, saveProfileAndTags } from '@/lib/supabase/queries/tagQueries';
 import type { LobbyUserProfile, ProfileFormData } from '@/lib/types';
 import { EXAM_TYPES } from '@/lib/utils/constants';
 import { COUNTRY_OPTIONS, countryFlag } from '@/lib/utils/countries';
 import { INDUSTRIES, STUDY_TIMES } from '@/lib/utils/lobbyConstants';
 import { OnboardingTour } from '@/components/onboarding/OnboardingTour';
+import { TagChipInput } from '@/components/ui/TagChipInput';
 import { SuccessMessage } from './SuccessMessage';
 
 interface ProfileTabProps {
@@ -34,6 +35,8 @@ export function ProfileTab({ userId, userProfile, onUpdate, authProvider }: Prof
   const [showSuccess, setShowSuccess] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [showTour, setShowTour] = useState(false);
+  const [tags, setTags] = useState<string[]>([]);
+  const [initialTags, setInitialTags] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Password change state
@@ -60,6 +63,13 @@ export function ProfileTab({ userId, userProfile, onUpdate, authProvider }: Prof
       }
     }
   }, [userProfile]);
+
+  useEffect(() => {
+    fetchUserTags(userId).then((t) => {
+      setTags(t);
+      setInitialTags(t);
+    });
+  }, [userId]);
 
   const handleChange = (field: keyof ProfileFormData, value: string | null) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -121,6 +131,10 @@ export function ProfileTab({ userId, userProfile, onUpdate, authProvider }: Prof
       setError('Country is required');
       return false;
     }
+    if (tags.length !== 5) {
+      setError('Add exactly 5 professional tags');
+      return false;
+    }
     return true;
   };
 
@@ -131,7 +145,7 @@ export function ProfileTab({ userId, userProfile, onUpdate, authProvider }: Prof
     setError(null);
 
     try {
-      await updateUserProfile(userId, formData);
+      await saveProfileAndTags(userId, formData, tags);
       setShowSuccess(true);
       onUpdate();
     } catch (err) {
@@ -178,6 +192,7 @@ export function ProfileTab({ userId, userProfile, onUpdate, authProvider }: Prof
         study_time: userProfile.study_time,
       });
     }
+    setTags(initialTags);
     setError(null);
   };
 
@@ -360,6 +375,13 @@ export function ProfileTab({ userId, userProfile, onUpdate, authProvider }: Prof
           <p className="text-xs text-neutral-500 mt-1 ml-1">
             {formData.bio?.length || 0}/500 characters
           </p>
+        </div>
+
+        <div>
+          <label className="block text-sm font-semibold text-neutral-700 mb-1 ml-1">
+            Professional tags *
+          </label>
+          <TagChipInput value={tags} onChange={setTags} max={5} disabled={saving} />
         </div>
 
         {error && (

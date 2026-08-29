@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { updateUserProfile, fetchUserProfile } from '@/lib/supabase/queries/lobbyQueries';
+import { fetchUserTags, saveProfileAndTags } from '@/lib/supabase/queries/tagQueries';
+import { TagChipInput } from '@/components/ui/TagChipInput';
 import { EXAM_TYPES } from '@/lib/utils/constants';
 import { INDUSTRIES, STUDY_TIMES } from '@/lib/utils/lobbyConstants';
 import { COUNTRY_OPTIONS, countryFlag } from '@/lib/utils/countries';
@@ -10,6 +12,10 @@ import type { LobbyUserProfile } from '@/lib/types/lobby';
 interface OnboardingTourProps {
   userId: string;
   onComplete: () => void;
+  /** Skip the tour/profile-form steps and show only the mandatory tag step —
+   * used to backfill tags for users who already completed onboarding before
+   * tags existed (see AppShell.tsx). */
+  tagsOnly?: boolean;
 }
 
 const STEPS = [
@@ -56,35 +62,40 @@ const EMPTY_FORM: ProfileFormState = {
   study_time: '',
 };
 
-export function OnboardingTour({ userId, onComplete }: OnboardingTourProps) {
+export function OnboardingTour({ userId, onComplete, tagsOnly = false }: OnboardingTourProps) {
   const [step, setStep] = useState(0);
   const [showForm, setShowForm] = useState(false);
+  const [showTags, setShowTags] = useState(tagsOnly);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState<ProfileFormState>(EMPTY_FORM);
+  const [tags, setTags] = useState<string[]>([]);
   const isLastInfoStep = step === STEPS.length - 1;
   const current = STEPS[step]!;
-  const totalDots = STEPS.length + 1;
-  const activeDot = showForm ? STEPS.length : step;
+  const totalDots = tagsOnly ? 1 : STEPS.length + 2;
+  const activeDot = tagsOnly ? 0 : showTags ? STEPS.length + 1 : showForm ? STEPS.length : step;
 
-  // Pre-fill from the existing profile so replaying the tour (or resuming
-  // partway through onboarding) edits current values instead of blanking them.
+  // Pre-fill from the existing profile/tags so replaying the tour (or
+  // resuming partway through onboarding) edits current values instead of
+  // blanking them.
   useEffect(() => {
-    fetchUserProfile(userId).then((profile) => {
-      if (!profile) return;
-      setForm({
-        full_name: profile.full_name || '',
-        exam_type: profile.exam_type || '',
-        industry: profile.industry || '',
-        country_code: profile.country_code || '',
-        study_time: profile.study_time || '',
-      });
+    Promise.all([fetchUserProfile(userId), fetchUserTags(userId)]).then(([profile, existingTags]) => {
+      if (profile) {
+        setForm({
+          full_name: profile.full_name || '',
+          exam_type: profile.exam_type || '',
+          industry: profile.industry || '',
+          country_code: profile.country_code || '',
+          study_time: profile.study_time || '',
+        });
+      }
+      setTags(existingTags);
     });
   }, [userId]);
 
-  const persistCompletion = async (fields?: ProfileFormState) => {
+  const persistCompletion = async (fields?: ProfileFormState, tagsToSave?: string[]) => {
     setSaving(true);
     try {
-      const updates: Partial<LobbyUserProfile> = { onboarding_completed: true };
+      const updates: Partial<LobbyUserProfile> = tagsOnly ? {} : { onboarding_completed: true };
       if (fields) {
         if (fields.full_name) updates.full_name = fields.full_name;
         if (fields.exam_type) updates.exam_type = fields.exam_type;
@@ -92,7 +103,11 @@ export function OnboardingTour({ userId, onComplete }: OnboardingTourProps) {
         if (fields.country_code) updates.country_code = fields.country_code;
         if (fields.study_time) updates.study_time = fields.study_time;
       }
-      await updateUserProfile(userId, updates);
+      if (tagsToSave) {
+        await saveProfileAndTags(userId, updates, tagsToSave);
+      } else {
+        await updateUserProfile(userId, updates);
+      }
     } catch (err) {
       console.error('Failed to save onboarding completion:', err);
     } finally {
@@ -104,8 +119,11 @@ export function OnboardingTour({ userId, onComplete }: OnboardingTourProps) {
   const handleSkip = () => persistCompletion();
 
   const handleNext = () => {
-    if (showForm) {
-      persistCompletion(form);
+    if (showTags) {
+      if (tags.length !== 5) return;
+      persistCompletion(tagsOnly ? undefined : form, tags);
+    } else if (showForm) {
+      setShowTags(true);
     } else if (isLastInfoStep) {
       setShowForm(true);
     } else {
@@ -120,18 +138,31 @@ export function OnboardingTour({ userId, onComplete }: OnboardingTourProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
       <div className="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 p-6 animate-fade-in relative">
-        <button
-          onClick={handleSkip}
-          disabled={saving}
-          title="Skip"
-          className="absolute top-4 right-4 p-1.5 rounded-lg hover:bg-neutral-100 text-neutral-400 transition-colors disabled:opacity-50"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
+        {!showTags && (
+          <button
+            onClick={handleSkip}
+            disabled={saving}
+            title="Skip"
+            className="absolute top-4 right-4 p-1.5 rounded-lg hover:bg-neutral-100 text-neutral-400 transition-colors disabled:opacity-50"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        )}
 
-        {showForm ? (
+        {showTags ? (
+          <>
+            <div className="text-5xl mb-4">🏷️</div>
+            <h2 className="text-xl font-bold text-neutral-900 mb-2">Add 5 professional tags</h2>
+            <p className="text-sm text-neutral-600 mb-5">
+              Tags like &ldquo;JavaScript&rdquo; or &ldquo;AutoCAD&rdquo; help us connect you with people in your field. You can edit these anytime in Settings.
+            </p>
+            <div className="mb-6 text-left">
+              <TagChipInput value={tags} onChange={setTags} max={5} disabled={saving} />
+            </div>
+          </>
+        ) : showForm ? (
           <>
             <div className="text-5xl mb-4">👋</div>
             <h2 className="text-xl font-bold text-neutral-900 mb-2">Tell us about yourself</h2>
@@ -241,10 +272,10 @@ export function OnboardingTour({ userId, onComplete }: OnboardingTourProps) {
 
         <button
           onClick={handleNext}
-          disabled={saving}
+          disabled={saving || (showTags && tags.length !== 5)}
           className="w-full py-3 bg-brand-green text-white font-semibold rounded-lg hover:bg-brand-green-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {saving ? 'Saving...' : showForm ? 'Finish' : 'Next'}
+          {saving ? 'Saving...' : showTags ? 'Finish' : 'Next'}
         </button>
       </div>
     </div>

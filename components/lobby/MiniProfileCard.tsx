@@ -8,6 +8,7 @@ import {
   acceptFriendRequest,
   type FriendshipStatus,
 } from '@/lib/supabase/queries/lobbyQueries';
+import { fetchUserTags } from '@/lib/supabase/queries/tagQueries';
 import type { LobbyUserProfile } from '@/lib/types/lobby';
 import { countryFlag, countryName } from '@/lib/utils/countries';
 
@@ -24,14 +25,17 @@ export function MiniProfileCard({ userId, currentUserId, onClose, onSendDM, posi
   const [loading, setLoading] = useState(true);
   const [friendStatus, setFriendStatus] = useState<FriendshipStatus>('none');
   const [friendLoading, setFriendLoading] = useState(false);
+  const [tags, setTags] = useState<string[]>([]);
 
   useEffect(() => {
     Promise.all([
       fetchUserProfile(userId),
       fetchFriendshipStatus(currentUserId, userId),
-    ]).then(([p, fs]) => {
+      fetchUserTags(userId),
+    ]).then(([p, fs, t]) => {
       setProfile(p);
       setFriendStatus(fs);
+      setTags(t);
     }).finally(() => setLoading(false));
   }, [userId, currentUserId]);
 
@@ -148,6 +152,18 @@ export function MiniProfileCard({ userId, currentUserId, onClose, onSendDM, posi
               )}
               {profile.bio && (
                 <p className="text-xs text-neutral-500 mt-2 leading-relaxed">{profile.bio}</p>
+              )}
+              {tags.length > 0 && (
+                <div className="flex flex-wrap gap-1 mt-2">
+                  {tags.map((tag) => (
+                    <span
+                      key={tag}
+                      className="px-2 py-0.5 rounded-full bg-neutral-100 text-neutral-600 text-[10px] font-semibold"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
               )}
             </div>
 
